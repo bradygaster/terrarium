@@ -17,11 +17,13 @@
 | Gus | Server Dev | `.ai-team/agents/gus/charter.md` | ✅ Active |
 | Mike | Networking / Engine Dev | `.ai-team/agents/mike/charter.md` | ✅ Active |
 | Hank | Tester / QA | `.ai-team/agents/hank/charter.md` | ✅ Active |
+| Skyler | Frontend Web Dev | `.ai-team/agents/skyler/charter.md` | ✅ Active |
+| Saul | DevOps / Aspire | `.ai-team/agents/saul/charter.md` | ✅ Active |
 | Scribe | Session Logger | `.ai-team/agents/scribe/charter.md` | 📋 Silent |
 
 ## Project Context
 
 - **Owner:** bradygaster (bradyg@microsoft.com)
-- **Stack:** C#, .NET, WPF, ASP.NET MVC, DirectX, P2P networking
-- **Description:** .NET Terrarium 2.0 — a peer-to-peer networked ecosystem where developer-created creatures compete for survival, featuring WPF/DirectX client, MVC server, and peer-to-peer networking
+- **Stack:** C#, .NET 10, Blazor, ASP.NET Core, .NET Aspire, SignalR, Azure Container Apps
+- **Description:** .NET Terrarium 2.0 — a cross-platform web-based peer-to-peer networked ecosystem where developer-created creatures compete for survival, modernized from legacy .NET Framework to .NET 10 with .NET Aspire orchestration
 - **Created:** 2026-02-10

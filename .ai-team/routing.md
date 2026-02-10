@@ -7,8 +7,8 @@ How to decide who handles what.
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
 | Architecture & solution structure | Heisenberg | .NET version targeting, project dependencies, modernization strategy, solution-wide decisions |
-| WPF client & UI | Jesse | TerrariumClient, Controls, Glass, Renderer, user-facing components |
-| DirectX & graphics | Jesse | DXVBLib, Graphics, rendering pipeline, visual effects |
+| WPF client & UI | Jesse | Original sprite assets, art pipeline, legacy UI reference for web port |
+| DirectX & graphics | Jesse | Legacy rendering reference, sprite sheets, asset extraction for web |
 | Server & web services | Gus | TerrariumServer MVC, web APIs, data persistence, server-side logic |
 | P2P networking | Mike | HttpListener, peer discovery, creature teleportation, network protocol |
 | Game engine & organism logic | Mike | Game, OrganismBase, creature lifecycle, simulation engine, Services |
@@ -16,6 +16,10 @@ How to decide who handles what.
 | Code review | Heisenberg | Review PRs, check quality, architectural consistency |
 | Testing & QA | Hank | Unit tests, integration tests, TerrariumServer.Tests, build verification |
 | Scope & priorities | Heisenberg | What to build next, trade-offs, decisions |
+| Web UI & Blazor | Skyler | Blazor components, browser rendering, Canvas/WebGL, SignalR client, CSS/theming |
+| .NET Aspire & orchestration | Saul | AppHost, service defaults, service discovery, health checks, telemetry |
+| CI/CD & GitHub workflow | Saul | GitHub Actions, Docker, Azure Container Apps deployment, GitHub Issues/Projects |
+| Infrastructure & deployment | Saul | Azure provisioning, container configuration, environment management |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Rules
