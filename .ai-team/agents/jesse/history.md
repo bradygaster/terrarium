@@ -41,3 +41,21 @@
 📌 Team update (2026-02-11): CI pipeline created (.github/workflows/build.yml) targeting src/Terrarium.sln — decided by Hank
 📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
 📌 Team update (2026-02-10): Keep ArrayList on Scan() until Game project ported — decided by Mike
+
+### 2025-07-16 — Sprint 3: Glass Theming Expansion + Asset Catalog (PR #123)
+
+**Glass CSS Expansion (#23):**
+Expanded the Glass design system from base tokens+components to full UI coverage. Added ~60 new CSS custom properties for inputs, dropdowns, sidebar panels, toolbars, stat grids, and scrollbars. Added 12 new component classes: `.glass-sidebar` (frosted glass via `backdrop-filter`), `.glass-input`, `.glass-select`, `.glass-toolbar`, `.glass-stat-grid`, `.glass-minimap`, `.glass-dialog`, `.glass-ticker`, `.glass-tabs`, `.glass-icon-button`, plus themed scrollbars. All follow BEM naming and `--glass-*` token convention.
+
+**Asset Catalog (#25):**
+Searched entire legacy codebase and extracted ALL 76 original image assets to `src/Terrarium.Web/wwwroot/assets/`:
+- `sprites/` — 19 files: creature sprite sheets (ant, beetle, inchworm, scorpion, spider at 24px+48px), plant variants (4 types at 24px+48px), teleporter
+- `terrain/` — 2 files: background grass tile, dirt tile
+- `ui/` — 32 files: WPF toolbar button icons (18), splash/screensaver, server website banners/borders (8), WinForms play buttons (2), watermark
+- `cursors/` — 1 file: custom in-game cursor
+- `icons/` — 5 files: tericon 16/32px, app icon copy, StyleEditor icon, ServerConfig icon
+- `screenshots/` — 17 files: classic Whidbey screenshots, tutorials, documentation images, root whidbey_image001.jpg
+
+Created `manifest.json` cataloging every asset with path, original location, and purpose.
+
+**Key insight:** The `.svnbridge` subdirectories in `Client/ControlsWPF/Images/` contain duplicate copies of the button PNGs — excluded those to avoid redundancy. All unique assets are preserved.
