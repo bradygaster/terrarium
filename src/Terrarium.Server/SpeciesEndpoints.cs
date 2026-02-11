@@ -239,7 +239,9 @@ public static class SpeciesEndpoints
                 logger.LogError(ex, "Species: GetExtinct failed");
                 return Results.Ok(Array.Empty<SpeciesInfo>());
             }
-        });
+        })
+        .WithName("ListExtinctSpecies")
+        .Produces<IEnumerable<SpeciesInfo>>();
 
         group.MapGet("/blacklisted", async (
             IOptions<ServerSettings> settings,
@@ -260,7 +262,9 @@ public static class SpeciesEndpoints
                 logger.LogError(ex, "Species: GetBlacklisted failed");
                 return Results.Ok(Array.Empty<string>());
             }
-        });
+        })
+        .WithName("GetBlacklistedSpecies")
+        .Produces<IEnumerable<string>>();
 
         group.MapPost("/reintroduce", async (
             ReintroduceSpeciesRequest request,
@@ -315,7 +319,9 @@ public static class SpeciesEndpoints
                 logger.LogError(ex, "Species: Reintroduce failed for {Name}", request.Name);
                 return Results.Ok(new ReintroduceSpeciesResponse { Success = false });
             }
-        });
+        })
+        .WithName("ReintroduceSpecies")
+        .Produces<ReintroduceSpeciesResponse>();
 
         return group;
     }
