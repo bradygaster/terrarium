@@ -1,5 +1,6 @@
 using Terrarium.Server;
 using Terrarium.Server.Middleware;
+using Terrarium.Server.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,7 @@ builder.Services.Configure<ServerSettings>(
     builder.Configuration.GetSection("Terrarium"));
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ThrottleService>();
+builder.Services.AddHostedService<NonPageServicesWorker>();
 
 var app = builder.Build();
 
@@ -33,6 +35,12 @@ app.MapGroup("/api/species")
 
 app.MapGroup("/api/reporting")
     .MapReportingEndpoints();
+
+app.MapGroup("/api/charts")
+    .MapChartsEndpoints();
+
+app.MapGroup("/api/usage")
+    .MapUsageEndpoints();
 
 app.Run();
 
