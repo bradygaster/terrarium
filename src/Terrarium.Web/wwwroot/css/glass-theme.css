@@ -186,4 +186,64 @@
   --glass-radius-button:             9999px; /* Pill shape — arc = height */
   --glass-radius-panel:              0;      /* Panels are rectangular */
   --glass-radius-led:                50%;    /* Circular when square */
+  --glass-radius-input:              3px;    /* Subtle rounding for input fields */
+
+  /* ========================================================================
+   * INPUT & FORM TOKENS
+   * Source: DeveloperPanel.xaml ComboBox, WinForms TextBox integration
+   * ======================================================================== */
+
+  --glass-color-input-bg:            rgba(0, 0, 0, 0.6);
+  --glass-color-input-bg-focus:      rgba(0, 0, 0, 0.8);
+  --glass-color-input-border:        #404060;
+  --glass-color-input-border-focus:  #8080ff;
+  --glass-color-input-text:          #ffffff;
+  --glass-color-input-placeholder:   #808080;
+
+  /* Dropdown/select tokens */
+  --glass-color-dropdown-bg:         rgba(16, 16, 32, 0.95);
+  --glass-color-dropdown-hover:      rgba(128, 128, 255, 0.3);
+  --glass-color-dropdown-border:     #404060;
+
+  /* ========================================================================
+   * SIDEBAR / DEVELOPER PANEL TOKENS
+   * Source: DeveloperPanel.xaml — 200px sidebar with #202020 background
+   * ======================================================================== */
+
+  --glass-color-sidebar-bg:          #202020;
+  --glass-size-sidebar-width:        200px;
+  --glass-spacing-sidebar-padding:   6px;
+
+  /* Section header inside sidebar */
+  --glass-gradient-section-top:      #6060c0;
+  --glass-gradient-section-bottom:   #000040;
+  --glass-size-section-height:       22px;
+
+  /* ========================================================================
+   * TOOLBAR / BOTTOM PANEL TOKENS
+   * Source: GlassBottomPanel.xaml — button toolbar with mode selector
+   * ======================================================================== */
+
+  --glass-size-toolbar-height:       40px;
+  --glass-size-toolbar-button:       32px;
+  --glass-spacing-toolbar-gap:       4px;
+
+  /* ========================================================================
+   * STAT GRID TOKENS
+   * Source: DeveloperPanel.xaml — key-value stat rows
+   * ======================================================================== */
+
+  --glass-color-stat-label:          #a0a0c0;
+  --glass-color-stat-value:          #ffffff;
+  --glass-font-size-stat:            8px;
+
+  /* ========================================================================
+   * SCROLLBAR TOKENS
+   * Themed scrollbars to match Glass aesthetic
+   * ======================================================================== */
+
+  --glass-color-scrollbar-track:     rgba(0, 0, 0, 0.3);
+  --glass-color-scrollbar-thumb:     rgba(128, 128, 255, 0.4);
+  --glass-color-scrollbar-thumb-hover: rgba(128, 128, 255, 0.6);
+  --glass-size-scrollbar:            8px;
 }
