@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Terrarium.ServiceDefaults;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -31,6 +32,9 @@ public static class Extensions
             http.AddServiceDiscovery();
         });
 
+        // Register Terrarium-specific telemetry (custom metrics + activity sources)
+        builder.Services.AddSingleton<TerrariumTelemetry>();
+
         return builder;
     }
 
@@ -50,11 +54,13 @@ public static class Extensions
             {
                 metrics.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddRuntimeInstrumentation()
+                    .AddMeter(TerrariumTelemetry.MeterName);
             })
             .WithTracing(tracing =>
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
+                    .AddSource(TerrariumTelemetry.ActivitySourceNames)
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation();
             });

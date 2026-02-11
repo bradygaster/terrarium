@@ -87,3 +87,32 @@ Created `src/Terrarium.Services/` — a clean HttpClient-based replacement for t
 - Aspire service discovery via `AddTerrariumServices(serviceName)` overload
 
 PR #109, branch `squad/14-services-layer`.
+
+### 2025-07-16 — Terrarium.Net SignalR Hub Layer (#16)
+
+Created `src/Terrarium.Net/` — the SignalR contract layer replacing the legacy custom HttpWebListener and TCP peer-to-peer networking stack.
+
+**What was built:**
+- `ITerrariumClient` — server-to-client interface: `ReceiveEcosystemTick`, `ReceiveWorldStateUpdate`, `ReceiveCreatureTeleport`, `ReceivePeerAnnounce`
+- `ITerrariumHub` — client-to-server interface: `JoinEcosystem`, `LeaveEcosystem`, `TeleportCreature`, `AnnouncePeer`, `RequestWorldState`
+- `TerrariumHub : Hub<ITerrariumClient>` — thin relay implementation using SignalR groups per ecosystem
+- 4 message types in `Messages/`:
+  - `WorldStateUpdate` — tick-indexed world snapshot
+  - `CreatureTeleport` — replaces legacy 4-step HTTP teleport protocol (version check → assembly check → assembly transfer → state transfer) with a single message carrying optional assembly payload
+  - `PeerAnnounce` — replaces SOAP-based PeerDiscoveryService polling with push-based join/leave/heartbeat
+  - `EcosystemTick` — lightweight tick clock signal
+
+**Legacy → new mapping:**
+- `HttpWebListener` (custom TCP, port 50000) → SignalR WebSocket transport
+- `NetworkEngine.Teleport()` 4-step HTTP → `CreatureTeleport` single message
+- `PeerDiscoveryService` SOAP polling → `PeerAnnounce` + SignalR groups
+- `PeerManager` good/bad peer lists → Orleans `PeerGrain` (Sprint 7)
+
+**Key decisions:**
+- Uses `FrameworkReference Microsoft.AspNetCore.App` — SignalR is in-box for net10.0, no NuGet package needed
+- Hub is intentionally thin — all TODO comments mark where Orleans grain calls will be added in Sprint 7
+- `CreatureTeleport.AssemblyPayload` is optional Base64 — only sent when target peer lacks the assembly
+- `PeerAction` enum (Join/Leave/Heartbeat) replaces the lease-timeout pattern from `PeerManager`
+- No dependency on other Terrarium projects — pure contract library
+
+PR #113, branch `squad/16-networking-layer`.
