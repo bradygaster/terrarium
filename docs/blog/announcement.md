@@ -60,6 +60,18 @@ The biggest story: Heisenberg evaluated the networking architecture and discover
 
 New team member: **Badger** (Diagram Designer) — converted all ASCII diagrams to Mermaid and established diagram standards repo-wide.
 
+### Sprint 2: Configuration & Core Infrastructure
+
+The static singletons met their maker. `GameConfig` — a class with 26 static fields reading from an XML file via `XmlDocument.SelectSingleNode()` — was replaced by `IOptions<ServerSettings>` with one line of DI registration. The custom `CachedBooleanConfig` class, the hand-rolled XML reader, the `Mutex` thread safety — all gone.
+
+The `TimeMonitor` class with its `QueryPerformanceCounter` P/Invoke (including a hand-rolled API overhead compensation algorithm) was replaced by `System.Diagnostics.Stopwatch`. Twenty years of framework evolution in one line.
+
+PeerDiscovery — the heartbeat that keeps creatures teleporting between peers — was ported from ASMX `[WebMethod]` with `DataSet` out parameters to typed `HttpClient` service classes speaking JSON. The `ErrorLog` → `ILogger<T>` migration replaced `Trace.WriteLine` and `Mutex` synchronization with structured logging. Watson error reporting (previously accepting raw `DataSet` over SOAP) became a Minimal API endpoint with a POCO request model and Dapper. The `BugService` that was a `TODO` in the original code for twenty years is finally a real endpoint.
+
+Saul wired OpenTelemetry with custom `TerrariumTelemetry` — activity sources for creature registration, peer discovery, and teleportation, plus custom metrics for ticks, API requests, and creature counts. All flowing to the Aspire dashboard. The legacy `PerformanceCounter` instances (which required a custom installer and `perfmon.exe` over Remote Desktop) are no more.
+
+Mike built the SignalR hub as a deliberately thin contract layer — no business logic, no state management. Orleans will own that when it arrives in Sprint 7. Hank added code coverage to CI and wrote proactive Configuration tests.
+
 ## The Architecture: Modern .NET, Cross-Platform, In Your Browser
 
 - **Blazor** for the UI

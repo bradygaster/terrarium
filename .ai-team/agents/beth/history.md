@@ -40,3 +40,12 @@ The blog is a first-class deliverable. Brady's directive: "We want to hand Hanse
 - The Orleans discovery is the best narrative hook in Sprint 1. "You built actors before you knew what actors were" — that's the kind of reveal that makes migration stories compelling.
 - Brady's VB.NET directive is important for tone: never dismissive, always respectful. "We're C# now" is the framing. This applies to all legacy tech, not just VB.NET.
 - The before/after pattern (ASMX `[WebMethod]` → Minimal API lambda) works just as well for server code as it did for OrganismBase in Sprint 0.
+
+📌 Sprint 2 blog (2025-07-16): Wrote `docs/blog/journal/02-configuration-core-infra.md` covering: GameConfig static monolith → IOptions<ServerSettings>, QueryPerformanceCounter P/Invoke → Stopwatch, PeerDiscovery heartbeat porting (ASMX with DataSet out params → typed HttpClient + JSON), Watson/BugService error reporting (DataSet over SOAP → POCO + Dapper), ErrorLog/Mutex → ILogger<T>, SignalR hub as deliberate thin layer (no business logic — Orleans owns that), OpenTelemetry + TerrariumTelemetry custom counters replacing Windows PerformanceCounter, Hank's code coverage + Configuration tests. Updated `docs/blog/announcement.md` with Sprint 2 progress section.
+
+📌 Learnings (Sprint 2):
+- The "they built what the framework didn't provide" framing is the strongest narrative for infrastructure migration stories. The Terrarium team's custom abstractions were proto-framework features. Frame it as validation, not obsolescence.
+- QueryPerformanceCounter → Stopwatch is the most visceral single-line migration. The overhead compensation algorithm in the constructor — calling QPC twice to measure its own cost — is the kind of detail that makes devs go "oh wow." Lead with the human story of why they needed it.
+- The BugService TODO is a great narrative detail — someone wrote TODO twenty years ago and now we finally closed it. Use callbacks to unfinished legacy work as storytelling hooks.
+- The PerformanceCounter → OpenTelemetry comparison is gold for the "developer experience" angle. perfmon.exe over Remote Desktop vs. Aspire dashboard in your browser. That's the DX leap of two decades.
+- The "deliberately thin hub" story works as a design principle lesson: explain what the code *doesn't* do and why. Absence of logic is itself an architectural decision worth documenting.
