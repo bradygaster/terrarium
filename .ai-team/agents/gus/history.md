@@ -58,3 +58,21 @@
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
 📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
 📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
+
+### 2025-07-16 — Sprint 1: Terrarium.Server Bootstrap (#9, #10, #11)
+
+**What was done:**
+- Created `src/Terrarium.Server/` as a Minimal API host on net10.0
+- Added Dapper + Microsoft.Data.SqlClient NuGet packages for future SQL access
+- Ported `ServerSettings.cs` from static `ConfigurationManager.AppSettings` to `IOptions<ServerSettings>` pattern bound to `"Terrarium"` config section
+- Ported `Messaging.asmx.cs` (SOAP WebMethods) to three JSON endpoints: `GET /api/messaging/welcome`, `/motd`, `/version`
+- Ported `Throttle.cs` from ASP.NET `HttpContext.Current.Cache` + `Hashtable` + `lock(typeof(Throttle))` to `IMemoryCache` + `ConcurrentDictionary` + `Interlocked` operations
+- Registered server as Aspire resource in AppHost (`builder.AddProject<Projects.Terrarium_Server>("server")`)
+- Wired ServiceDefaults (OpenTelemetry, health checks, service discovery)
+- PR #112 → `squadified`
+
+**Key decisions:**
+- ThrottleService is a singleton; ThrottleMiddleware is transient (per-request)
+- Default rate limit: 60 requests/IP/minute — matches legacy server's typical throttle window
+- Messaging endpoints return `{ "message": "..." }` / `{ "version": "..." }` JSON — simple, predictable shape
+- No database calls yet — Dapper is referenced but not invoked until discovery/species endpoints are ported
