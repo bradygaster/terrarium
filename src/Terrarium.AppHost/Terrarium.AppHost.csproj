@@ -19,9 +19,12 @@
     <ProjectReference Include="..\Terrarium.ServiceDefaults\Terrarium.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <!-- Project references for orchestrated services (uncomment when projects exist)
   <ItemGroup>
     <ProjectReference Include="..\Terrarium.Server\Terrarium.Server.csproj" />
+  </ItemGroup>
+
+  <!-- Uncomment when Terrarium.Web project is ready
+  <ItemGroup>
     <ProjectReference Include="..\Terrarium.Web\Terrarium.Web.csproj" />
   </ItemGroup>
   -->
