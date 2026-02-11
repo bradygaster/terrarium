@@ -59,3 +59,31 @@
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
 📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
 📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
+
+### 2025-07-16 — Terrarium.Services Client-Side Service Layer (#14)
+
+Created `src/Terrarium.Services/` — a clean HttpClient-based replacement for the 8 legacy ASMX Web Reference proxies in `Client/Services/Web References/`.
+
+**What was built:**
+- 6 interfaces: IMessagingService, IPeerDiscoveryService, ISpeciesService, IPopulationService, IReportingService, IChartService
+- 6 HttpClient-based implementations in `Clients/`
+- 10 model types in `Models/` (BugReport, UsageData, SpeciesInfo, PeerInfo, PopulationData, PopulationEntry, VersionCheckResult + 3 enums)
+- `ServiceCollectionExtensions` with DI registration and Aspire service discovery support
+- Added to `Terrarium.sln`, builds clean
+
+**Legacy proxy → new service mapping:**
+- Messaging → IMessagingService (aligned with Gus's `/api/messaging/*` endpoints)
+- Discovery → IPeerDiscoveryService
+- Species → ISpeciesService
+- Reporting → IPopulationService
+- BugReporting + Watson + Usage → IReportingService (consolidated)
+- Charts → IChartService
+
+**Key decisions:**
+- Interface-first design for testability and DI
+- No ServiceDefaults dependency — pure class library, depends only on `Microsoft.Extensions.Http` and `Microsoft.Extensions.Options`
+- System.Text.Json serialization, no DataSet, no SOAP
+- CancellationToken on all async methods
+- Aspire service discovery via `AddTerrariumServices(serviceName)` overload
+
+PR #109, branch `squad/14-services-layer`.
