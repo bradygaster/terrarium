@@ -21,6 +21,7 @@ How to decide who handles what.
 | CI/CD & GitHub workflow | Saul | GitHub Actions, Docker, Azure Container Apps deployment, GitHub Issues/Projects |
 | Infrastructure & deployment | Saul | Azure provisioning, container configuration, environment management |
 | Blog content & technical writing | Beth | Sprint journal entries, announcement post, before/after comparisons, narrative documentation |
+| Diagrams & visual documentation | Badger | Mermaid diagrams, architecture visuals, data flow diagrams, sequence diagrams, all visual representations |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Rules

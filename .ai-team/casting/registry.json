@@ -55,6 +55,13 @@
       "created_at": "2026-02-11T05:02:00Z",
       "legacy_named": false,
       "status": "active"
+    },
+    "badger": {
+      "persistent_name": "Badger",
+      "universe": "Breaking Bad",
+      "created_at": "2026-02-11T06:14:00Z",
+      "legacy_named": false,
+      "status": "active"
     }
   }
 }

@@ -20,6 +20,7 @@
 | Skyler | Frontend Web Dev | `.ai-team/agents/skyler/charter.md` | ✅ Active |
 | Saul | DevOps / Aspire | `.ai-team/agents/saul/charter.md` | ✅ Active |
 | Beth | Technical Writer / Blogger | `.ai-team/agents/beth/charter.md` | ✅ Active |
+| Badger | Diagram Designer | `.ai-team/agents/badger/charter.md` | ✅ Active |
 | Scribe | Session Logger | `.ai-team/agents/scribe/charter.md` | 📋 Silent |
 
 ## Project Context

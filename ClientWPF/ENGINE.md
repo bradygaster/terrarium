@@ -42,6 +42,25 @@ complete one full tick. This design spreads CPU load evenly across frames for sm
 | 8 | Resolve bites/eating, growth, incubation, reproduction, healing |
 | 9 | Distribute energy to plants, execute teleportation, insert queued new organisms, update antenna states, make world state immutable |
 
+```mermaid
+graph LR
+    subgraph TickLoop["ProcessTurn() — 10 Phases Per Tick"]
+        P0["Phase 0–4<br/>Organism AI<br/>(1/5 quantum each)"]
+        P5["Phase 5<br/>Gather Actions<br/>Clone WorldState"]
+        P6["Phase 6<br/>Energy Burn<br/>Combat Resolution"]
+        P7["Phase 7<br/>Movement"]
+        P8["Phase 8<br/>Eating, Growth<br/>Reproduction"]
+        P9["Phase 9<br/>Plant Energy<br/>Teleportation<br/>Finalize State"]
+
+        P0 -->|actions queued| P5
+        P5 -->|mutable copy| P6
+        P6 -->|vectors updated| P7
+        P7 -->|positions set| P8
+        P8 -->|new organisms| P9
+        P9 -->|immutable snapshot| P0
+    end
+```
+
 ### World State (`WorldState`)
 
 **File:** `Client/Game/Classes/Engine/WorldState.cs`
@@ -96,10 +115,24 @@ determine time quantum. Excludes outlier samples (top/bottom 15%) for robust ave
 
 ### Class Hierarchy
 
-```
-Organism (abstract)
-├── Animal — mobile creatures with attack/defend/eat/move
-└── Plant  — stationary organisms (in Engine subfolder)
+```mermaid
+classDiagram
+    Organism <|-- Animal : extends
+    Organism <|-- Plant : extends
+
+    class Organism {
+        <<abstract>>
+        base class for all living things
+        position, radius, energy, lifecycle
+    }
+    class Animal {
+        mobile creature with AI events
+        attack, defend, eat, move, reproduce
+    }
+    class Plant {
+        stationary organism, energy from sunlight
+        height, food chunks, defoliation
+    }
 ```
 
 **Files:**
@@ -196,6 +229,34 @@ draw from a shared budget — you can't max everything.
 - Incubation: 10 ticks from `BeginReproduction()` to offspring spawn
 - Corpses rot over 100 ticks, available as food (for carnivores)
 
+```mermaid
+stateDiagram-v2
+    [*] --> Born : spawned or teleported in
+    Born --> Idle : initialized
+    Idle --> Moving : BeginMoving()
+    Idle --> Attacking : BeginAttacking()
+    Idle --> Eating : BeginEating()
+    Idle --> Defending : BeginDefending()
+    Idle --> Reproducing : BeginReproduction()
+    Moving --> Idle : MoveCompleted
+    Attacking --> Idle : AttackCompleted
+    Eating --> Idle : EatCompleted
+    Defending --> Idle : DefendCompleted
+    Reproducing --> Incubating : reproduction started
+    Incubating --> Idle : offspring spawned (10 ticks)
+    Idle --> Growing : GrowthWait elapsed
+    Growing --> Idle : radius increased
+
+    Idle --> Teleported : entered teleport zone
+    Teleported --> Born : arrived at new peer
+
+    Idle --> Dead : energy depleted / killed / old age
+    Moving --> Dead : killed mid-action
+    Attacking --> Dead : killed mid-action
+    Dead --> Corpse : animal dies
+    Corpse --> [*] : rotted (100 ticks)
+```
+
 ---
 
 ## P2P Networking Model
@@ -242,21 +303,28 @@ request buffering and `ManualResetEvent` signaling.
 
 Multi-step HTTP protocol between peers:
 
-```
-Sender                              Receiver
-  |                                    |
-  |-- GET /version ------------------>|  Step 1: Version check
-  |<-- <version>...</version> --------|
-  |                                    |
-  |-- POST /organisms/assemblycheck ->|  Step 2: Does peer have this creature's DLL?
-  |<-- <assemblyexists>true/false</..>|
-  |                                    |
-  |-- POST /organisms/assemblies ---->|  Step 3: Send DLL (if needed)
-  |<-- <assemblyreceived>true</...>---|
-  |                                    |
-  |-- POST /organisms/state --------->|  Step 4: Send serialized creature
-  |<-- <organismreceived>true</...>---|
-  |                                    |
+```mermaid
+sequenceDiagram
+    participant Sender
+    participant Receiver
+
+    Note over Sender,Receiver: Step 1 — Version Check
+    Sender->>Receiver: GET /version
+    Receiver-->>Sender: <version>2.0.50727</version>
+
+    Note over Sender,Receiver: Step 2 — Assembly Check
+    Sender->>Receiver: POST /organisms/assemblycheck
+    Receiver-->>Sender: <assemblyexists>true/false</assemblyexists>
+
+    alt Receiver does NOT have the creature DLL
+        Note over Sender,Receiver: Step 3 — Assembly Transfer
+        Sender->>Receiver: POST /organisms/assemblies (DLL bytes)
+        Receiver-->>Sender: <assemblyreceived>true</assemblyreceived>
+    end
+
+    Note over Sender,Receiver: Step 4 — Organism State Transfer
+    Sender->>Receiver: POST /organisms/state (serialized creature)
+    Receiver-->>Sender: <organismreceived>true</organismreceived>
 ```
 
 ### Network Endpoints (Namespace Handlers)

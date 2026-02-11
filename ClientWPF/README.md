@@ -123,28 +123,38 @@ These are also under `ClientWPF/` but are cross-cutting or owned by other team m
 
 Based on the legacy code, the rendering pipeline flows:
 
-```
-DXVBLib (COM Interop)
-  └── Provides: DirectDraw7, DirectDrawSurface7, DDSURFACEDESC2, RECT, etc.
-      │
-Graphics (Abstraction Layer)
-  └── Intended higher-level API over raw DirectX types (not yet built)
-      │
-Renderer
-  ├── DirectX/ (managed wrappers)
-  │   ├── DirectDrawSurface — wraps DxVBLib.DirectDrawSurface7
-  │   ├── DirectDrawPictureBox — PictureBox → DirectDraw render target
-  │   ├── DirectDrawSpriteSurface — sprite sheet management
-  │   └── DirectDrawClippedRect — viewport clipping
-  │
-  ├── Engine/ (pluggable backends — all stubs except the interface)
-  │   └── IGraphicsEngine ← DirectX7, DX9, DX10, MDX, XNA implementations
-  │
-  └── Game Rendering
-      ├── TerrariumDirectDrawGameView — THE main render loop
-      ├── World — tile-based terrain with height map
-      ├── TerrariumSpriteSurfaceManager — creature sprite caching
-      └── TerrariumTextSurfaceManager — text overlays
+```mermaid
+graph TD
+    subgraph DXVBLib["DXVBLib (COM Interop)"]
+        DD7["DirectDraw7, DirectDrawSurface7, DDSURFACEDESC2, RECT, etc."]
+    end
+
+    subgraph Graphics["Graphics (Abstraction Layer)"]
+        GFX["Intended higher-level API over raw DirectX types (not yet built)"]
+    end
+
+    subgraph Renderer["Renderer"]
+        subgraph DirectX["DirectX/ (managed wrappers)"]
+            DDS["DirectDrawSurface — wraps DxVBLib.DirectDrawSurface7"]
+            DDPB["DirectDrawPictureBox — PictureBox → DirectDraw render target"]
+            DDSS["DirectDrawSpriteSurface — sprite sheet management"]
+            DDCR["DirectDrawClippedRect — viewport clipping"]
+        end
+
+        subgraph Engine["Engine/ (pluggable backends)"]
+            IGE["IGraphicsEngine ← DirectX7, DX9, DX10, MDX, XNA implementations"]
+        end
+
+        subgraph GameRendering["Game Rendering"]
+            TDDGV["TerrariumDirectDrawGameView — THE main render loop"]
+            World["World — tile-based terrain with height map"]
+            TSSM["TerrariumSpriteSurfaceManager — creature sprite caching"]
+            TTSM["TerrariumTextSurfaceManager — text overlays"]
+        end
+    end
+
+    DXVBLib -->|provides COM types| Graphics
+    Graphics -->|abstracts DirectX| Renderer
 ```
 
 The WPF host bridges WinForms → WPF via `WindowsFormsHost`, embedding `TerrariumDirectDrawGameView` (a `PictureBox` subclass) directly into the WPF layout.
@@ -155,13 +165,20 @@ The WPF host bridges WinForms → WPF via `WindowsFormsHost`, embedding `Terrari
 
 From the legacy `Client/TerrariumWPF/MainForm.xaml`:
 
-```
-Window (MainForm)
-  └── DockPanel
-        ├── GlassTitleBar (Top) — custom window chrome
-        ├── DeveloperPanel (Left) — stats + minimap sidebar
-        ├── GlassBottomPanel (Bottom) — toolbar with icon buttons
-        └── Grid (Center) — hosts TerrariumDirectDrawGameView via WindowsFormsHost
+```mermaid
+graph TD
+    Window["Window (MainForm)"]
+    Dock["DockPanel"]
+    Title["GlassTitleBar (Top) — custom window chrome"]
+    Dev["DeveloperPanel (Left) — stats + minimap sidebar"]
+    Bottom["GlassBottomPanel (Bottom) — toolbar with icon buttons"]
+    Center["Grid (Center) — hosts TerrariumDirectDrawGameView via WindowsFormsHost"]
+
+    Window -->|contains| Dock
+    Dock -->|DockPanel.Top| Title
+    Dock -->|DockPanel.Left| Dev
+    Dock -->|DockPanel.Bottom| Bottom
+    Dock -->|DockPanel.Fill| Center
 ```
 
 On load, the `MainForm` creates a `TerrariumDirectDrawGameView`, wraps it in a `WindowsFormsHost`, and calls `InitializeDirectDraw(false)` to set up the rendering surface.

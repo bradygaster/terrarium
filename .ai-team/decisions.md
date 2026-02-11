@@ -65,7 +65,7 @@ Similarly for the server: `Server/Website/` is the functional server; `ServerMVC
 **What:**
 1. SQL hosting: Docker for dev, Azure SQL for prod — approved
 2. Deployment target: Azure Container Apps — confirmed
-3. C# only — drop VB.NET SDK support entirely
+3. C# only going forward
 4. Delete legacy code — no need to archive Client/, Server/, ClientWPF/, ServerMVC/ after migration
 5. Use ALL original imagery — people who know .NET Terrarium should recognize it immediately
 6. Cross-platform — change frontend to a web app instead of WPF desktop. Use .NET Aspire for orchestration. Staff up with new agents as needed. Use GitHub Issues and PRs to track all work items. Use labels for squad members and progress. Keep issues updated with status for GitHub project board tracking.
@@ -75,6 +75,39 @@ Similarly for the server: `Server/Website/` is the functional server; `ServerMVC
 **By:** bradygaster (via Copilot)
 **What:** Beth is inspired by someone who was the voice of .NET's marketing program for years, then moved into the product team. She's done it all. Beth is the fearless voice of the .NET developer toiling away. Beth is our voice.
 **Why:** User request — establishes Beth's identity and tone. She writes from the trenches, not the press box. Advocacy-to-engineering energy. Community-first.
+
+### 2025-07-16: Diagram Standards & Audit Results
+**By:** Badger (Diagram Designer)
+**Status:** Implemented
+
+**What:** Full audit and upgrade of every diagram across the repository. 3 converted from ASCII/plain to Mermaid, 6 improved with arrow labels and fixes, 3 new diagrams added. Standards established: no ASCII art ever, every arrow labeled, PascalCase node IDs, subgraphs for boundaries, type selection guidelines (graph for dependencies, sequenceDiagram for protocols, stateDiagram for lifecycles, classDiagram for hierarchies, gantt for scheduling). Directory tree listings (├── └──) are acceptable as file structure displays.
+**Why:** Brady directive — "never use ASCII art, use Mermaid, fix it, make a rule, never break it." Ensures all diagrams render properly on GitHub and maintain consistent quality.
+
+### 2026-02-11: Never use ASCII art — use Mermaid diagrams instead
+**By:** bradygaster (via Copilot)
+**What:** All diagrams in docs, blog posts, and markdown files must use Mermaid syntax. ASCII art (box drawing characters, block elements, ASCII Gantt charts) is banned.
+**Why:** User request — captured for team memory. Brady was emphatic: "sweet lord the blog has ascii art in it. never use ascii art. use mermaid. fix it, make a rule, never break it."
+
+### 2026-02-11: VB.NET language — respectful framing only
+**By:** bradygaster (via Copilot)
+**What:** Never refer to VB.NET as "dead weight", "debt", or in any negative/dismissive way. The decision is C# only going forward, but VB.NET is a respected part of .NET's history. Frame it simply: "we're C# now" — not as dropping something bad.
+**Why:** User request — captured for team memory. Brady said: "i would never refer to vb.net as dead weight or debt. we just do C# now. it doesn't have to be like that."
+
+### 2025-07-16: Orleans + SignalR for Terrarium Networking Layer
+**By:** Heisenberg (Lead / Architect)
+**Status:** Recommendation
+**Requested by:** bradygaster
+**Impact:** Sprint 7, Sprint 11, Sprint 12
+
+**What:** Recommends Orleans + SignalR hybrid architecture. Orleans owns stateful domain logic (EcosystemGrain, PeerGrain, SpeciesRegistryGrain, PopulationGrain); SignalR remains browser push channel only. Tick loop runs via Orleans grain timer on EcosystemGrain. Teleportation mediated by grain-to-grain calls. Per-organism grains rejected — per-ecosystem is the right granularity. SignalR.Orleans provides backplane without Redis. Aspire integration via AddOrleans() is first-class. Sprint 7 gets heavier (grain implementation), Sprint 11 gets lighter (Orleans handles scaling).
+**Why:** The legacy codebase already implements actor patterns manually (static Hashtables, lease timeouts, state serialization). Orleans formalizes these patterns. SignalR-only would require hand-rolling ConcurrentDictionary state management, BackgroundService timer multiplexing, manual crash recovery, and a separate Redis backplane. Orleans is a net-neutral or slight reduction in complexity.
+
+### 2026-02-10: Keep ArrayList Scan() for Now
+**By:** Mike (Networking / Engine Dev)
+**Status:** Proposed
+
+**What:** The legacy `IAnimalWorldBoundary.Scan()` method keeps `ArrayList` as its return type for now. When the Game project is ported, change to `List<OrganismState>`.
+**Why:** Changing to generic `List<OrganismState>` now would create a compile-time dependency on the unported Game project. Preserves source compatibility with existing creature code.
 
 ### 2025-07-16: Solution uses classic .sln format, not .slnx; CS1591 suppressed
 **By:** Heisenberg
@@ -91,8 +124,4 @@ Similarly for the server: `Server/Website/` is the functional server; `ServerMVC
 **What:** All CSS design tokens follow `--glass-{category}-{element}-{modifier}`. Categories: color, gradient, border, shadow, font, spacing, size, radius. Component classes use BEM: `.glass-panel`, `.glass-panel--sunk`, `.glass-titlebar__controls`. Tokens in `glass-theme.css` are the single source of truth for Terrarium's visual identity.
 **Why:** Predictable, discoverable naming that maps directly to legacy C# code (e.g., `GlassStyle.ButtonHover.Top` → `--glass-gradient-button-hover-top`). All UI agents must use tokens, not hard-coded values.
 
-### 2026-02-10: Keep ArrayList on Scan() until Game project ported
-**By:** Mike (Networking / Engine Dev)
-**Status:** Proposed
-**What:** `IAnimalWorldBoundary.Scan()` retains `ArrayList` return type. Changing to `List<OrganismState>` now would create compile-time dependency on the unported Game project. When Game is ported, change return type and remove `using System.Collections`.
-**Why:** Preserves source compatibility with existing creature code. Avoids blocking OrganismBase port on Game port.
+

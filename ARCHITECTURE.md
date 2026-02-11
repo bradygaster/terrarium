@@ -49,22 +49,30 @@ The active solution (`Terrraium2010.sln`) is the VS 2010 rewrite attempt. It con
 
 ### Active Solution Dependency Graph
 
-```
-TerrariumServer.Tests → TerrariumServer
+```mermaid
+graph LR
+    subgraph ActiveSolution["Active Solution (Terrraium2010.sln)"]
+        Tests["TerrariumServer.Tests"] -->|references| Server["TerrariumServer"]
 
-TerrariumClient (standalone — no project references)
-AsmCheck (standalone)
-Configuration (standalone)
-Controls (standalone)
-DXVBLib (standalone)
-Game (standalone)
-Glass (standalone)
-Graphics (standalone)
-HttpListener (standalone)
-OrganismBase (standalone)
-Renderer (standalone)
-Services (standalone)
+        Client["TerrariumClient"]
+        AsmCheck["AsmCheck"]
+        Config["Configuration"]
+        Controls["Controls"]
+        DXVBLib["DXVBLib"]
+        Game["Game"]
+        Glass["Glass"]
+        Graphics["Graphics"]
+        Http["HttpListener"]
+        OB["OrganismBase"]
+        Renderer["Renderer"]
+        Services["Services"]
+    end
+
+    style Tests fill:#f9f,stroke:#333
+    style Server fill:#f9f,stroke:#333
 ```
+
+> **⚠ All ClientWPF projects are standalone** — no project references exist between them. They are empty shells containing only `AssemblyInfo.cs`.
 
 **⚠ Critical observation:** The ClientWPF projects are almost entirely **empty shells**. Most contain only `AssemblyInfo.cs` and no actual source code. The only project with real code in the active solution is TerrariumServer (ASP.NET MVC 2) and TerrariumClient (WPF shell with `MainWindow.xaml`). The VS 2010 rewrite was started but never completed.
 
@@ -92,22 +100,48 @@ These are the **real, feature-complete** implementations. All target **.NET Fram
 
 ### Legacy Client Dependency Graph
 
-```
-Terrarium (WinForms EXE)
-├── Configuration → Services
-├── Controls → Configuration, Glass
-├── Game → Configuration, Controls, Glass, OrganismBase, Services, HttpListener
-│           └── HttpListener → Configuration
-├── Glass
-├── OrganismBase
-├── Renderer → Configuration, Game, OrganismBase (+ DXVBLib.dll file ref)
-└── Services
+```mermaid
+graph TD
+    subgraph Legacy["Legacy Client (.NET 3.5)"]
+        Terrarium["Terrarium (WinForms EXE)"]
+        Config["Configuration"]
+        Controls["Controls"]
+        Game["Game Engine"]
+        Glass["Glass UI Theme"]
+        OB["OrganismBase (Creature SDK)"]
+        Renderer["Renderer"]
+        Services["Services"]
+        Http["HttpListener"]
 
-TerrariumWPF (WPF EXE)
-├── ControlsWPF
-└── Renderer → (same as above)
+        Terrarium -->|uses settings| Config
+        Terrarium -->|embeds UI| Controls
+        Terrarium -->|runs simulation| Game
+        Terrarium -->|applies theme| Glass
+        Terrarium -->|loads creatures| OB
+        Terrarium -->|draws world| Renderer
+        Terrarium -->|calls server| Services
 
-Terrarium2 (WinForms EXE — standalone, no project references)
+        Config -->|reads server URLs| Services
+        Controls -->|reads settings| Config
+        Controls -->|applies theme| Glass
+        Game -->|reads settings| Config
+        Game -->|updates UI| Controls
+        Game -->|applies theme| Glass
+        Game -->|manages creatures| OB
+        Game -->|calls server| Services
+        Game -->|P2P networking| Http
+        Http -->|reads settings| Config
+        Renderer -->|reads settings| Config
+        Renderer -->|accesses world state| Game
+        Renderer -->|renders creatures| OB
+    end
+
+    TerrariumWPF["TerrariumWPF (WPF EXE)"]
+    ControlsWPF["ControlsWPF"]
+    TerrariumWPF -->|hosts controls| ControlsWPF
+    TerrariumWPF -->|renders via WindowsFormsHost| Renderer
+
+    Terrarium2["Terrarium2 (standalone — no project refs)"]
 ```
 
 **The leaf nodes (no dependencies):** OrganismBase, Glass, Services, ControlsWPF, Controls2

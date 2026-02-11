@@ -28,7 +28,7 @@ The original Terrarium was a desktop app with DirectX rendering. The modernized 
 | Serialization | **System.Text.Json** (replace BinaryFormatter) | BinaryFormatter is removed in .NET 10. All state serialization uses JSON |
 | Test framework | **xUnit** | Modern, extensible, good parallelization |
 | Deployment | **Azure Container Apps** via Aspire | Stateless services, horizontal scaling, Docker-native, Aspire has first-class support |
-| Language | **C# only** | VB.NET SDK support dropped — no remaining community |
+| Language | **C# only** | Going forward, creature SDK and samples are C# |
 | Legacy code | **Delete after migration** | No archive folder. Old code stays in git history. |
 | Visual identity | **All original sprite assets preserved** | Visual recognition is critical — this is Terrarium, it should look like Terrarium |
 
@@ -365,7 +365,7 @@ The original Terrarium was a desktop app with DirectX rendering. The modernized 
 
 | Work Item | Owner | Details |
 |-----------|-------|---------|
-| Port and modernize SDK tutorials | Hank | Convert `SDK/Manuals/TUTORIAL_CS.doc` content to Markdown. Update exercises to use modern C# (records, pattern matching, file-scoped namespaces). C# only — no VB.NET. |
+| Port and modernize SDK tutorials | Hank | Convert `SDK/Manuals/TUTORIAL_CS.doc` content to Markdown. Update exercises to use modern C# (records, pattern matching, file-scoped namespaces). C# only. |
 | Creature upload UI | Skyler | Web file upload component — drag-and-drop DLL or browse. Server-side validation via AsmCheck, show validation errors inline. Progress indicator for upload + validation. |
 | Creature introduction via server | Mike | Upload creature to server, download creatures from server. Wire `SpeciesService.Add` and `SpeciesService.GetSpeciesAssembly` through the web UI. Species listing page with search/filter. |
 | Creature browser/gallery | Skyler | Web page showing all available species: name, author, type (herbivore/carnivore/plant), population stats. Click to introduce into local ecosystem. |
@@ -463,7 +463,7 @@ All product decisions have been made by Brady:
 |---|----------|---------------|--------|
 | 1 | **SQL Server hosting** | Docker for dev, Azure SQL for prod | Aspire manages SQL container locally, Azure SQL in production |
 | 2 | **Deployment target** | Azure Container Apps | Aspire has first-class support, `azd up` deployment |
-| 3 | **VB.NET SDK support** | C# only | Drop all VB.NET skeletons and samples |
+| 3 | **Language** | C# only | Creature SDK and samples are C# going forward |
 | 4 | **Legacy code disposition** | Delete after migration | No archive — git history preserves everything |
 | 5 | **Sprite assets** | Use ALL original imagery | Visual recognition is critical — people should know this is Terrarium |
 | 6 | **Cross-platform** | Web app with .NET Aspire | Blazor replaces WPF, runs in any browser, cross-platform by default |
@@ -487,22 +487,48 @@ All product decisions have been made by Brady:
 
 ## Parallel Work Streams
 
-```
-Sprint:   0    1    2    3    4    5    6    7    8    9    10   11   12   13
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Server:   |    ████ ████ ████ ████ ████ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░ ████ ████
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Engine:   ████ ░░░░ ████ ░░░░ ████ ████ ████ ████ ░░░░ ████ ████ ████ ████ ░░░░
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Frontend: ░░░░ ░░░░ ░░░░ ████ ░░░░ ░░░░ ████ ████ ████ ████ ████ ████ ████ ████
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Assets:   ████ ░░░░ ░░░░ ████ ████ ░░░░ ░░░░ ░░░░ ████ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Aspire:   ████ ████ ████ ░░░░ ░░░░ ████ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░ ████ ████ ████
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Testing:  ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████
+```mermaid
+gantt
+    title Parallel Work Streams
+    dateFormat X
+    axisFormat Sprint %s
 
-████ = Primary focus    ░░░░ = Support/secondary work
+    section Server
+    Primary   :active, s1, 1, 5
+    Support   :s2, 6, 11
+    Primary   :active, s3, 12, 13
+
+    section Engine
+    Primary   :active, e0, 0, 0
+    Support   :e1, 1, 1
+    Primary   :active, e2, 2, 2
+    Support   :e3, 3, 3
+    Primary   :active, e4, 4, 7
+    Support   :e5, 8, 8
+    Primary   :active, e6, 9, 12
+
+    section Frontend
+    Support   :f0, 0, 2
+    Primary   :active, f1, 3, 3
+    Support   :f2, 4, 5
+    Primary   :active, f3, 6, 13
+
+    section Assets
+    Primary   :active, a0, 0, 0
+    Support   :a1, 1, 2
+    Primary   :active, a2, 3, 4
+    Support   :a3, 5, 7
+    Primary   :active, a4, 8, 8
+
+    section Aspire
+    Primary   :active, ap0, 0, 2
+    Support   :ap1, 3, 4
+    Primary   :active, ap2, 5, 5
+    Support   :ap3, 6, 10
+    Primary   :active, ap4, 11, 13
+
+    section Testing
+    Primary   :active, t0, 0, 13
 ```
 
 - **Gus** (Server) is mostly done by Sprint 5 — available for server maintenance and monitoring after that
@@ -524,7 +550,7 @@ To be explicit about scope:
 3. **Not using WASM for sandboxing.** Process isolation is proven and simpler. Creature execution stays server-side.
 4. **Not supporting .NET Framework side-by-side.** This is a clean break. Legacy code gets deleted after migration.
 5. **Not building a native mobile app.** The web app is responsive and works on mobile browsers. PWA for installability.
-6. **Not supporting VB.NET.** C# only — the VB.NET creature community is gone.
+6. **C# only.** The creature SDK, samples, and tutorials are all C# going forward.
 7. **Not building direct peer-to-peer.** Browser clients connect to the server via SignalR. The server mediates all peer interactions. Direct P2P is a browser security limitation, not a design choice.
 
 ---

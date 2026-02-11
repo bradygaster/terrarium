@@ -71,3 +71,14 @@
 - **Key convention:** All new code goes under `src/`. Legacy code stays untouched.
 📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
 📌 Team update (2026-02-10): Keep ArrayList on Scan() until Game project ported — decided by Mike
+### 2025-07-16 — Orleans + SignalR Architecture Evaluation
+
+- **Recommendation: YES to Orleans + SignalR (hybrid).** Orleans owns stateful domain logic; SignalR remains as browser push channel only.
+- **Grain model:** `EcosystemGrain` (tick loop, world state, teleportation mediation), `PeerGrain` (lease management, heartbeat, bad-peer tracking), `SpeciesRegistryGrain` (species CRUD, throttling, assembly storage), `PopulationGrain` (write-behind population reporting).
+- **Key insight:** The legacy codebase already implements actor patterns manually — `ReportingService._lastGuid` Hashtable, `PeerManager` with lease timeouts, `GameEngine` with state serialization. Orleans names and formalizes these patterns.
+- **OrganismGrain rejected:** Per-organism grains are wrong for Terrarium. The 10-phase `ProcessTurn` loop requires atomic tick processing across all ~300 organisms with spatial collision detection (`GridIndex`). `EcosystemGrain` holding `WorldState` is the right granularity.
+- **Sprint impact:** Sprint 7 gets heavier (Orleans setup + grain implementation), Sprint 11 gets lighter (Orleans handles scaling, no Redis/gRPC needed). `SignalR.Orleans` provides backplane without Redis.
+- **Aspire integration:** `AddOrleans()` in AppHost is first-class. Azure Table/Blob Storage for clustering and grain state in production.
+- **Written to:** `.ai-team/decisions/inbox/heisenberg-orleans-evaluation.md`
+
+📌 Team update (2025-07-16): Orleans + SignalR hybrid recommended — Orleans for stateful domain (ecosystems, peers, species), SignalR as thin browser push channel — decided by Heisenberg

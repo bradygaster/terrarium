@@ -184,37 +184,44 @@ internal class GridIndex
 
 Here's what we're building:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    .NET Aspire AppHost                          │
-│                  (Local Dev Orchestrator)                       │
-│                                                                 │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │  Terrarium.Web   │  │ Terrarium.Server │  │  SQL Server  │  │
-│  │  (Blazor Server) │──│ (ASP.NET Core)   │──│  (Container) │  │
-│  │                  │  │                  │  │              │  │
-│  │  ┌────────────┐  │  │  Minimal APIs    │  │  ~17 Stored  │  │
-│  │  │ Glass UI   │  │  │  SignalR Hub     │  │  Procedures  │  │
-│  │  │ Components │  │  │  Dapper + SQL    │  │              │  │
-│  │  │            │  │  │                  │  │              │  │
-│  │  │ Canvas     │  │  │  Background      │  │              │  │
-│  │  │ Game View  │  │  │  Services        │  │              │  │
-│  │  └────────────┘  │  └──────────────────┘  └──────────────┘  │
-│  │                  │           │                               │
-│  │  SignalR ◄───────┼───────────┘                               │
-│  │  Circuit         │                                           │
-│  └──────────────────┘                                           │
-│                                                                 │
-│  ┌──────────────────────────┐  ┌────────────────────────────┐  │
-│  │  Terrarium.Game          │  │  Terrarium.OrganismBase    │  │
-│  │  (Engine + Simulation)   │  │  (Creature SDK)            │  │
-│  │                          │  │                            │  │
-│  │  10-Phase Tick Loop      │  │  Organism, Animal, Plant   │  │
-│  │  Spatial Indexing         │  │  Attributes, Actions       │  │
-│  │  Physics, Teleportation  │  │  The API developers code   │  │
-│  │  Organism Scheduling     │  │  against                   │  │
-│  └──────────────────────────┘  └────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Aspire[".NET Aspire AppHost (Local Dev Orchestrator)"]
+        subgraph Web["Terrarium.Web (Blazor Server)"]
+            GlassUI["Glass UI Components"]
+            Canvas["Canvas Game View"]
+            SignalR_Client["SignalR Circuit"]
+        end
+
+        subgraph Server["Terrarium.Server (ASP.NET Core)"]
+            APIs["Minimal APIs"]
+            Hub["SignalR Hub"]
+            Dapper["Dapper + SQL"]
+            BgSvc["Background Services"]
+        end
+
+        subgraph SQL["SQL Server (Container)"]
+            Procs["~17 Stored Procedures"]
+        end
+
+        subgraph Game["Terrarium.Game (Engine + Simulation)"]
+            Tick["10-Phase Tick Loop"]
+            Spatial["Spatial Indexing"]
+            Physics["Physics, Teleportation"]
+            Scheduler["Organism Scheduling"]
+        end
+
+        subgraph SDK["Terrarium.OrganismBase (Creature SDK)"]
+            Organisms["Organism, Animal, Plant"]
+            Attrs["Attributes, Actions"]
+            DevAPI["The API developers code against"]
+        end
+
+        Web -->|real-time state via SignalR| Server
+        Server -->|Dapper queries| SQL
+        Game -->|manages creatures via| SDK
+        Server -->|drives simulation| Game
+    end
 ```
 
 **Blazor Interactive Server** for the UI. The Glass-themed chrome — that distinctive green gradient title bar, the developer panel, the status bar — rebuilt as Blazor components with CSS custom properties. The game viewport is an HTML5 Canvas element driven by JavaScript, because the rendering hot path can't round-trip through SignalR.
@@ -239,9 +246,9 @@ Before a single line of code gets written, six product decisions needed to be ma
 
 > Aspire has first-class Azure Container Apps support. `azd up` gets you from zero to deployed. Stateless services, horizontal scaling, Docker-native.
 
-### 3. C# Only — VB.NET Dropped
+### 3. C# Only
 
-> The original SDK supported both C# and VB.NET creature development. The VB.NET community for game creature authoring is gone. We're not carrying dead weight. C# only.
+> The original SDK supported both C# and VB.NET creature development. Going forward, we're C# only. The creature SDK, samples, and tutorials are all C#.
 
 ### 4. Delete Legacy Code After Migration
 
@@ -279,22 +286,48 @@ This modernization is being done by an AI agent squad, each with a defined role 
 
 Here's the full arc — 14 sprints, roughly 7 months, building leaf-to-root through the dependency graph:
 
-```
-Sprint    0    1    2    3    4    5    6    7    8    9    10   11   12   13
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Server:   |    ████ ████ ████ ████ ████ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░ ████ ████
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Engine:   ████ ░░░░ ████ ░░░░ ████ ████ ████ ████ ░░░░ ████ ████ ████ ████ ░░░░
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Frontend: ░░░░ ░░░░ ░░░░ ████ ░░░░ ░░░░ ████ ████ ████ ████ ████ ████ ████ ████
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Assets:   ████ ░░░░ ░░░░ ████ ████ ░░░░ ░░░░ ░░░░ ████ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Aspire:   ████ ████ ████ ░░░░ ░░░░ ████ ░░░░ ░░░░ ░░░░ ░░░░ ░░░░ ████ ████ ████
-          |    |    |    |    |    |    |    |    |    |    |    |    |    |
-Testing:  ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████ ████
+```mermaid
+gantt
+    title Parallel Work Streams
+    dateFormat X
+    axisFormat Sprint %s
 
-████ = Primary focus    ░░░░ = Support/secondary
+    section Server
+    Primary   :active, s1, 1, 5
+    Support   :s2, 6, 11
+    Primary   :active, s3, 12, 13
+
+    section Engine
+    Primary   :active, e0, 0, 0
+    Support   :e1, 1, 1
+    Primary   :active, e2, 2, 2
+    Support   :e3, 3, 3
+    Primary   :active, e4, 4, 7
+    Support   :e5, 8, 8
+    Primary   :active, e6, 9, 12
+
+    section Frontend
+    Support   :f0, 0, 2
+    Primary   :active, f1, 3, 3
+    Support   :f2, 4, 5
+    Primary   :active, f3, 6, 13
+
+    section Assets
+    Primary   :active, a0, 0, 0
+    Support   :a1, 1, 2
+    Primary   :active, a2, 3, 4
+    Support   :a3, 5, 7
+    Primary   :active, a4, 8, 8
+
+    section Aspire
+    Primary   :active, ap0, 0, 2
+    Support   :ap1, 3, 4
+    Primary   :active, ap2, 5, 5
+    Support   :ap3, 6, 10
+    Primary   :active, ap4, 11, 13
+
+    section Testing
+    Primary   :active, t0, 0, 13
 ```
 
 ### Sprint 0: Foundation
