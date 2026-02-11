@@ -1,0 +1,1694 @@
+{
+  "frameSize": {
+    "small": 24,
+    "large": 48
+  },
+  "layout": {
+    "framesPerRow": 10,
+    "totalRows": 40,
+    "directions": [
+      "n",
+      "ne",
+      "e",
+      "se",
+      "s",
+      "sw",
+      "w",
+      "nw"
+    ],
+    "directionIndices": {
+      "n": 7,
+      "ne": 8,
+      "e": 1,
+      "se": 2,
+      "s": 3,
+      "sw": 4,
+      "w": 5,
+      "nw": 6
+    },
+    "actionBaseRows": {
+      "attacked": 0,
+      "defended": 8,
+      "died": 16,
+      "ate": 24,
+      "moved": 32
+    }
+  },
+  "creatures": {
+    "ant": {
+      "type": "animal",
+      "spriteSheet": {
+        "small": "ant24.bmp",
+        "large": "ant48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 240,
+          "height": 960
+        },
+        "large": {
+          "width": 480,
+          "height": 1920
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 500,
+          "loop": false
+        },
+        "attacked_e": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_se": {
+          "row": 1,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_s": {
+          "row": 2,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_sw": {
+          "row": 3,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_w": {
+          "row": 4,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_nw": {
+          "row": 5,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_n": {
+          "row": 6,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_ne": {
+          "row": 7,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "defended_e": {
+          "row": 8,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_se": {
+          "row": 9,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_s": {
+          "row": 10,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_sw": {
+          "row": 11,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_w": {
+          "row": 12,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_nw": {
+          "row": 13,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_n": {
+          "row": 14,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_ne": {
+          "row": 15,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "died_e": {
+          "row": 16,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_se": {
+          "row": 17,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_s": {
+          "row": 18,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_sw": {
+          "row": 19,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_w": {
+          "row": 20,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_nw": {
+          "row": 21,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_n": {
+          "row": 22,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_ne": {
+          "row": 23,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "ate_e": {
+          "row": 24,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_se": {
+          "row": 25,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_s": {
+          "row": 26,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_sw": {
+          "row": 27,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_w": {
+          "row": 28,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_nw": {
+          "row": 29,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_n": {
+          "row": 30,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_ne": {
+          "row": 31,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "moved_e": {
+          "row": 32,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_se": {
+          "row": 33,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_s": {
+          "row": 34,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_sw": {
+          "row": 35,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_w": {
+          "row": 36,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_nw": {
+          "row": 37,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_n": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_ne": {
+          "row": 39,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        }
+      }
+    },
+    "beetle": {
+      "type": "animal",
+      "spriteSheet": {
+        "small": "beetle24.bmp",
+        "large": "beetle48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 240,
+          "height": 960
+        },
+        "large": {
+          "width": 480,
+          "height": 1920
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 500,
+          "loop": false
+        },
+        "attacked_e": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_se": {
+          "row": 1,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_s": {
+          "row": 2,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_sw": {
+          "row": 3,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_w": {
+          "row": 4,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_nw": {
+          "row": 5,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_n": {
+          "row": 6,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_ne": {
+          "row": 7,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "defended_e": {
+          "row": 8,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_se": {
+          "row": 9,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_s": {
+          "row": 10,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_sw": {
+          "row": 11,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_w": {
+          "row": 12,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_nw": {
+          "row": 13,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_n": {
+          "row": 14,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_ne": {
+          "row": 15,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "died_e": {
+          "row": 16,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_se": {
+          "row": 17,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_s": {
+          "row": 18,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_sw": {
+          "row": 19,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_w": {
+          "row": 20,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_nw": {
+          "row": 21,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_n": {
+          "row": 22,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_ne": {
+          "row": 23,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "ate_e": {
+          "row": 24,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_se": {
+          "row": 25,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_s": {
+          "row": 26,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_sw": {
+          "row": 27,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_w": {
+          "row": 28,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_nw": {
+          "row": 29,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_n": {
+          "row": 30,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_ne": {
+          "row": 31,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "moved_e": {
+          "row": 32,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_se": {
+          "row": 33,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_s": {
+          "row": 34,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_sw": {
+          "row": 35,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_w": {
+          "row": 36,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_nw": {
+          "row": 37,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_n": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_ne": {
+          "row": 39,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        }
+      }
+    },
+    "spider": {
+      "type": "animal",
+      "spriteSheet": {
+        "small": "spider24.bmp",
+        "large": "spider48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 240,
+          "height": 960
+        },
+        "large": {
+          "width": 480,
+          "height": 1920
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 500,
+          "loop": false
+        },
+        "attacked_e": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_se": {
+          "row": 1,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_s": {
+          "row": 2,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_sw": {
+          "row": 3,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_w": {
+          "row": 4,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_nw": {
+          "row": 5,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_n": {
+          "row": 6,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_ne": {
+          "row": 7,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "defended_e": {
+          "row": 8,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_se": {
+          "row": 9,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_s": {
+          "row": 10,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_sw": {
+          "row": 11,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_w": {
+          "row": 12,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_nw": {
+          "row": 13,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_n": {
+          "row": 14,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_ne": {
+          "row": 15,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "died_e": {
+          "row": 16,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_se": {
+          "row": 17,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_s": {
+          "row": 18,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_sw": {
+          "row": 19,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_w": {
+          "row": 20,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_nw": {
+          "row": 21,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_n": {
+          "row": 22,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_ne": {
+          "row": 23,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "ate_e": {
+          "row": 24,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_se": {
+          "row": 25,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_s": {
+          "row": 26,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_sw": {
+          "row": 27,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_w": {
+          "row": 28,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_nw": {
+          "row": 29,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_n": {
+          "row": 30,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_ne": {
+          "row": 31,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "moved_e": {
+          "row": 32,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_se": {
+          "row": 33,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_s": {
+          "row": 34,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_sw": {
+          "row": 35,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_w": {
+          "row": 36,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_nw": {
+          "row": 37,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_n": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_ne": {
+          "row": 39,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        }
+      }
+    },
+    "inchworm": {
+      "type": "animal",
+      "spriteSheet": {
+        "small": "inchworm24.bmp",
+        "large": "inchworm48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 240,
+          "height": 960
+        },
+        "large": {
+          "width": 480,
+          "height": 1920
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 500,
+          "loop": false
+        },
+        "attacked_e": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_se": {
+          "row": 1,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_s": {
+          "row": 2,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_sw": {
+          "row": 3,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_w": {
+          "row": 4,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_nw": {
+          "row": 5,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_n": {
+          "row": 6,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_ne": {
+          "row": 7,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "defended_e": {
+          "row": 8,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_se": {
+          "row": 9,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_s": {
+          "row": 10,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_sw": {
+          "row": 11,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_w": {
+          "row": 12,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_nw": {
+          "row": 13,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_n": {
+          "row": 14,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_ne": {
+          "row": 15,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "died_e": {
+          "row": 16,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_se": {
+          "row": 17,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_s": {
+          "row": 18,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_sw": {
+          "row": 19,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_w": {
+          "row": 20,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_nw": {
+          "row": 21,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_n": {
+          "row": 22,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_ne": {
+          "row": 23,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "ate_e": {
+          "row": 24,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_se": {
+          "row": 25,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_s": {
+          "row": 26,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_sw": {
+          "row": 27,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_w": {
+          "row": 28,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_nw": {
+          "row": 29,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_n": {
+          "row": 30,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_ne": {
+          "row": 31,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "moved_e": {
+          "row": 32,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_se": {
+          "row": 33,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_s": {
+          "row": 34,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_sw": {
+          "row": 35,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_w": {
+          "row": 36,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_nw": {
+          "row": 37,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_n": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_ne": {
+          "row": 39,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        }
+      }
+    },
+    "scorpion": {
+      "type": "animal",
+      "spriteSheet": {
+        "small": "scorpion24.bmp",
+        "large": "scorpion48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 240,
+          "height": 960
+        },
+        "large": {
+          "width": 480,
+          "height": 1920
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 500,
+          "loop": false
+        },
+        "attacked_e": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_se": {
+          "row": 1,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_s": {
+          "row": 2,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_sw": {
+          "row": 3,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_w": {
+          "row": 4,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_nw": {
+          "row": 5,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_n": {
+          "row": 6,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "attacked_ne": {
+          "row": 7,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 80,
+          "loop": false
+        },
+        "defended_e": {
+          "row": 8,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_se": {
+          "row": 9,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_s": {
+          "row": 10,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_sw": {
+          "row": 11,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_w": {
+          "row": 12,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_nw": {
+          "row": 13,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_n": {
+          "row": 14,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "defended_ne": {
+          "row": 15,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "died_e": {
+          "row": 16,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_se": {
+          "row": 17,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_s": {
+          "row": 18,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_sw": {
+          "row": 19,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_w": {
+          "row": 20,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_nw": {
+          "row": 21,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_n": {
+          "row": 22,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "died_ne": {
+          "row": 23,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 120,
+          "loop": false
+        },
+        "ate_e": {
+          "row": 24,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_se": {
+          "row": 25,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_s": {
+          "row": 26,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_sw": {
+          "row": 27,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_w": {
+          "row": 28,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_nw": {
+          "row": 29,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_n": {
+          "row": 30,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "ate_ne": {
+          "row": 31,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": false
+        },
+        "moved_e": {
+          "row": 32,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_se": {
+          "row": 33,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_s": {
+          "row": 34,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_sw": {
+          "row": 35,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_w": {
+          "row": 36,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_nw": {
+          "row": 37,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_n": {
+          "row": 38,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        },
+        "moved_ne": {
+          "row": 39,
+          "startFrame": 0,
+          "frameCount": 10,
+          "frameDuration": 100,
+          "loop": true
+        }
+      }
+    },
+    "plant": {
+      "type": "plant",
+      "spriteSheet": {
+        "small": "plant24.bmp",
+        "large": "plant48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 24,
+          "height": 24
+        },
+        "large": {
+          "width": 48,
+          "height": 48
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 1000,
+          "loop": false
+        }
+      }
+    },
+    "plantone": {
+      "type": "plant",
+      "spriteSheet": {
+        "small": "plantone24.bmp",
+        "large": "plantone48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 24,
+          "height": 24
+        },
+        "large": {
+          "width": 48,
+          "height": 48
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 1000,
+          "loop": false
+        }
+      }
+    },
+    "planttwo": {
+      "type": "plant",
+      "spriteSheet": {
+        "small": "planttwo24.bmp",
+        "large": "planttwo48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 24,
+          "height": 24
+        },
+        "large": {
+          "width": 48,
+          "height": 48
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 1000,
+          "loop": false
+        }
+      }
+    },
+    "plantthree": {
+      "type": "plant",
+      "spriteSheet": {
+        "small": "plantthree24.bmp",
+        "large": "plantthree48.bmp"
+      },
+      "sheetSize": {
+        "small": {
+          "width": 24,
+          "height": 24
+        },
+        "large": {
+          "width": 48,
+          "height": 48
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 1,
+          "frameDuration": 1000,
+          "loop": false
+        }
+      }
+    },
+    "teleporter": {
+      "type": "effect",
+      "spriteSheet": {
+        "large": "teleporter.bmp"
+      },
+      "sheetSize": {
+        "large": {
+          "width": 768,
+          "height": 48
+        }
+      },
+      "animations": {
+        "idle": {
+          "row": 0,
+          "startFrame": 0,
+          "frameCount": 16,
+          "frameDuration": 60,
+          "loop": true
+        }
+      }
+    }
+  }
+}
