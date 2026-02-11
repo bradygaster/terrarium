@@ -1,6 +1,9 @@
 @page "/"
 @rendermode InteractiveServer
 @using Terrarium.Web.Models
+@using Terrarium.Web.Services
+@inject TerrariumHubConnection HubConnection
+@implements IDisposable
 
 <PageTitle>.NET Terrarium</PageTitle>
 
@@ -53,8 +56,51 @@
         _tickCount = 0;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            HubConnection.OnWorldStateReceived += OnWorldStateReceived;
+            HubConnection.OnCreatureUpdate += OnCreatureUpdate;
+            HubConnection.OnPeerDiscovered += OnPeerDiscovered;
+
+            await HubConnection.ConnectAsync();
+            _isRunning = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnWorldStateReceived(Terrarium.Net.WorldStateUpdate update)
+    {
+        _tickCount = (int)update.TickNumber;
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now,
+            $"World state received: tick {update.TickNumber}, {update.OrganismCount} organisms"));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnCreatureUpdate(Terrarium.Net.EcosystemTick tick)
+    {
+        _tickCount = (int)tick.TickNumber;
+        _peerCount = tick.PeerCount;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnPeerDiscovered(Terrarium.Net.PeerAnnounce announce)
+    {
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now,
+            $"Peer {announce.PeerId} {announce.Action}"));
+        await InvokeAsync(StateHasChanged);
+    }
+
     private void OnCreatureSelected(CreatureInfo creature)
     {
         _selectedCreature = creature;
+    }
+
+    public void Dispose()
+    {
+        HubConnection.OnWorldStateReceived -= OnWorldStateReceived;
+        HubConnection.OnCreatureUpdate -= OnCreatureUpdate;
+        HubConnection.OnPeerDiscovered -= OnPeerDiscovered;
     }
 }
