@@ -72,6 +72,14 @@ Saul wired OpenTelemetry with custom `TerrariumTelemetry` — activity sources f
 
 Mike built the SignalR hub as a deliberately thin contract layer — no business logic, no state management. Orleans will own that when it arrives in Sprint 7. Hank added code coverage to CI and wrote proactive Configuration tests.
 
+### Sprint 3: Web UI Foundation
+
+First pixels. The Blazor Interactive Server project — `Terrarium.Web` — came online with Glass-themed components rendering in a browser. The original Terrarium window layout ported to Razor: `<TerrariumViewport />`, `<CreaturePanel />`, `<EcosystemStatus />`, `<MessageLog />`. Jesse's CSS tokens from Sprint 0 became real pixels — the blue-to-dark-blue panel gradients, the glass sheen overlay, the green LED status indicator, the dark chrome frame. Every gradient stop traceable to a `Color.FromArgb()` call in the legacy C# source.
+
+Species registration — the endpoint that makes the ecosystem work — began its migration from ASMX `[WebMethod]` to Minimal APIs. The `ISpeciesService` contract covers the full species lifecycle: register, browse, download, reintroduce, and blacklist. The typed `SpeciesServiceClient` speaks JSON over HTTP instead of `DataSet` over SOAP.
+
+Jesse cataloged original sprite assets — the BMPs loaded via DirectDraw, rendered at 48×48 pixels, ten animation frames per action type. Brady's directive: "people who know .NET Terrarium should recognize it immediately." Hank ported the SDK samples to .NET 10 — the creature developer experience (`class MyBeetle : Animal` with attribute-based point allocation) working on the modern framework.
+
 ## The Architecture: Modern .NET, Cross-Platform, In Your Browser
 
 - **Blazor** for the UI
