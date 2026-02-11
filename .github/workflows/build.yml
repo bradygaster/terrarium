@@ -52,6 +52,39 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.SOLUTION }} --no-restore --configuration Release
 
-      # ── Test ──────────────────────────────────────────────────
+      # ── Test with Coverage ────────────────────────────────────
       - name: Test
-        run: dotnet test ${{ env.SOLUTION }} --no-build --configuration Release --verbosity normal
+        run: >-
+          dotnet test ${{ env.SOLUTION }}
+          --no-build
+          --configuration Release
+          --verbosity normal
+          --collect:"XPlat Code Coverage"
+          --results-directory ${{ github.workspace }}/TestResults
+
+      # ── Coverage Report ────────────────────────────────────────
+      - name: Install ReportGenerator
+        if: always()
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        if: always()
+        run: >-
+          reportgenerator
+          -reports:"${{ github.workspace }}/TestResults/**/coverage.cobertura.xml"
+          -targetdir:"${{ github.workspace }}/CoverageReport"
+          -reporttypes:"Cobertura;TextSummary"
+
+      - name: Print coverage summary
+        if: always()
+        run: cat ${{ github.workspace }}/CoverageReport/Summary.txt
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage
+          path: |
+            ${{ github.workspace }}/CoverageReport/
+            ${{ github.workspace }}/TestResults/**/coverage.cobertura.xml
+          retention-days: 30
