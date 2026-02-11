@@ -42,6 +42,8 @@ public static class WatsonEndpoints
 {
     public static RouteGroupBuilder MapWatsonEndpoints(this RouteGroupBuilder group)
     {
+        group.WithTags("Watson");
+
         group.MapPost("/report", async (
             WatsonReportRequest request,
             HttpContext httpContext,
@@ -77,13 +79,16 @@ public static class WatsonEndpoints
                 logger.LogError(ex, "Watson: ReportError failed");
                 return Results.Ok(new { success = false });
             }
-        });
+        })
+        .WithName("ReportWatsonError");
 
         return group;
     }
 
     public static RouteGroupBuilder MapBugEndpoints(this RouteGroupBuilder group)
     {
+        group.WithTags("Bugs");
+
         group.MapPost("/report", (
             BugReportRequest request,
             ILogger<Program> logger) =>
@@ -91,7 +96,8 @@ public static class WatsonEndpoints
             // Legacy BugService was a stub (TODO in code). Log the report for now.
             logger.LogInformation("Bug report received: {Title} from {Alias}", request.Title, request.Alias);
             return Results.Ok(new { success = true });
-        });
+        })
+        .WithName("ReportBug");
 
         return group;
     }

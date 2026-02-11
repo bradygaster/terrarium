@@ -90,6 +90,8 @@ public static class SpeciesEndpoints
 {
     public static RouteGroupBuilder MapSpeciesEndpoints(this RouteGroupBuilder group)
     {
+        group.WithTags("Species");
+
         group.MapPost("/register", async (
             RegisterSpeciesRequest request,
             HttpContext httpContext,
@@ -165,7 +167,9 @@ public static class SpeciesEndpoints
                 logger.LogError(ex, "Species: Register failed");
                 return Results.Ok(new RegisterSpeciesResponse { Status = SpeciesServiceStatus.ServerDown });
             }
-        });
+        })
+        .WithName("RegisterSpecies")
+        .Produces<RegisterSpeciesResponse>();
 
         group.MapGet("/list", async (
             string version,
@@ -200,11 +204,11 @@ public static class SpeciesEndpoints
                 logger.LogError(ex, "Species: List failed");
                 return Results.Ok(Array.Empty<SpeciesInfo>());
             }
-        });
+        })
+        .WithName("ListSpecies")
+        .Produces<IEnumerable<SpeciesInfo>>();
 
         group.MapGet("/extinct", async (
-            string version,
-            string? filter,
             IOptions<ServerSettings> settings,
             ILogger<Program> logger) =>
         {
