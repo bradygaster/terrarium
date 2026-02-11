@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="xunit" Version="2.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.*" />
+    <PackageReference Include="coverlet.collector" Version="6.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Terrarium.Game\Terrarium.Game.csproj" />
+    <ProjectReference Include="..\Terrarium.Samples\SimpleCarnivore\SimpleCarnivore.csproj" />
+    <ProjectReference Include="..\Terrarium.Samples\SimpleHerbivore\SimpleHerbivore.csproj" />
+    <ProjectReference Include="..\Terrarium.Samples\SimplePlant\SimplePlant.csproj" />
+  </ItemGroup>
+
+</Project>
