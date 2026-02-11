@@ -112,6 +112,8 @@ public static class ReportingEndpoints
 {
     public static RouteGroupBuilder MapReportingEndpoints(this RouteGroupBuilder group)
     {
+        group.WithTags("Reporting");
+
         group.MapPost("/population", async (
             ReportPopulationRequest request,
             HttpContext httpContext,
@@ -261,7 +263,9 @@ public static class ReportingEndpoints
                 logger.LogError(ex, "Reporting: ReportPopulation failed");
                 return Results.Ok(new ReportPopulationResponse { ReturnCode = ReportingReturnCode.Success });
             }
-        });
+        })
+        .WithName("ReportPopulation")
+        .Produces<ReportPopulationResponse>();
 
         group.MapGet("/stats/species-list", async (
             IOptions<ServerSettings> settings,
@@ -283,7 +287,9 @@ public static class ReportingEndpoints
                 logger.LogError(ex, "Reporting: GetSpeciesList failed");
                 return Results.Ok(Array.Empty<SpeciesWithPopulation>());
             }
-        });
+        })
+        .WithName("GetSpeciesList")
+        .Produces<IEnumerable<SpeciesWithPopulation>>();
 
         group.MapGet("/stats/latest", async (
             string species,
@@ -307,7 +313,9 @@ public static class ReportingEndpoints
                 logger.LogError(ex, "Reporting: GrabLatestSpeciesData failed for {Species}", species);
                 return Results.Ok(Array.Empty<SpeciesPopulationData>());
             }
-        });
+        })
+        .WithName("GetLatestSpeciesData")
+        .Produces<IEnumerable<SpeciesPopulationData>>();
 
         group.MapGet("/stats/top-animals", async (
             string version,
@@ -337,7 +345,9 @@ public static class ReportingEndpoints
                 logger.LogError(ex, "Reporting: GetTopAnimals failed");
                 return Results.Ok(Array.Empty<TopAnimalEntry>());
             }
-        });
+        })
+        .WithName("GetTopAnimals")
+        .Produces<IEnumerable<TopAnimalEntry>>();
 
         return group;
     }

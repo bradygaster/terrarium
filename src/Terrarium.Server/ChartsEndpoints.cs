@@ -55,6 +55,8 @@ public static class ChartsEndpoints
 {
     public static RouteGroupBuilder MapChartsEndpoints(this RouteGroupBuilder group)
     {
+        group.WithTags("Charts");
+
         // Population over time by species (for time-series chart)
         group.MapGet("/population-history", async (
             string species,
@@ -98,7 +100,9 @@ public static class ChartsEndpoints
                 logger.LogError(ex, "Charts: PopulationHistory failed for {Species}", species);
                 return Results.Ok(Array.Empty<PopulationHistoryEntry>());
             }
-        });
+        })
+        .WithName("GetPopulationHistory")
+        .Produces<IEnumerable<PopulationHistoryEntry>>();
 
         // Current species distribution (for pie chart)
         group.MapGet("/species-distribution", async (
@@ -121,7 +125,9 @@ public static class ChartsEndpoints
                 logger.LogError(ex, "Charts: SpeciesDistribution failed");
                 return Results.Ok(Array.Empty<SpeciesDistributionEntry>());
             }
-        });
+        })
+        .WithName("GetSpeciesDistribution")
+        .Produces<IEnumerable<SpeciesDistributionEntry>>();
 
         // Top N creatures by population (for leaderboard)
         group.MapGet("/top-creatures", async (
@@ -158,7 +164,9 @@ public static class ChartsEndpoints
                 logger.LogError(ex, "Charts: TopCreatures failed");
                 return Results.Ok(Array.Empty<TopCreatureEntry>());
             }
-        });
+        })
+        .WithName("GetTopCreatures")
+        .Produces<IEnumerable<TopCreatureEntry>>();
 
         return group;
     }

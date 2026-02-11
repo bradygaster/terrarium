@@ -10,10 +10,12 @@ builder.Services.Configure<ServerSettings>(
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ThrottleService>();
 builder.Services.AddHostedService<NonPageServicesWorker>();
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+app.MapOpenApi();
 app.UseMiddleware<ThrottleMiddleware>();
 
 app.MapGet("/", () => "Terrarium Server");

@@ -52,6 +52,8 @@ public static class UsageEndpoints
 {
     public static RouteGroupBuilder MapUsageEndpoints(this RouteGroupBuilder group)
     {
+        group.WithTags("Usage");
+
         // Client heartbeat (peer alive signal)
         group.MapPost("/heartbeat", async (
             HeartbeatRequest request,
@@ -98,7 +100,9 @@ public static class UsageEndpoints
                 logger.LogError(ex, "Usage: Heartbeat failed for {Guid}", request.Guid);
                 return Results.Ok(new HeartbeatResponse { Success = false });
             }
-        });
+        })
+        .WithName("Heartbeat")
+        .Produces<HeartbeatResponse>();
 
         // Daily active users, creature count, total ticks
         group.MapGet("/daily-stats", async (
@@ -140,7 +144,9 @@ public static class UsageEndpoints
                 logger.LogError(ex, "Usage: DailyStats failed");
                 return Results.Ok(new DailyStatsResponse());
             }
-        });
+        })
+        .WithName("GetDailyStats")
+        .Produces<DailyStatsResponse>();
 
         // Server version info for client compatibility
         group.MapGet("/version-check", (IOptions<ServerSettings> settings) =>
@@ -150,7 +156,9 @@ public static class UsageEndpoints
                 LatestVersion = settings.Value.LatestVersion,
                 MOTD = settings.Value.MOTD
             });
-        });
+        })
+        .WithName("GetServerVersion")
+        .Produces<ServerVersionResponse>();
 
         return group;
     }
