@@ -80,6 +80,16 @@ Species registration — the endpoint that makes the ecosystem work — began it
 
 Jesse cataloged original sprite assets — the BMPs loaded via DirectDraw, rendered at 48×48 pixels, ten animation frames per action type. Brady's directive: "people who know .NET Terrarium should recognize it immediately." Hank ported the SDK samples to .NET 10 — the creature developer experience (`class MyBeetle : Animal` with attribute-based point allocation) working on the modern framework.
 
+### Sprint 4: Game Engine Core
+
+The heart of Terrarium. We opened `GameEngine.cs` — 2,583 lines of simulation architecture — and found the 10-phase tick loop: a `switch` statement where each case is a phase, ten calls equals one tick, two ticks per second, screen paints between each phase. Cooperative multitasking hand-tuned for a 20 FPS game loop. Built in 2002.
+
+The WorldState class is immutable — `throw new ApplicationException("WorldState is immutable.")` in every setter, `DuplicateMutable()` for clone-on-write, `MakeImmutable()` at the end of each tick. The pattern that Redux popularized in 2015, implemented on .NET 1.0 in 2002.
+
+GridIndex implements collision detection using Bresenham's line algorithm for path rasterization, `TimeWindow=10000` for temporal resolution, and sort-and-sweep for conflict resolution. SegmentWrappers track multi-cell creature occupancy. 483 lines of computational geometry in what was meant to be a teaching tool.
+
+The Great Collection Migration: 47 files with `Hashtable`/`ArrayList`/`BinaryFormatter`. The full .NET type system evolution — untyped collections to generics, binary serialization to `System.Text.Json`, runtime casting to compile-time safety. Sprite archaeology completed: 76 original assets across 5 categories, every one preserved, every one mapped to Canvas-ready animation sequences. Server: feature complete — all seven ASMX services ported to Minimal APIs.
+
 ## The Architecture: Modern .NET, Cross-Platform, In Your Browser
 
 - **Blazor** for the UI
