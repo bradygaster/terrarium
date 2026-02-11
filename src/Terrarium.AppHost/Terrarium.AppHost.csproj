@@ -23,10 +23,8 @@
     <ProjectReference Include="..\Terrarium.Server\Terrarium.Server.csproj" />
   </ItemGroup>
 
-  <!-- Uncomment when Terrarium.Web project is ready
   <ItemGroup>
     <ProjectReference Include="..\Terrarium.Web\Terrarium.Web.csproj" />
   </ItemGroup>
-  -->
 
 </Project>

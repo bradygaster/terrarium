@@ -1,0 +1,12 @@
+@* TerrariumViewport — Canvas game viewport placeholder *@
+
+<div class="terrarium-viewport glass-panel glass-panel--no-glass">
+    <canvas @ref="_canvasRef" class="terrarium-viewport__canvas"></canvas>
+    <div class="terrarium-viewport__overlay">
+        <span class="glass-label">Ecosystem viewport — awaiting creature data</span>
+    </div>
+</div>
+
+@code {
+    private ElementReference _canvasRef;
+}

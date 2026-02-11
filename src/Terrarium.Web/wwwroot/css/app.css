@@ -1,0 +1,151 @@
+/*
+ * ==========================================================================
+ * Terrarium Web — Application Styles
+ * ==========================================================================
+ * Layout styles for the Blazor app. Uses tokens from glass-theme.css.
+ * ==========================================================================
+ */
+
+/* Full-viewport app layout */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: var(--glass-color-dialog);
+    color: var(--glass-color-foreground);
+    font-family: var(--glass-font-family);
+    overflow: hidden;
+}
+
+.terrarium-app {
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Home page layout */
+.terrarium-home {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.terrarium-home__content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Ecosystem status bar */
+.ecosystem-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 4px 12px;
+}
+
+.ecosystem-status__metric {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Viewport */
+.terrarium-viewport {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.terrarium-viewport__canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.terrarium-viewport__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Creature panel */
+.creature-panel {
+    padding: 8px;
+}
+
+.creature-panel__header {
+    border-bottom: var(--glass-border);
+    margin-bottom: 8px;
+}
+
+.creature-panel__stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.creature-panel__stat {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--glass-font-family);
+    font-size: var(--glass-font-size-label);
+    color: var(--glass-color-foreground);
+    text-shadow: var(--glass-shadow-text);
+    padding: 2px var(--glass-spacing-label-padding);
+}
+
+.creature-panel__stat-label {
+    opacity: 0.7;
+}
+
+.creature-panel__empty {
+    text-align: center;
+    opacity: 0.5;
+    padding: 16px;
+}
+
+/* Message log */
+.message-log {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.message-log__header {
+    border-bottom: var(--glass-border);
+    flex-shrink: 0;
+}
+
+.message-log__entries {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.message-log__entry {
+    padding: 2px var(--glass-spacing-label-padding);
+    font-size: var(--glass-font-size);
+}
+
+.message-log__timestamp {
+    opacity: 0.6;
+    margin-right: 8px;
+}
+
+/* Blazor error UI */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 8px;
+    background: var(--glass-gradient-led-failed-bottom);
+    color: var(--glass-color-foreground);
+    font-family: var(--glass-font-family);
+    text-align: center;
+    z-index: 9999;
+}

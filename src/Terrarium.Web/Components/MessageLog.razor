@@ -1,0 +1,32 @@
+@* MessageLog — scrollable message log for game events *@
+
+<div class="message-log glass-panel glass-panel--sunk">
+    <div class="message-log__header glass-label">
+        Event Log
+    </div>
+    <div class="message-log__entries">
+        @if (Messages.Count == 0)
+        {
+            <div class="message-log__entry glass-label">
+                No events yet.
+            </div>
+        }
+        else
+        {
+            @foreach (var message in Messages)
+            {
+                <div class="message-log__entry glass-label">
+                    <span class="message-log__timestamp">@message.Timestamp.ToString("HH:mm:ss")</span>
+                    <span class="message-log__text">@message.Text</span>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<GameMessage> Messages { get; set; } = [];
+
+    public sealed record GameMessage(DateTime Timestamp, string Text);
+}

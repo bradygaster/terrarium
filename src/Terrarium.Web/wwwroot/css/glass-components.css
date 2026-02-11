@@ -472,3 +472,584 @@
   background-color: #000000;
   overflow: hidden;
 }
+
+/* ==========================================================================
+ * .glass-sidebar
+ *
+ * Frosted glass sidebar panel — the Developer Panel area. Dark background
+ * with semi-transparent frosted overlay. Contains sections, stat grids,
+ * and the minimap.
+ *
+ * Source: DeveloperPanel.xaml — 200px, #202020 background, vertical stack
+ * ========================================================================== */
+
+.glass-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--glass-size-sidebar-width);
+  flex-shrink: 0;
+  background-color: var(--glass-color-sidebar-bg);
+  border-left: var(--glass-border);
+  overflow-y: auto;
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size);
+  font-weight: var(--glass-font-weight);
+}
+
+/* Frosted glass effect via backdrop-filter */
+.glass-sidebar--frosted {
+  background: rgba(32, 32, 32, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Left-positioned sidebar variant */
+.glass-sidebar--left {
+  border-left: none;
+  border-right: var(--glass-border);
+}
+
+/* Section header inside sidebar */
+.glass-sidebar__section-header {
+  display: flex;
+  align-items: center;
+  height: var(--glass-size-section-height);
+  padding: 0 var(--glass-spacing-sidebar-padding);
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-section-top) 0%,
+    var(--glass-gradient-section-bottom) 100%
+  );
+  border-bottom: var(--glass-border);
+  text-shadow: var(--glass-shadow-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+/* Glass sheen on section headers */
+.glass-sidebar__section-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  pointer-events: none;
+}
+
+.glass-sidebar__section-body {
+  padding: var(--glass-spacing-sidebar-padding);
+}
+
+/* ==========================================================================
+ * .glass-stat-grid
+ *
+ * Two-column key-value stat display used in the Developer Panel.
+ * Labels on left (muted), values on right (bright white).
+ *
+ * Source: DeveloperPanel.xaml — Grid with 2 columns for stats
+ * ========================================================================== */
+
+.glass-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--glass-spacing-sidebar-padding);
+  padding: var(--glass-spacing-sidebar-padding);
+  font-size: var(--glass-font-size-stat);
+}
+
+.glass-stat-grid__label {
+  color: var(--glass-color-stat-label);
+  text-shadow: var(--glass-shadow-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.glass-stat-grid__value {
+  color: var(--glass-color-stat-value);
+  text-shadow: var(--glass-shadow-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+ * .glass-input
+ *
+ * Text input field styled for the Terrarium Glass UI. Dark recessed
+ * background with a subtle blue border that highlights on focus.
+ *
+ * Source: Inferred from Glass theme color system
+ * ========================================================================== */
+
+.glass-input {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--glass-color-input-bg);
+  border: 1px solid var(--glass-color-input-border);
+  border-radius: var(--glass-radius-input);
+  color: var(--glass-color-input-text);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size-label);
+  font-weight: var(--glass-font-weight);
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  box-sizing: border-box;
+}
+
+.glass-input::placeholder {
+  color: var(--glass-color-input-placeholder);
+}
+
+.glass-input:focus {
+  background: var(--glass-color-input-bg-focus);
+  border-color: var(--glass-color-input-border-focus);
+  box-shadow: 0 0 4px rgba(128, 128, 255, 0.3);
+}
+
+.glass-input:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Textarea variant */
+.glass-input--textarea {
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+ * .glass-select
+ *
+ * Dropdown/select styled for the Glass UI. Matches the dark input style
+ * with a custom dropdown arrow.
+ *
+ * Source: GlassBottomPanel.xaml ComboBox (96px width, basic integration)
+ * ========================================================================== */
+
+.glass-select {
+  display: block;
+  width: 100%;
+  padding: 4px 24px 4px 8px;
+  background: var(--glass-color-input-bg);
+  border: 1px solid var(--glass-color-input-border);
+  border-radius: var(--glass-radius-input);
+  color: var(--glass-color-input-text);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size-label);
+  font-weight: var(--glass-font-weight);
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  /* Custom arrow */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23808080'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px 6px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.glass-select:focus {
+  border-color: var(--glass-color-input-border-focus);
+  box-shadow: 0 0 4px rgba(128, 128, 255, 0.3);
+}
+
+.glass-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.glass-select option {
+  background: var(--glass-color-dropdown-bg);
+  color: var(--glass-color-input-text);
+}
+
+/* ==========================================================================
+ * .glass-toolbar
+ *
+ * Horizontal toolbar panel for action buttons. Used in the bottom panel
+ * area below the game viewport.
+ *
+ * Source: GlassBottomPanel.xaml — horizontal StackPanel of image buttons
+ * ========================================================================== */
+
+.glass-toolbar {
+  display: flex;
+  align-items: center;
+  height: var(--glass-size-toolbar-height);
+  padding: 0 var(--glass-spacing-toolbar-gap);
+  gap: var(--glass-spacing-toolbar-gap);
+
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-top) 0%,
+    var(--glass-gradient-panel-bottom) 100%
+  );
+  border: var(--glass-border);
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glass sheen */
+.glass-toolbar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Image-based toolbar button (e.g. the 32×32 icon buttons) */
+.glass-toolbar__button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--glass-size-toolbar-button);
+  height: var(--glass-size-toolbar-button);
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--glass-radius-button);
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.1s ease;
+}
+
+.glass-toolbar__button:hover {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-hover-top) 0%,
+    var(--glass-gradient-button-hover-bottom) 100%
+  );
+}
+
+.glass-toolbar__button:active {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-pressed-top) 0%,
+    var(--glass-gradient-button-pressed-bottom) 100%
+  );
+}
+
+.glass-toolbar__button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Separator between toolbar groups */
+.glass-toolbar__separator {
+  width: 1px;
+  height: 60%;
+  background: var(--glass-color-border);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+/* Spacer pushes items to the right */
+.glass-toolbar__spacer {
+  flex: 1;
+  z-index: 2;
+}
+
+/* Mode selector dropdown in toolbar */
+.glass-toolbar .glass-select {
+  width: 96px;
+  z-index: 2;
+}
+
+/* ==========================================================================
+ * .glass-minimap
+ *
+ * Mini-map container in the sidebar. Shows a scaled-down view of the
+ * terrarium world with a navigation viewport indicator.
+ *
+ * Source: DeveloperPanel.xaml — Image element for mini map
+ * ========================================================================== */
+
+.glass-minimap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #000000;
+  border: var(--glass-border);
+  overflow: hidden;
+}
+
+.glass-minimap__viewport {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+ * .glass-dialog
+ *
+ * Modal dialog overlay styled in Glass theme. Dark background with
+ * frosted glass effect and panel gradient header.
+ *
+ * Source: TerrariumForm.cs dialog styling, GlassStyle.dialogColor
+ * ========================================================================== */
+
+.glass-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.glass-dialog {
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-color-dialog);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow-chrome);
+  min-width: 300px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.glass-dialog__header {
+  display: flex;
+  align-items: center;
+  height: var(--glass-size-titlebar-height);
+  padding: 0 var(--glass-spacing-label-padding);
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-top) 0%,
+    var(--glass-gradient-panel-bottom) 100%
+  );
+  border-bottom: var(--glass-border);
+  position: relative;
+}
+
+/* Glass sheen on dialog header */
+.glass-dialog__header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  pointer-events: none;
+}
+
+.glass-dialog__title {
+  flex: 1;
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size-label);
+  font-weight: var(--glass-font-weight);
+  text-shadow: var(--glass-shadow-text);
+  position: relative;
+  z-index: 1;
+}
+
+.glass-dialog__body {
+  padding: var(--glass-spacing-label-padding);
+  overflow-y: auto;
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size-label);
+}
+
+.glass-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--glass-spacing-button-margin);
+  padding: var(--glass-spacing-label-padding);
+  border-top: var(--glass-border);
+}
+
+/* ==========================================================================
+ * .glass-ticker
+ *
+ * Scrolling ticker/news bar. Marquee-style text display at the bottom
+ * of panels.
+ *
+ * Source: TickerBar.cs — horizontal scrolling text control
+ * ========================================================================== */
+
+.glass-ticker {
+  position: relative;
+  height: var(--glass-size-statusbar-height);
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-bottom) 0%,
+    var(--glass-gradient-panel-top) 100%
+  );
+  border: var(--glass-border);
+  white-space: nowrap;
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size);
+  font-weight: var(--glass-font-weight);
+  text-shadow: var(--glass-shadow-text);
+  line-height: var(--glass-size-statusbar-height);
+}
+
+.glass-ticker__content {
+  display: inline-block;
+  padding-left: 100%;
+  animation: glass-ticker-scroll 20s linear infinite;
+}
+
+@keyframes glass-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+/* ==========================================================================
+ * .glass-tab
+ *
+ * Tab navigation matching Glass button styling. Active tab uses panel
+ * gradient; inactive tabs are muted.
+ * ========================================================================== */
+
+.glass-tabs {
+  display: flex;
+  border-bottom: var(--glass-border);
+}
+
+.glass-tab {
+  position: relative;
+  padding: 4px 12px;
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-normal-top) 0%,
+    var(--glass-gradient-button-normal-bottom) 100%
+  );
+  border: var(--glass-border);
+  border-bottom: none;
+  margin-right: -1px;
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size);
+  font-weight: var(--glass-font-weight);
+  text-shadow: var(--glass-shadow-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.glass-tab:hover {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-hover-top) 0%,
+    var(--glass-gradient-button-hover-bottom) 100%
+  );
+}
+
+.glass-tab--active {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-top) 0%,
+    var(--glass-gradient-panel-bottom) 100%
+  );
+  border-bottom: 1px solid var(--glass-gradient-panel-bottom);
+  z-index: 1;
+}
+
+/* ==========================================================================
+ * Themed Scrollbars
+ *
+ * Custom scrollbar styling to match the Glass aesthetic. Uses the slim
+ * 8px track with translucent blue thumb.
+ * ========================================================================== */
+
+.glass-scrollbar::-webkit-scrollbar,
+.glass-sidebar::-webkit-scrollbar {
+  width: var(--glass-size-scrollbar);
+}
+
+.glass-scrollbar::-webkit-scrollbar-track,
+.glass-sidebar::-webkit-scrollbar-track {
+  background: var(--glass-color-scrollbar-track);
+}
+
+.glass-scrollbar::-webkit-scrollbar-thumb,
+.glass-sidebar::-webkit-scrollbar-thumb {
+  background: var(--glass-color-scrollbar-thumb);
+  border-radius: var(--glass-size-scrollbar);
+}
+
+.glass-scrollbar::-webkit-scrollbar-thumb:hover,
+.glass-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-color-scrollbar-thumb-hover);
+}
+
+/* Firefox scrollbar support */
+.glass-scrollbar,
+.glass-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-color-scrollbar-thumb) var(--glass-color-scrollbar-track);
+}
+
+/* ==========================================================================
+ * Utility: glass-icon-button
+ *
+ * A transparent button that only shows its icon, with the signature
+ * green hover glow. For toolbar and sidebar icon buttons.
+ * ========================================================================== */
+
+.glass-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--glass-size-button-chrome);
+  height: var(--glass-size-button-chrome);
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--glass-radius-button);
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.glass-icon-button:hover {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-hover-top) 0%,
+    var(--glass-gradient-button-hover-bottom) 100%
+  );
+}
+
+.glass-icon-button:active {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-pressed-top) 0%,
+    var(--glass-gradient-button-pressed-bottom) 100%
+  );
+}
+
+.glass-icon-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
