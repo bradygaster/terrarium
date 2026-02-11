@@ -43,3 +43,20 @@
 📌 Team update (2026-02-10): MVC Server is a scaffold — all game logic lives in legacy ASMX — decided by Gus
 📌 Team update (2026-02-10): .NET 10 modernization sprint plan created — 14 sprints, WPF on .NET 10, Silk.NET OpenGL, gRPC P2P, Dapper+stored procs, process isolation, xUnit, System.Text.Json — decided by Heisenberg
 📌 Team update (2026-02-11): Beth's voice is fearless, developer-first, community-driven — decided by bradygaster
+
+### 2025-07-15 — CI Pipeline Created (Issue #5)
+
+**What was done:**
+- Created `.github/workflows/build.yml` — the first CI pipeline for the project
+- Triggers on push to `main` and `squadified` branches, and on all PRs
+- Ubuntu runner (cross-platform web app per Brady's decision)
+- .NET 10 SDK setup with global.json detection (falls back to 10.0.x + preview quality)
+- NuGet package caching keyed on csproj/Directory.Packages.props/Directory.Build.props
+- Restore → Build (Release) → Test pipeline targeting `src/Terrarium.sln`
+- Decided against a separate `pr-check.yml` — no label/title conventions exist yet to validate
+
+**Key decisions:**
+- Used `dotnet-quality: preview` since .NET 10 is in preview
+- Solution path is `src/Terrarium.sln` (Heisenberg's new structure, not the legacy `Terrraium2010.sln`)
+- Cache key includes Directory.Packages.props and Directory.Build.props for central package management support
+- Single workflow handles both push CI and PR checks — no unnecessary ceremony

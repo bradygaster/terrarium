@@ -1,0 +1,57 @@
+# CI pipeline for .NET Terrarium
+# Builds and tests the modernized .NET 10 solution on every push and PR.
+
+name: Build and Test
+
+on:
+  push:
+    branches: [main, squadified]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  SOLUTION: src/Terrarium.sln
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── .NET SDK ──────────────────────────────────────────────
+      # Reads version from global.json when present; falls back to 10.0.x.
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ${{ hashFiles('global.json') != '' && 'global.json' || '' }}
+          dotnet-version: ${{ hashFiles('global.json') != '' && '' || '10.0.x' }}
+          dotnet-quality: preview
+
+      # ── NuGet cache ───────────────────────────────────────────
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props', '**/Directory.Build.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      # ── Restore ───────────────────────────────────────────────
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      # ── Build ─────────────────────────────────────────────────
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --no-restore --configuration Release
+
+      # ── Test ──────────────────────────────────────────────────
+      - name: Test
+        run: dotnet test ${{ env.SOLUTION }} --no-build --configuration Release --verbosity normal
