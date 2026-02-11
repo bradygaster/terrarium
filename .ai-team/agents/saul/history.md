@@ -9,4 +9,4 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
-📌 Team update (2026-02-11): Beth's voice is inspired by Beth Massi — fearless, developer-first, community-driven — decided by bradygaster
+📌 Team update (2026-02-11): Beth's voice is fearless, developer-first, community-driven — decided by bradygaster
