@@ -28,6 +28,12 @@ app.MapGroup("/api/watson")
 app.MapGroup("/api/bugs")
     .MapBugEndpoints();
 
+app.MapGroup("/api/species")
+    .MapSpeciesEndpoints();
+
+app.MapGroup("/api/reporting")
+    .MapReportingEndpoints();
+
 app.Run();
 
 // Make Program visible to integration tests using WebApplicationFactory<Program>
