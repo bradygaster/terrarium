@@ -44,6 +44,12 @@
 📌 Team update (2026-02-10): .NET 10 modernization sprint plan created — 14 sprints, WPF on .NET 10, Silk.NET OpenGL, gRPC P2P, Dapper+stored procs, process isolation, xUnit, System.Text.Json — decided by Heisenberg
 📌 Team update (2026-02-11): Beth's voice is fearless, developer-first, community-driven — decided by bradygaster
 
+📌 Team update (2026-02-11): Diagram standards — Mermaid only, no ASCII art. All diagrams must use Mermaid — decided by Badger, bradygaster
+📌 Team update (2026-02-11): VB.NET respectful framing — never refer to VB.NET negatively, just "we're C# now" — decided by bradygaster
+📌 Team update (2026-02-11): Orleans + SignalR hybrid — TestCluster-based grain tests assigned to Hank in Sprint 7 — decided by Heisenberg
+📌 Team update (2026-02-11): Solution uses classic .sln (not .slnx), CS1591 suppressed during port — decided by Heisenberg
+📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
+
 ### 2025-07-15 — CI Pipeline Created (Issue #5)
 
 **What was done:**

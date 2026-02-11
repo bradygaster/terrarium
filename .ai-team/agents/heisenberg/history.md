@@ -82,3 +82,9 @@
 - **Written to:** `.ai-team/decisions/inbox/heisenberg-orleans-evaluation.md`
 
 📌 Team update (2025-07-16): Orleans + SignalR hybrid recommended — Orleans for stateful domain (ecosystems, peers, species), SignalR as thin browser push channel — decided by Heisenberg
+
+📌 Team update (2026-02-11): Diagram standards — Mermaid only, no ASCII art. All diagrams must use Mermaid — decided by Badger, bradygaster
+📌 Team update (2026-02-11): VB.NET respectful framing — never refer to VB.NET negatively, just "we're C# now" — decided by bradygaster
+📌 Team update (2026-02-11): CI pipeline created (.github/workflows/build.yml) targeting src/Terrarium.sln — decided by Hank
+📌 Team update (2026-02-11): Solution uses classic .sln (not .slnx), CS1591 suppressed during port — decided by Heisenberg
+📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse

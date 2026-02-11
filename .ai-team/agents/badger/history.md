@@ -40,3 +40,6 @@
 - `ClientWPF/ENGINE.md` — Teleportation sequence diagram (`sequenceDiagram`)
 
 **Decision written:** `.ai-team/decisions/inbox/badger-diagram-standards.md`
+
+📌 Team update (2026-02-11): VB.NET respectful framing — never refer to VB.NET negatively, just "we're C# now" — decided by bradygaster
+📌 Team update (2026-02-11): Orleans + SignalR hybrid recommended — 4 grain types, Sprint 7 heavier, Sprint 11 lighter — decided by Heisenberg
