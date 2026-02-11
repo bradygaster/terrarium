@@ -13,10 +13,9 @@ var server = builder.AddProject<Projects.Terrarium_Server>("server")
     .WaitFor(terrariumDb);
 
 // Terrarium Web — Blazor frontend for the creature ecosystem
-// Uncomment when Terrarium.Web project is created:
-// builder.AddProject<Projects.Terrarium_Web>("web")
-//     .WithExternalHttpEndpoints()
-//     .WithReference(server)
-//     .WaitFor(server);
+builder.AddProject<Projects.Terrarium_Web>("web")
+    .WithExternalHttpEndpoints()
+    .WithReference(server)
+    .WaitFor(server);
 
 builder.Build().Run();

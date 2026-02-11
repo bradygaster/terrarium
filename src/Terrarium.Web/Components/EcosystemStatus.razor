@@ -1,0 +1,27 @@
+@* EcosystemStatus — header bar with ecosystem metrics *@
+
+<div class="ecosystem-status glass-panel">
+    <div class="ecosystem-status__metric">
+        <span class="glass-led glass-led--idle"></span>
+        <span class="glass-label glass-label--nowrap">Creatures: @CreatureCount</span>
+    </div>
+    <div class="ecosystem-status__metric">
+        <span class="glass-led glass-led--waiting"></span>
+        <span class="glass-label glass-label--nowrap">Tick: @TickNumber</span>
+    </div>
+    <div class="ecosystem-status__metric">
+        <span class="glass-led glass-led--idle"></span>
+        <span class="glass-label glass-label--nowrap">Peers: @PeerCount</span>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int CreatureCount { get; set; }
+
+    [Parameter]
+    public int TickNumber { get; set; }
+
+    [Parameter]
+    public int PeerCount { get; set; }
+}

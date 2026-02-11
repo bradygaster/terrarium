@@ -1,0 +1,42 @@
+@* CreaturePanel — sidebar showing selected creature stats *@
+
+<div class="creature-panel glass-panel">
+    <div class="creature-panel__header glass-label">
+        Creature Details
+    </div>
+
+    @if (SelectedCreature is not null)
+    {
+        <div class="creature-panel__stats">
+            <div class="creature-panel__stat">
+                <span class="creature-panel__stat-label">Species</span>
+                <span class="creature-panel__stat-value">@SelectedCreature.Species</span>
+            </div>
+            <div class="creature-panel__stat">
+                <span class="creature-panel__stat-label">Energy</span>
+                <span class="creature-panel__stat-value">@SelectedCreature.Energy</span>
+            </div>
+            <div class="creature-panel__stat">
+                <span class="creature-panel__stat-label">Age</span>
+                <span class="creature-panel__stat-value">@SelectedCreature.Age</span>
+            </div>
+            <div class="creature-panel__stat">
+                <span class="creature-panel__stat-label">Position</span>
+                <span class="creature-panel__stat-value">(@SelectedCreature.X, @SelectedCreature.Y)</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="creature-panel__empty glass-label">
+            Click a creature to inspect
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public CreatureInfo? SelectedCreature { get; set; }
+
+    public sealed record CreatureInfo(string Species, int Energy, int Age, int X, int Y);
+}

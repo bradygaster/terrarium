@@ -1,3 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <ItemGroup>
+    <ProjectReference Include="..\Terrarium.ServiceDefaults\Terrarium.ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

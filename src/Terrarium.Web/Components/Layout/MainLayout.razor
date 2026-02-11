@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+
+<div class="terrarium-chrome terrarium-app">
+    <header class="glass-titlebar">
+        <div class="glass-titlebar__icon">
+            <img src="images/terrarium-icon.png" alt="Terrarium" width="24" height="24"
+                 onerror="this.style.display='none'" />
+        </div>
+        <div class="glass-titlebar__title">.NET Terrarium</div>
+    </header>
+
+    <div class="terrarium-chrome__body">
+        @Body
+    </div>
+
+    <footer class="glass-statusbar">
+        <div class="glass-statusbar__section">
+            <span class="glass-led glass-led--idle"></span>
+        </div>
+        <div class="glass-statusbar__section" style="flex:1;">
+            Ready
+        </div>
+    </footer>
+</div>
