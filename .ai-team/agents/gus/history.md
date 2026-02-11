@@ -76,3 +76,18 @@
 - Default rate limit: 60 requests/IP/minute — matches legacy server's typical throttle window
 - Messaging endpoints return `{ "message": "..." }` / `{ "version": "..." }` JSON — simple, predictable shape
 - No database calls yet — Dapper is referenced but not invoked until discovery/species endpoints are ported
+
+### 2025-07-16 — Sprint 2: Species & Reporting Endpoints (#26, #27)
+
+**What was done:**
+- Created `src/Terrarium.Server/SpeciesEndpoints.cs` — 5 endpoints porting the legacy `SpeciesService` ASMX
+- Created `src/Terrarium.Server/ReportingEndpoints.cs` — 4 endpoints porting `ReportingService` + `ChartService`/`ChartBuilder`
+- Wired both endpoint groups in `Program.cs`
+- PR #120 → `squadified`
+
+**Key decisions:**
+- Assembly file I/O omitted — legacy CAS-based `FileIOPermission` doesn't apply in .NET 10
+- Word filter (PoliCheck) omitted — depends on static file; can be added later
+- `ReportPopulation` returns `Success` on error (matching legacy behavior to prevent retry storms)
+- Chart endpoints consolidated under `/api/reporting/stats/` rather than separate `/api/charts/`
+- `SpeciesServiceStatus` and `ReportingReturnCode` enums ported as-is for client compatibility
