@@ -1,5 +1,6 @@
 using Terrarium.Configuration;
 using Terrarium.Web.Components;
+using Terrarium.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<TerrariumHubConnection>();
 
 var app = builder.Build();
 

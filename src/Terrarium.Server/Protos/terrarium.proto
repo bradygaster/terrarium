@@ -1,0 +1,37 @@
+// Future: Multi-server gRPC communication for geo-distributed ecosystems
+
+syntax = "proto3";
+
+option csharp_namespace = "Terrarium.Server.Protos";
+
+package terrarium;
+
+// Service definition for server-to-server communication.
+service TerrariumService {
+  // Returns the current world state for an ecosystem.
+  rpc GetWorldState (WorldStateRequest) returns (WorldStateResponse);
+
+  // Exchanges peer information between servers for geo-distributed routing.
+  rpc ExchangePeers (PeerInfo) returns (PeerInfo);
+}
+
+message WorldStateRequest {
+  string ecosystem_id = 1;
+  int64 since_tick = 2;
+}
+
+message WorldStateResponse {
+  string ecosystem_id = 1;
+  int64 tick_number = 2;
+  int32 world_width = 3;
+  int32 world_height = 4;
+  int32 organism_count = 5;
+  string timestamp = 6;
+}
+
+message PeerInfo {
+  string peer_id = 1;
+  string ecosystem_id = 2;
+  string server_address = 3;
+  string region = 4;
+}
