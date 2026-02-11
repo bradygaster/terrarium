@@ -715,7 +715,7 @@
   z-index: 1;
 }
 
-/* Image-based toolbar button (e.g. the 32×32 icon buttons) */
+/* Image-based toolbar button (e.g. the 32x32 icon buttons) */
 .glass-toolbar__button {
   position: relative;
   display: inline-flex;
