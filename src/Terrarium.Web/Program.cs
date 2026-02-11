@@ -1,8 +1,15 @@
+using Terrarium.Configuration;
 using Terrarium.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.Services.AddTerrariumConfiguration();
+
+builder.Services.AddHttpClient("terrarium-server", client =>
+{
+    client.BaseAddress = new Uri("https+http://server");
+});
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

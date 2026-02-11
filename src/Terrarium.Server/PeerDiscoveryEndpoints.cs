@@ -78,6 +78,8 @@ public static class PeerDiscoveryEndpoints
 {
     public static RouteGroupBuilder MapPeerDiscoveryEndpoints(this RouteGroupBuilder group)
     {
+        group.WithTags("PeerDiscovery");
+
         group.MapPost("/register", async (
             RegisterPeerRequest request,
             HttpContext httpContext,
@@ -132,7 +134,9 @@ public static class PeerDiscoveryEndpoints
                 logger.LogError(ex, "PeerDiscovery: RegisterPeer failed");
                 return Results.Ok(new RegisterPeerResponse { Result = RegisterPeerResult.Failure });
             }
-        });
+        })
+        .WithName("RegisterPeer")
+        .Produces<RegisterPeerResponse>();
 
         group.MapGet("/peers", async (
             string version,
@@ -164,13 +168,16 @@ public static class PeerDiscoveryEndpoints
                 logger.LogError(ex, "PeerDiscovery: GetNumPeers failed");
                 return Results.Ok(new PeerCountResponse { Count = 0 });
             }
-        });
+        })
+        .WithName("GetPeerCount")
+        .Produces<PeerCountResponse>();
 
         group.MapGet("/validate", (HttpContext httpContext) =>
         {
             var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             return Results.Ok(new { ipAddress });
-        });
+        })
+        .WithName("ValidatePeer");
 
         group.MapPost("/register-user", async (
             RegisterUserRequest request,
@@ -197,7 +204,8 @@ public static class PeerDiscoveryEndpoints
                 logger.LogError(ex, "PeerDiscovery: RegisterUser failed");
                 return Results.Ok(new { success = false });
             }
-        });
+        })
+        .WithName("RegisterUser");
 
         group.MapGet("/version-check", async (
             string version,
@@ -224,7 +232,9 @@ public static class PeerDiscoveryEndpoints
                 logger.LogError(ex, "PeerDiscovery: IsVersionDisabled failed");
                 return Results.Ok(new VersionCheckResponse { Disabled = true, Message = string.Empty });
             }
-        });
+        })
+        .WithName("CheckVersion")
+        .Produces<VersionCheckResponse>();
 
         return group;
     }

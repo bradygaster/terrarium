@@ -1,0 +1,12 @@
+name: terrarium
+metadata:
+  template: terrarium
+services:
+  server:
+    project: src/Terrarium.Server
+    host: containerapp
+    language: csharp
+  web:
+    project: src/Terrarium.Web
+    host: containerapp
+    language: csharp
