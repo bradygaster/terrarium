@@ -48,6 +48,18 @@ The modernization started with five AI agents working in parallel, each on their
 
 **CI from day one.** GitHub Actions building and testing on every push and PR. Ubuntu runner — this isn't a Windows app anymore.
 
+### Sprint 1: Server Bootstrap
+
+The server came online. Seven legacy ASMX web services — SOAP/XML endpoints accepting `DataSet` payloads over the wire — began their migration to ASP.NET Core Minimal APIs returning JSON. The messaging endpoints (`/welcome`, `/motd`, `/version`) were the first to port: `[WebMethod]` attributes replaced by lambda expressions, SOAP envelopes replaced by `Results.Ok()`.
+
+The original rate limiter — a creative hack built on ASP.NET's `HttpContext.Current.Cache` with eviction callbacks to decrement request counters — was ported to `IMemoryCache` with `ConcurrentDictionary` and proper middleware that returns HTTP 429 with `Retry-After` headers.
+
+SQL Server joined the Aspire AppHost as a container resource with persistent lifetime. `dotnet run` now starts the server *and* the database. Dapper and `Microsoft.Data.SqlClient` are wired for the ~17 stored procedures that have been battle-tested for two decades.
+
+The biggest story: Heisenberg evaluated the networking architecture and discovered that the original team had unknowingly built an actor system — static `Hashtable` state management, lease timeouts, manual serialization for crash recovery. His recommendation: Orleans + SignalR hybrid with four grain types (EcosystemGrain, PeerGrain, SpeciesRegistryGrain, PopulationGrain). Orleans formalizes what the legacy code was doing by hand. This decision reshapes Sprints 7-12.
+
+New team member: **Badger** (Diagram Designer) — converted all ASCII diagrams to Mermaid and established diagram standards repo-wide.
+
 ## The Architecture: Modern .NET, Cross-Platform, In Your Browser
 
 - **Blazor** for the UI

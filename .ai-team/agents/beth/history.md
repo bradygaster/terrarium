@@ -32,3 +32,11 @@ The blog is a first-class deliverable. Brady's directive: "We want to hand Hanse
 - Mike's `ArrayList` deferral decision is worth highlighting — pragmatic migration decisions (not changing interfaces until the implementing project is ported) are the kind of detail that makes a migration story credible.
 - Five branches landing in parallel is a great narrative hook. Lead with it.
 - The triple-R typo (`Terrraium2010.sln`) is comic relief gold. Use it every time.
+
+📌 Sprint 1 blog (2025-07-16): Wrote `docs/blog/journal/01-server-bootstrap.md` covering: ASMX→Minimal API migration with before/after code, throttle middleware port (ASP.NET Cache→IMemoryCache), SQL Server as Aspire resource, Orleans+SignalR hybrid recommendation (4 grain types), Badger joining as Diagram Designer, Mike's HttpClient service layer, Hank's proactive testing strategy. Updated `docs/blog/announcement.md` with Sprint 1 progress section.
+
+📌 Learnings (Sprint 1):
+- The throttle port is a great "honoring the original devs" story — they found a creative solution with eviction callbacks. Frame it as respect, not ridicule.
+- The Orleans discovery is the best narrative hook in Sprint 1. "You built actors before you knew what actors were" — that's the kind of reveal that makes migration stories compelling.
+- Brady's VB.NET directive is important for tone: never dismissive, always respectful. "We're C# now" is the framing. This applies to all legacy tech, not just VB.NET.
+- The before/after pattern (ASMX `[WebMethod]` → Minimal API lambda) works just as well for server code as it did for OrganismBase in Sprint 0.
