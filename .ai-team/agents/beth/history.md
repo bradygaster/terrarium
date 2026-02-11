@@ -22,7 +22,16 @@ The blog is a first-class deliverable. Brady's directive: "We want to hand Hanse
 📌 Team update (2026-02-11): Orleans + SignalR hybrid recommended — 4 grain types for networking layer — decided by Heisenberg
 📌 Team update (2026-02-11): CI pipeline created (.github/workflows/build.yml) targeting src/Terrarium.sln — decided by Hank
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
-📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
+📌 Team update (2026-02-11): Services layer (HttpClient-based, interface-first, no ServiceDefaults) — decided by Mike
+📌 Team update (2026-02-11): SignalR Hub contract (8 methods, 7 callbacks, rate limiting, error struct) — decided by Mike
+📌 Team update (2026-02-11): Terrarium.Web Blazor Interactive Server (PR #118, SignalR-ready) — decided by Skyler
+📌 Team update (2026-02-11): Glass CSS expanded (60+ tokens, 76 assets cataloged) — decided by Jesse
+📌 Team update (2026-02-11): Server.Tests (17 xUnit integration tests) — decided by Hank
+📌 Team update (2026-02-11): SDK Samples (standalone structure, 3 creatures) — decided by Hank
+📌 Team update (2026-02-11): Species & Reporting endpoints (assembly/filter deferred, /api/reporting/stats/) — decided by Gus
+📌 Team update (2026-02-11): Organism Isolation architecture (3-layer: validator, sandbox, host+scheduler) — decided by Heisenberg
+📌 Team update (2026-02-11): Hub-and-spoke SignalR architecture (rate limits, heartbeat/lease, reconnect=rejoin, 512KB msg) — decided by Heisenberg
+📌 Team update (2026-02-11): Road ahead blog post (sprint-prep-the-road-ahead.md, 48 issues, 89-minute wall-clock parallelism) — decided by Beth (self)
 
 📌 Sprint 0 blog (2026-02-11): Wrote `docs/blog/journal/00-sprint-0-complete.md` covering the full foundation wave — 5 agents, 5 PRs, Mike's 91-file OrganismBase port, Jesse's Glass CSS tokens, Heisenberg's solution structure, Saul's Aspire AppHost, Hank's CI pipeline. Updated `docs/blog/announcement.md` with real Sprint 0 details in "The Challenge" and "The AI Story" sections.
 
@@ -58,3 +67,12 @@ The blog is a first-class deliverable. Brady's directive: "We want to hand Hanse
 - The sprite pipeline archaeology (BMP naming conventions, size variants, DirectDraw surfaces, animation frame grids) is rich material. The rendering system was sophisticated for 2003. Frame it as engineering respect.
 - The creature developer experience (attribute-based point allocation, event-driven lifecycle) is the Terrarium story. The SDK samples are the onboarding ramp — without them, the SDK is just documentation. Always lead with "what does the developer actually write?"
 - Brady's sprite directive ("people who know .NET Terrarium should recognize it immediately") is the visual north star. Recognition is the metric. Use it in every visual story.
+
+📌 Sprint prep blog (2026-02-11): Wrote `docs/blog/journal/sprint-prep-the-road-ahead.md` — the "here's what's ahead" post capturing Sprints 7–13, 48 open issues, ~230 agent-minutes / ~89 wall-clock minutes, the eight-agent team, and the narrative hook: "an AI team is about to modernize a 25-year-old .NET app in under 2 hours of wall-clock time." Structured as: scope overview, sprint-by-sprint narrative (7 sprints: networking, renderer, shell, SDK, multi-peer, polish, launch), summary table of per-agent workload, and the emotional pitch ("this is the blog Hanselman gets").
+
+📌 Learnings (Sprint prep):
+- The "48 issues / 89 minutes" frame is visceral for engineers. Lead with the parallelism numbers, not the issue count. People understand wall-clock time better than agent-minutes.
+- Sprint-by-sprint narrative > table. Each sprint needs a one-sentence "story" (e.g., "The nervous system. The internet pipes.") and 2–3 lines of human context before listing the issues.
+- The per-agent workload table is critical context — it shows the team composition and makes it clear why parallelism matters. Skyler's 13 issues take 55 minutes sequentially; the whole team finishes in 89 minutes wall-clock.
+- The emotional arc: (1) Foundation done, (2) here's what's ahead, (3) it's audacious, (4) we're about to do it, (5) watch it unfold. The post is a call-to-action to be present for the migration.
+- Terrarium's 25-year history is the throughline. Open with recognition of what the project means to .NET community. Close with urgency ("Buckle up."). The blog IS about community stewardship, not just technical delivery.

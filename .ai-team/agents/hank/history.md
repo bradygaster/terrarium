@@ -47,8 +47,17 @@
 📌 Team update (2026-02-11): Diagram standards — Mermaid only, no ASCII art. All diagrams must use Mermaid — decided by Badger, bradygaster
 📌 Team update (2026-02-11): VB.NET respectful framing — never refer to VB.NET negatively, just "we're C# now" — decided by bradygaster
 📌 Team update (2026-02-11): Orleans + SignalR hybrid — TestCluster-based grain tests assigned to Hank in Sprint 7 — decided by Heisenberg
-📌 Team update (2026-02-11): Solution uses classic .sln (not .slnx), CS1591 suppressed during port — decided by Heisenberg
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
+📌 Team update (2026-02-11): Services layer interface-first (no ServiceDefaults), HttpClient-based, System.Text.Json — decided by Mike
+📌 Team update (2026-02-11): SignalR Hub contract locked (8 hub methods, 7 client callbacks, ReceiveError for error handling) — decided by Mike
+📌 Team update (2026-02-11): Terrarium.Web Blazor Interactive Server created (PR #118), components SignalR-ready, Glass CSS integrated — decided by Skyler
+📌 Team update (2026-02-11): Glass CSS expanded to 60+ tokens, all 76 original assets cataloged and available in wwwroot/assets/ — decided by Jesse
+📌 Team update (2026-02-11): Server.Tests xUnit integration tests (17 tests, 4 passing, 13 pending server bootstrap) — decided by Hank
+📌 Team update (2026-02-11): SDK Samples structure (standalone .csproj per sample in src/Terrarium.Samples/), SimpleHerbivore/SimpleCarnivore/SimplePlant ported — decided by Hank
+📌 Team update (2026-02-11): Species & Reporting endpoints (assembly storage deferred, word filter deferred, /api/reporting/stats/ consolidation) — decided by Gus
+📌 Team update (2026-02-11): Organism Isolation architecture (3 layers: static validator, AssemblyLoadContext sandbox, execution safety host) — decided by Heisenberg
+📌 Team update (2026-02-11): Hub-and-spoke SignalR architecture finalized (rate limiting, heartbeat/lease, reconnect=rejoin, error struct) — decided by Heisenberg
+📌 Team update (2026-02-11): Road ahead blog post written (sprint-prep-the-road-ahead.md): 48 issues, 7 sprints, 89 minutes wall-clock — decided by Beth
 
 ### 2025-07-15 — CI Pipeline Created (Issue #5)
 

@@ -89,3 +89,39 @@
 📌 Team update (2026-02-11): Solution uses classic .sln (not .slnx), CS1591 suppressed during port — decided by Heisenberg
 📌 Team update (2026-02-11): Aspire packages pinned — Aspire 13.1.0, ServiceDiscovery/Resilience 10.3.0, OpenTelemetry 1.15.0 — decided by Saul
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
+📌 Team update (2026-02-11): Services layer (HttpClient-based, interface-first, no ServiceDefaults) — decided by Mike
+📌 Team update (2026-02-11): SignalR Hub contract (8 methods, 7 callbacks, ReceiveError struct, rate limiting) — decided by Mike
+📌 Team update (2026-02-11): Terrarium.Web Blazor Interactive Server (PR #118, SignalR-ready, Glass integrated) — decided by Skyler
+📌 Team update (2026-02-11): Glass CSS expanded (60+ tokens, 12 new components, 76 assets cataloged) — decided by Jesse
+📌 Team update (2026-02-11): Server.Tests (17 xUnit tests, 4 passing) — decided by Hank
+📌 Team update (2026-02-11): SDK Samples (standalone structure, 3 creatures ported) — decided by Hank
+📌 Team update (2026-02-11): Species & Reporting endpoints (assembly/filter deferred) — decided by Gus
+📌 Team update (2026-02-11): Organism Isolation architecture (3-layer: static validator, AssemblyLoadContext sandbox, execution host) — decided by Heisenberg
+📌 Team update (2026-02-11): Hub-and-spoke SignalR architecture finalized (rate limits, heartbeat/lease, reconnect=rejoin) — decided by Heisenberg
+📌 Team update (2026-02-11): Road ahead blog post (sprint-prep-the-road-ahead.md, 48 issues, 89-minute parallelism) — decided by Beth
+
+### 2025-07-16 — SignalR Hub-and-Spoke Architecture (Sprint 7)
+
+- **Architecture doc created:** `docs/architecture/signalr-hub-spoke.md` — comprehensive design for SignalR-based real-time communication replacing legacy TCP P2P.
+- **ITerrariumHub expanded:** Added `Heartbeat`, `RequestPeerList`, `ReportPopulation` methods. Now 8 hub methods total.
+- **ITerrariumClient expanded:** Added `ReceivePeerList`, `ReceivePopulationReport`, `ReceiveError` callbacks. Now 7 client callbacks total.
+- **New message types created:**
+  - `Messages/PeerListResponse.cs` — active peer enumeration response
+  - `Messages/PopulationReport.cs` + `SpeciesPopulation` — per-species population stats
+  - `Messages/HubError.cs` — structured error delivery (replaces throwing from hub methods)
+- **IEcosystemNotifier interface created:** Abstraction for grain-to-hub push notifications. Keeps `Terrarium.Orleans` decoupled from `Microsoft.AspNetCore.SignalR`. Implementation lives in `Terrarium.Server`.
+- **TerrariumHub updated:** Stub implementations for all new interface methods. All TODOs reference Sprint 7 grain delegation.
+- **Key architectural decisions:**
+  - Hub never throws — all errors go through `ReceiveError` callback with structured `HubError` (code, transient flag, retry-after).
+  - Rate limiting per connection: teleport 10/min, population 2/min, world state 5/min, peer list 2/min, heartbeat 3/min.
+  - Heartbeat interval: 30 seconds client-side, 90-second lease expiry server-side (3× interval).
+  - SignalR `MaximumReceiveMessageSize` set to 512 KB to accommodate assembly payloads in `CreatureTeleport`.
+  - Reconnection requires re-join + re-announce (new connection ID on reconnect).
+- **Key file paths:**
+  - `docs/architecture/signalr-hub-spoke.md` — full architecture doc
+  - `src/Terrarium.Net/ITerrariumHub.cs` — hub method contract (8 methods)
+  - `src/Terrarium.Net/ITerrariumClient.cs` — client callback contract (7 callbacks)
+  - `src/Terrarium.Net/IEcosystemNotifier.cs` — grain-to-hub notification abstraction
+  - `src/Terrarium.Net/Messages/HubError.cs` — structured error type
+  - `src/Terrarium.Net/Messages/PopulationReport.cs` — population stats message
+  - `src/Terrarium.Net/Messages/PeerListResponse.cs` — peer list response message

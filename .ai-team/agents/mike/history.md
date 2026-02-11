@@ -57,8 +57,18 @@
 📌 Team update (2026-02-11): CI pipeline created (.github/workflows/build.yml) targeting src/Terrarium.sln — decided by Hank
 📌 Team update (2026-02-11): Aspire packages pinned — Aspire 13.1.0, ServiceDiscovery/Resilience 10.3.0, OpenTelemetry 1.15.0 — decided by Saul
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
-📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
-📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
+📌 Team update (2026-02-11): SignalR Hub contract layer locked for Sprint 7 (ITerrariumHub, ITerrariumClient, CreatureTeleport, PeerAnnounce, EcosystemTick, error handling via ReceiveError callback) — decided by Mike
+📌 Team update (2026-02-11): Services layer is pure class lib (no ServiceDefaults), interface-first design, consumers configure Aspire integration at DI level — decided by Mike
+📌 Team update (2026-02-11): Keep ArrayList.Scan() for now (deferred to Game project port); will change to List<OrganismState> when Game is ported — decided by Mike
+📌 Team update (2026-02-11): Terrarium.Web Blazor Interactive Server created (PR #118), component library built on Glass CSS, Canvas via ElementReference, ready for Sprint 4 engine integration — decided by Skyler
+📌 Team update (2026-02-11): Glass CSS expanded to 60+ new tokens, all 76 original image assets cataloged and extracted to wwwroot/assets/, manifest.json created — decided by Jesse
+📌 Team update (2026-02-11): Organism Isolation architecture (3 layers: CreatureValidator static check, OrganismSandbox AssemblyLoadContext, OrganismHost timeout+safety) replaces AppDomain sandbox — decided by Heisenberg
+📌 Team update (2026-02-11): Hub-and-spoke SignalR architecture finalized: 8 hub methods, 7 client callbacks, error struct, rate limiting per connection, heartbeat/lease model, reconnect=rejoin, 512KB message size limit — decided by Heisenberg
+📌 Team update (2026-02-11): Server.Tests xUnit project created (PR #13), 17 tests (ServerHealth, MessagingEndpoints, Throttle), 4 passing now, 13 awaiting Gus bootstrap — decided by Hank
+📌 Team update (2026-02-11): SDK samples structure finalized (src/Terrarium.Samples/{Name}/ standalone projects), SimpleHerbivore/SimpleCarnivore/SimplePlant ported, README documents creature authoring — decided by Hank
+📌 Team update (2026-02-11): Species & Reporting endpoints: assembly storage deferred, word filter deferred, chart endpoints under /api/reporting/stats/, ReportPopulation returns Success on server error — decided by Gus
+📌 Team update (2026-02-11): Terrarium.Server created (PR #112), Minimal APIs, ServerSettings via IOptions, messaging endpoints, throttle via IMemoryCache — decided by Gus
+📌 Team update (2026-02-11): Road ahead blog post written (sprint-prep-the-road-ahead.md): 48 issues, 7 sprints, 89 minutes wall-clock parallelism, per-agent workload, emotional frame — decided by Beth
 
 ### 2025-07-16 — Terrarium.Services Client-Side Service Layer (#14)
 

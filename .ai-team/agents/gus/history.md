@@ -56,8 +56,12 @@
 📌 Team update (2026-02-11): CI pipeline created (.github/workflows/build.yml) targeting src/Terrarium.sln — decided by Hank
 📌 Team update (2026-02-11): Aspire packages pinned — Aspire 13.1.0, ServiceDiscovery/Resilience 10.3.0, OpenTelemetry 1.15.0 — decided by Saul
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
-📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
-📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
+📌 Team update (2026-02-11): Services layer interface-first design (no ServiceDefaults dependency), consumers configure Aspire at DI level — decided by Mike
+📌 Team update (2026-02-11): SignalR Hub contract locked: ITerrariumHub (8 methods), ITerrariumClient (7 callbacks), error struct via ReceiveError callback — decided by Mike
+📌 Team update (2026-02-11): Terrarium.Web Blazor Interactive Server created (PR #118), SignalR-ready components, Glass CSS integrated — decided by Skyler
+📌 Team update (2026-02-11): Glass CSS expanded to 60+ tokens, all 76 original assets cataloged in wwwroot/assets/ — decided by Jesse
+📌 Team update (2026-02-11): Server.Tests xUnit integration tests created (17 tests, 4 passing, 13 pending server bootstrap) — decided by Hank
+📌 Team update (2026-02-11): Species & Reporting endpoints: assembly storage deferred, word filter deferred, /api/reporting/stats/ consolidation — decided by Gus
 
 ### 2025-07-16 — Sprint 1: Terrarium.Server Bootstrap (#9, #10, #11)
 

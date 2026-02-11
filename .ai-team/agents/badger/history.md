@@ -43,3 +43,13 @@
 
 📌 Team update (2026-02-11): VB.NET respectful framing — never refer to VB.NET negatively, just "we're C# now" — decided by bradygaster
 📌 Team update (2026-02-11): Orleans + SignalR hybrid recommended — 4 grain types, Sprint 7 heavier, Sprint 11 lighter — decided by Heisenberg
+📌 Team update (2026-02-11): Services layer (HttpClient-based, interface-first) — decided by Mike
+📌 Team update (2026-02-11): SignalR Hub contract (8 methods, 7 callbacks) — decided by Mike
+📌 Team update (2026-02-11): Terrarium.Web Blazor Interactive Server (PR #118) — decided by Skyler
+📌 Team update (2026-02-11): Glass CSS expanded (76 assets cataloged) — decided by Jesse
+📌 Team update (2026-02-11): Server.Tests (17 xUnit tests) — decided by Hank
+📌 Team update (2026-02-11): SDK Samples (standalone structure) — decided by Hank
+📌 Team update (2026-02-11): Species & Reporting endpoints — decided by Gus
+📌 Team update (2026-02-11): Organism Isolation architecture (3-layer sandbox) — decided by Heisenberg
+📌 Team update (2026-02-11): Hub-and-spoke SignalR architecture (rate limits, heartbeat/lease, reconnect=rejoin) — decided by Heisenberg
+📌 Team update (2026-02-11): Road ahead blog post (48 issues, 89-minute parallelism) — decided by Beth

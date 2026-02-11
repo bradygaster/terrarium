@@ -39,8 +39,16 @@
 📌 Team update (2026-02-11): VB.NET respectful framing — never refer to VB.NET negatively, just "we're C# now" — decided by bradygaster
 📌 Team update (2026-02-11): Orleans + SignalR hybrid recommended — 4 grain types for networking layer — decided by Heisenberg
 📌 Team update (2026-02-11): CI pipeline created (.github/workflows/build.yml) targeting src/Terrarium.sln — decided by Hank
-📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
-📌 Team update (2026-02-10): Keep ArrayList on Scan() until Game project ported — decided by Mike
+📌 Team update (2026-02-11): Services layer HttpClient-based, System.Text.Json, interface-first — decided by Mike
+📌 Team update (2026-02-11): SignalR Hub contract locked (8 methods, 7 callbacks, error handling via ReceiveError callback) — decided by Mike
+📌 Team update (2026-02-11): Terrarium.Web Blazor Interactive Server created (PR #118), SignalR-ready, Glass CSS integrated — decided by Skyler
+📌 Team update (2026-02-11): Glass CSS expanded to 60+ tokens (~12 new component classes), all 76 original assets cataloged/extracted to wwwroot/assets/ — decided by Jesse
+📌 Team update (2026-02-11): Server.Tests xUnit project (17 tests, 4 passing now) — decided by Hank
+📌 Team update (2026-02-11): SDK Samples standalone structure (SimpleHerbivore/SimpleCarnivore/SimplePlant ported) — decided by Hank
+📌 Team update (2026-02-11): Species & Reporting endpoints (assembly storage deferred, word filter deferred) — decided by Gus
+📌 Team update (2026-02-11): Organism Isolation architecture (AssemblyLoadContext-based 3-layer sandbox) — decided by Heisenberg
+📌 Team update (2026-02-11): Hub-and-spoke SignalR architecture finalized (rate limiting, heartbeat/lease, reconnect=rejoin) — decided by Heisenberg
+📌 Team update (2026-02-11): Road ahead blog post (sprint-prep-the-road-ahead.md): 48 issues, 7 sprints, 89 minutes wall-clock — decided by Beth
 
 ### 2025-07-16 — Sprint 3: Glass Theming Expansion + Asset Catalog (PR #123)
 
