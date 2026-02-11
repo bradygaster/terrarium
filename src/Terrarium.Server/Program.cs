@@ -19,6 +19,15 @@ app.MapGet("/", () => "Terrarium Server");
 app.MapGroup("/api/messaging")
     .MapMessagingEndpoints();
 
+app.MapGroup("/api/discovery")
+    .MapPeerDiscoveryEndpoints();
+
+app.MapGroup("/api/watson")
+    .MapWatsonEndpoints();
+
+app.MapGroup("/api/bugs")
+    .MapBugEndpoints();
+
 app.Run();
 
 // Make Program visible to integration tests using WebApplicationFactory<Program>
