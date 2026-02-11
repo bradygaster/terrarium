@@ -89,3 +89,16 @@
 📌 Team update (2026-02-11): Solution uses classic .sln (not .slnx), CS1591 suppressed during port — decided by Heisenberg
 📌 Team update (2026-02-11): Aspire packages pinned — Aspire 13.1.0, ServiceDiscovery/Resilience 10.3.0, OpenTelemetry 1.15.0 — decided by Saul
 📌 Team update (2026-02-11): CSS token naming: --glass-{category}-{element}-{modifier}, BEM for components — decided by Jesse
+
+### 2025-07-16 — Terrarium.Configuration Ported (#15)
+
+- **Ported:** `Client/Configuration/` → `src/Terrarium.Configuration/` as a clean .NET 10 class library.
+- **GameSettings** replaces static `GameConfig`. Uses `IOptions<GameSettings>` pattern with `BindConfiguration("Game")` and DataAnnotations validation (`[Range(50,200)]` on CpuThrottle). All 20+ legacy config properties preserved with matching defaults.
+- **ErrorLog** modernized from static class with `Mutex`/`DataSet`/WinForms to DI-injected service using `ILogger<ErrorLog>`. No more `System.Data.DataSet`, no `Mutex`, no `System.Windows.Forms`.
+- **TimeMonitor** replaced `QueryPerformanceCounter`/`QueryPerformanceFrequency` P/Invokes with `System.Diagnostics.Stopwatch`.
+- **Profiler/ProfilerNode** modernized: `Hashtable` → `ConcurrentDictionary`, `#if TRACE` removed (always available), public properties exposed on `ProfilerNode`.
+- **CountrySettings/StateSettings** ported as static classes with `Array.Exists` validation.
+- **Skipped:** `TerrariumTraceListener` (WinForms `DefaultTraceListener` subclass), `ReportBug` (WinForms dialog), `CachedBooleanConfig` (replaced by `IOptions<T>` pattern).
+- **DI registration:** `services.AddTerrariumConfiguration()` wires up `IOptions<GameSettings>` + `ErrorLog` singleton.
+- **Packages:** `Microsoft.Extensions.Options.DataAnnotations`, `Microsoft.Extensions.Options.ConfigurationExtensions`, `Microsoft.Extensions.Logging.Abstractions`, `Microsoft.Extensions.Configuration.Binder` (all 10.0.0).
+- **Build:** Clean build, 0 errors, 0 warnings across entire solution.
