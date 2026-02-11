@@ -6,10 +6,14 @@ namespace Terrarium.Services.Clients;
 
 public sealed class PopulationServiceClient(HttpClient httpClient) : IPopulationService
 {
-    public async Task<int> ReportPopulationAsync(PopulationData data, CancellationToken cancellationToken = default)
+    public async Task<ReportPopulationResult> ReportPopulationAsync(Guid peerGuid, int currentTick,
+        IReadOnlyList<PopulationHistoryRow> history,
+        CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync("population/report", data, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("reporting/population",
+            new { guid = peerGuid, currentTick, history }, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<int>(cancellationToken);
+        return await response.Content.ReadFromJsonAsync<ReportPopulationResult>(cancellationToken)
+            ?? new ReportPopulationResult { ReturnCode = ReportingReturnCode.ServerDown };
     }
 }

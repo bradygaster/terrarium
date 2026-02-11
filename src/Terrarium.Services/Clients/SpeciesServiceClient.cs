@@ -10,7 +10,7 @@ public sealed class SpeciesServiceClient(HttpClient httpClient) : ISpeciesServic
         string email, string assemblyFullName, byte[] assemblyCode,
         CancellationToken cancellationToken = default)
     {
-        var payload = new
+        var response = await httpClient.PostAsJsonAsync("species/register", new
         {
             name,
             version,
@@ -18,12 +18,11 @@ public sealed class SpeciesServiceClient(HttpClient httpClient) : ISpeciesServic
             author,
             email,
             assemblyFullName,
-            assemblyCode = Convert.ToBase64String(assemblyCode)
-        };
-
-        var response = await httpClient.PostAsJsonAsync("species", payload, cancellationToken);
+            assemblyCode
+        }, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<SpeciesServiceStatus>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<RegisterSpeciesResponse>(cancellationToken);
+        return result?.Status ?? SpeciesServiceStatus.ServerDown;
     }
 
     public async Task<IReadOnlyList<SpeciesInfo>> GetExtinctSpeciesAsync(string version, string filter,
@@ -38,7 +37,7 @@ public sealed class SpeciesServiceClient(HttpClient httpClient) : ISpeciesServic
         CancellationToken cancellationToken = default)
     {
         var result = await httpClient.GetFromJsonAsync<List<SpeciesInfo>>(
-            $"species?version={Uri.EscapeDataString(version)}&filter={Uri.EscapeDataString(filter)}", cancellationToken);
+            $"species/list?version={Uri.EscapeDataString(version)}&filter={Uri.EscapeDataString(filter)}", cancellationToken);
         return result ?? [];
     }
 
@@ -54,16 +53,31 @@ public sealed class SpeciesServiceClient(HttpClient httpClient) : ISpeciesServic
     public async Task<byte[]> ReintroduceSpeciesAsync(string name, string version, Guid peerGuid,
         CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync(
-            $"species/{Uri.EscapeDataString(name)}/reintroduce",
-            new { version, peerGuid }, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("species/reintroduce", new
+        {
+            name,
+            version,
+            peerGuid
+        }, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<ReintroduceResponse>(cancellationToken);
+        return result?.AssemblyCode ?? [];
     }
 
     public async Task<IReadOnlyList<string>> GetBlacklistedSpeciesAsync(CancellationToken cancellationToken = default)
     {
         var result = await httpClient.GetFromJsonAsync<List<string>>("species/blacklisted", cancellationToken);
         return result ?? [];
+    }
+
+    private sealed class RegisterSpeciesResponse
+    {
+        public SpeciesServiceStatus Status { get; init; }
+    }
+
+    private sealed class ReintroduceResponse
+    {
+        public bool Success { get; init; }
+        public byte[]? AssemblyCode { get; init; }
     }
 }
