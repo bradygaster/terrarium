@@ -8,10 +8,9 @@ var sql = builder.AddSqlServer("sql", password: sqlPassword)
 var terrariumDb = sql.AddDatabase("Terrarium");
 
 // Terrarium Server — the game's API backend (peer discovery, species registration, etc.)
-// Uncomment when Terrarium.Server project is created:
-// var server = builder.AddProject<Projects.Terrarium_Server>("server")
-//     .WithReference(terrariumDb)
-//     .WaitFor(terrariumDb);
+var server = builder.AddProject<Projects.Terrarium_Server>("server")
+    .WithReference(terrariumDb)
+    .WaitFor(terrariumDb);
 
 // Terrarium Web — Blazor frontend for the creature ecosystem
 // Uncomment when Terrarium.Web project is created:
