@@ -136,3 +136,23 @@
 - JSON response expectations derived from Gus's MessagingEndpoints.cs pattern (seen on squad/9-server-bootstrap)
 - Legacy Throttle.cs (60 req/min, per-IP, Hashtable+Cache) informed the rate-limit test expectations
 - Build command: `dotnet test src/Terrarium.Server.Tests/`
+
+### 2025-07-16 — SDK Samples Ported to .NET 10 (#28)
+
+**What was done:**
+- Ported legacy `Samples/` creature implementations from .NET Framework 2.0 to .NET 10
+- Created `src/Terrarium.Samples/` with 3 standalone sample projects referencing `Terrarium.OrganismBase`
+- All 3 samples compile as part of `dotnet build src/Terrarium.sln` — 0 warnings, 0 errors
+- PR #122 → `squad/28-sdk-samples` → `squadified`
+
+**Samples Created:**
+- **SimpleHerbivore** — Beetle that scans for plants, moves toward them, eats, reproduces. Demonstrates: `Scan()`, `LookFor()`, `BeginMoving()`, `MovementVector`, `BeginEating()`, `WithinEatingRange()`, `BeginReproduction()`, `CanReproduce`, `WriteTrace()`, random wandering. Point allocation: Camouflage 50, Eyesight 50.
+- **SimpleCarnivore** — Scorpion that hunts other animals, attacks, kills, eats dead prey. Demonstrates: `BeginAttacking()`, `WithinAttackingRange()`, `IsMySpecies()`, `Species.MaximumSpeed` pursuit. Point allocation: AttackDamage 52, MaximumSpeed 28, Eyesight 20.
+- **SimplePlant** — Simplest possible organism. Just attributes + serialization stubs. Plant base class handles reproduction automatically.
+
+**Key Porting Changes:**
+- Modern C# delegate syntax (`Load += LoadEvent` instead of `new LoadEventHandler(...)`)
+- Nullable annotations (`PlantState?`, `AnimalState?`)
+- Pattern matching (`organismState is PlantState plant`)
+- Updated namespaces to `Terrarium.Samples.*`
+- SDK-style `.csproj` with `ProjectReference` to OrganismBase

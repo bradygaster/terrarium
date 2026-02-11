@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Terrarium.Samples.SimplePlant</RootNamespace>
+    <AssemblyName>SimplePlant</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Terrarium.OrganismBase\Terrarium.OrganismBase.csproj" />
+  </ItemGroup>
+
+</Project>
