@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrarium.OrganismBase", "Terrarium.OrganismBase\Terrarium.OrganismBase.csproj", "{385034CC-73FB-48B0-B59C-CD1F444BD9FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrarium.Game", "Terrarium.Game\Terrarium.Game.csproj", "{7216E233-23BC-432D-8D19-D77B24E19BA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrarium.Server", "Terrarium.Server\Terrarium.Server.csproj", "{3102753A-067A-4646-B403-024ACC5F2E54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrarium.Web", "Terrarium.Web\Terrarium.Web.csproj", "{16DE8411-0E60-4D04-BA11-BCAADC502BBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrarium.AppHost", "Terrarium.AppHost\Terrarium.AppHost.csproj", "{867A916B-2864-4F0D-95BB-001DE093307E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrarium.ServiceDefaults", "Terrarium.ServiceDefaults\Terrarium.ServiceDefaults.csproj", "{D654137F-76C3-40AC-B83C-F9B054376533}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{385034CC-73FB-48B0-B59C-CD1F444BD9FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{385034CC-73FB-48B0-B59C-CD1F444BD9FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{385034CC-73FB-48B0-B59C-CD1F444BD9FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{385034CC-73FB-48B0-B59C-CD1F444BD9FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7216E233-23BC-432D-8D19-D77B24E19BA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7216E233-23BC-432D-8D19-D77B24E19BA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7216E233-23BC-432D-8D19-D77B24E19BA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7216E233-23BC-432D-8D19-D77B24E19BA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3102753A-067A-4646-B403-024ACC5F2E54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3102753A-067A-4646-B403-024ACC5F2E54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3102753A-067A-4646-B403-024ACC5F2E54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3102753A-067A-4646-B403-024ACC5F2E54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16DE8411-0E60-4D04-BA11-BCAADC502BBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16DE8411-0E60-4D04-BA11-BCAADC502BBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16DE8411-0E60-4D04-BA11-BCAADC502BBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16DE8411-0E60-4D04-BA11-BCAADC502BBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{867A916B-2864-4F0D-95BB-001DE093307E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{867A916B-2864-4F0D-95BB-001DE093307E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{867A916B-2864-4F0D-95BB-001DE093307E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{867A916B-2864-4F0D-95BB-001DE093307E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D654137F-76C3-40AC-B83C-F9B054376533}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D654137F-76C3-40AC-B83C-F9B054376533}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D654137F-76C3-40AC-B83C-F9B054376533}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D654137F-76C3-40AC-B83C-F9B054376533}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

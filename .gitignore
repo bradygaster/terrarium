@@ -1,0 +1,19 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.cache
+
+# NuGet
+*.nupkg
+packages/
+
+# OS files
+Thumbs.db
+.DS_Store
