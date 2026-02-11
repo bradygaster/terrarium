@@ -59,3 +59,19 @@ Similarly for the server: `Server/Website/` is the functional server; `ServerMVC
 **By:** bradygaster (via Copilot)
 **What:** Every decision, change, and highlight must be blogged. We are writing THE blog post that announces someone finally upgraded .NET Terrarium to use the latest .NET and AI technology. Think Hanselman-ready — hand him the blog and the end-state of Terrarium updated to .NET 10, and he publishes it. This is a 30-year .NET community story. Document everything.
 **Why:** User request — this is a historically significant project for the .NET community. People who've been doing .NET for 30 years will care about this. The blog IS a deliverable, not an afterthought. Beth (Technical Writer / Blogger) hired to own this. Blog issues tracked as #93-#100. Blog content lives in `docs/blog/`.
+
+### 2026-02-10: Brady's modernization decisions
+**By:** bradygaster (via Copilot)
+**What:**
+1. SQL hosting: Docker for dev, Azure SQL for prod — approved
+2. Deployment target: Azure Container Apps — confirmed
+3. C# only — drop VB.NET SDK support entirely
+4. Delete legacy code — no need to archive Client/, Server/, ClientWPF/, ServerMVC/ after migration
+5. Use ALL original imagery — people who know .NET Terrarium should recognize it immediately
+6. Cross-platform — change frontend to a web app instead of WPF desktop. Use .NET Aspire for orchestration. Staff up with new agents as needed. Use GitHub Issues and PRs to track all work items. Use labels for squad members and progress. Keep issues updated with status for GitHub project board tracking.
+**Why:** Product owner decisions — these override Heisenberg's recommendations where they differ (especially #4 delete vs archive, #6 web app vs WPF)
+
+### 2026-02-11: Beth's inspiration — Beth Massi
+**By:** bradygaster (via Copilot)
+**What:** Beth is inspired by Beth Massi. She was the voice of .NET's marketing program for years, then moved into the product team. She's done it all. Beth is the fearless voice of the .NET developer toiling away. Beth is our voice.
+**Why:** User request — establishes Beth's identity and tone. She writes from the trenches, not the press box. Advocacy-to-engineering energy. Community-first.
