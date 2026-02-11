@@ -1,0 +1,474 @@
+/*
+ * ==========================================================================
+ * Terrarium Glass Theme — Component Styles
+ * ==========================================================================
+ *
+ * Base component classes using tokens from glass-theme.css.
+ * Each class maps to a legacy WinForms/WPF Glass control:
+ *
+ *   .glass-panel     ← GlassPanel.cs     (gradient panel with glass overlay)
+ *   .glass-button    ← GlassButton.cs    (pill-shaped gradient button)
+ *   .glass-titlebar  ← GlassTitleBar.cs  (window title bar)
+ *   .glass-label     ← GlassLabel.cs     (bold white text with shadow)
+ *   .glass-led       ← TerrariumLed.cs   (status indicator light)
+ *   .glass-statusbar ← StatusBar.cs      (bottom status strip)
+ *   .terrarium-chrome← TerrariumForm.cs  (outer game window frame)
+ *
+ * Standalone — no Blazor, no JS framework. Pure CSS.
+ * ==========================================================================
+ */
+
+/* ==========================================================================
+ * .glass-panel
+ *
+ * The signature Terrarium panel: a top-to-bottom gradient (blue→dark blue
+ * by default) with a semi-transparent white overlay on the top half that
+ * creates the "glass" sheen. Borders on all sides.
+ *
+ * Source: GlassPanel.cs + GlassHelper.FillRectangle
+ * ========================================================================== */
+
+.glass-panel {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-top) 0%,
+    var(--glass-gradient-panel-bottom) 100%
+  );
+  border: var(--glass-border);
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size);
+  font-weight: var(--glass-font-weight);
+  overflow: hidden;
+}
+
+/* Glass overlay — the top-half sheen that made Terrarium Terrarium */
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Sunk variant — inverted gradient direction */
+.glass-panel--sunk {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-bottom) 0%,
+    var(--glass-gradient-panel-top) 100%
+  );
+}
+
+.glass-panel--sunk::before {
+  inset: 50% 0 0 0;
+}
+
+/* Alt (neutral gray) variant — used in non-styled mode */
+.glass-panel--alt {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-alt-top) 0%,
+    var(--glass-gradient-panel-alt-bottom) 100%
+  );
+}
+
+/* No-glass variant — gradient only, no overlay sheen */
+.glass-panel--no-glass::before {
+  display: none;
+}
+
+/* Border variants matching GlassBorders enum */
+.glass-panel--border-none  { border: none; }
+.glass-panel--border-lr    { border-top: none; border-bottom: none; }
+.glass-panel--border-tb    { border-left: none; border-right: none; }
+
+/* ==========================================================================
+ * .glass-button
+ *
+ * Pill-shaped button with gradient fill, rounded ends, and a sunken
+ * backdrop. Multiple states: normal, hover (green!), pressed, disabled,
+ * highlight. The green hover glow is THE Terrarium interaction cue.
+ *
+ * Source: GlassButton.cs + GlassHelper.FillRoundedRectangle
+ * ========================================================================== */
+
+.glass-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--glass-spacing-button-padding);
+  margin: var(--glass-spacing-button-margin);
+
+  /* Normal state gradient */
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-normal-top) 0%,
+    var(--glass-gradient-button-normal-bottom) 100%
+  );
+
+  border: var(--glass-border-button-width) solid var(--glass-border-button-color);
+  border-radius: var(--glass-radius-button);
+
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size);
+  font-weight: var(--glass-font-weight);
+  text-shadow: var(--glass-shadow-text);
+
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s ease;
+}
+
+/* Glass sheen on button */
+.glass-button::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  border-radius: var(--glass-radius-button);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Sunken backdrop — the outer ring around buttons */
+.glass-button::after {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--glass-spacing-button-depth));
+  background: linear-gradient(
+    180deg,
+    var(--glass-sunk-start) 0%,
+    var(--glass-sunk-end) 100%
+  );
+  border-radius: var(--glass-radius-button);
+  z-index: -1;
+}
+
+/* Hover — the signature Terrarium green glow */
+.glass-button:hover {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-hover-top) 0%,
+    var(--glass-gradient-button-hover-bottom) 100%
+  );
+}
+
+/* Pressed / active — inverted green */
+.glass-button:active {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-pressed-top) 0%,
+    var(--glass-gradient-button-pressed-bottom) 100%
+  );
+}
+
+/* Disabled */
+.glass-button:disabled,
+.glass-button[aria-disabled="true"] {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-disabled-top) 0%,
+    var(--glass-gradient-button-disabled-bottom) 100%
+  );
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* Highlight variant */
+.glass-button--highlight {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-highlight-top) 0%,
+    var(--glass-gradient-button-highlight-bottom) 100%
+  );
+}
+
+/* ==========================================================================
+ * .glass-label
+ *
+ * Bold white text on transparent background with optional text shadow.
+ * The workhorse text element in the Terrarium UI.
+ *
+ * Source: GlassLabel.cs, ResourceDictionary.xaml GlassLabel style
+ * ========================================================================== */
+
+.glass-label {
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size-label);
+  font-weight: var(--glass-font-weight);
+  text-shadow: var(--glass-shadow-text);
+  padding: var(--glass-spacing-label-padding);
+  background: transparent;
+  line-height: 1.4;
+}
+
+.glass-label--nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+ * .glass-titlebar
+ *
+ * The top chrome bar: gradient panel with icon, title text, and window
+ * control buttons (close, maximize, minimize). 32px tall.
+ *
+ * Source: GlassTitleBar.cs
+ * ========================================================================== */
+
+.glass-titlebar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--glass-size-titlebar-height);
+
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-top) 0%,
+    var(--glass-gradient-panel-bottom) 100%
+  );
+  border: var(--glass-border);
+
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size);
+  font-weight: var(--glass-font-weight);
+}
+
+/* Glass sheen */
+.glass-titlebar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.glass-titlebar__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--glass-size-titlebar-icon);
+  height: var(--glass-size-titlebar-icon);
+  flex-shrink: 0;
+}
+
+.glass-titlebar__title {
+  flex: 1;
+  padding: 0 var(--glass-spacing-label-padding);
+  text-shadow: var(--glass-shadow-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 2;
+}
+
+.glass-titlebar__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* Chrome-sized button (28×28 window controls) */
+.glass-titlebar__controls .glass-button {
+  width: var(--glass-size-button-chrome);
+  height: var(--glass-size-button-chrome);
+  padding: 0;
+  margin: 1px;
+}
+
+/* ==========================================================================
+ * .glass-statusbar
+ *
+ * The bottom status strip: 16px tall, holds mode info, stats, and LEDs.
+ *
+ * Source: StatusBar.cs
+ * ========================================================================== */
+
+.glass-statusbar {
+  display: flex;
+  align-items: center;
+  height: var(--glass-size-statusbar-height);
+
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-top) 0%,
+    var(--glass-gradient-panel-bottom) 100%
+  );
+  border-left: var(--glass-border);
+  border-right: var(--glass-border);
+  border-bottom: var(--glass-border);
+
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+  font-size: var(--glass-font-size);
+  font-weight: var(--glass-font-weight);
+}
+
+/* Glass sheen */
+.glass-statusbar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  pointer-events: none;
+}
+
+.glass-statusbar__section {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--glass-spacing-label-padding);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: var(--glass-shadow-text);
+}
+
+.glass-statusbar__section--sunk {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-panel-bottom) 0%,
+    var(--glass-gradient-panel-top) 100%
+  );
+  border-left: var(--glass-border);
+  border-right: var(--glass-border);
+  border-bottom: var(--glass-border);
+}
+
+.glass-statusbar__leds {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 var(--glass-spacing-label-padding);
+}
+
+/* ==========================================================================
+ * .glass-led
+ *
+ * Circular status indicator. Three states: idle (green), waiting (yellow),
+ * failed (red). Uses the button's rounded shape at 16×16 to form a circle.
+ *
+ * Source: TerrariumLed.cs
+ * ========================================================================== */
+
+.glass-led {
+  position: relative;
+  display: inline-block;
+  width: var(--glass-size-led);
+  height: var(--glass-size-led);
+  border-radius: var(--glass-radius-led);
+  border: var(--glass-border-button-width) solid var(--glass-border-button-color);
+  flex-shrink: 0;
+}
+
+/* Glass sheen on LEDs */
+.glass-led::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  border-radius: var(--glass-radius-led) var(--glass-radius-led) 0 0;
+  background: linear-gradient(
+    180deg,
+    var(--glass-overlay-start) 0%,
+    var(--glass-overlay-end) 100%
+  );
+  pointer-events: none;
+}
+
+.glass-led--idle {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-led-idle-top) 0%,
+    var(--glass-gradient-led-idle-bottom) 100%
+  );
+}
+
+.glass-led--waiting {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-led-waiting-top) 0%,
+    var(--glass-gradient-led-waiting-bottom) 100%
+  );
+}
+
+.glass-led--failed {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-led-failed-top) 0%,
+    var(--glass-gradient-led-failed-bottom) 100%
+  );
+}
+
+/* ==========================================================================
+ * .terrarium-chrome
+ *
+ * The outermost game window frame. Dark dialog-colored background with
+ * the titlebar at top, game view in the center, and status bar at bottom.
+ * This is the container that holds the entire Terrarium UI.
+ *
+ * Source: TerrariumForm.cs, GlassStyle.dialogColor
+ * ========================================================================== */
+
+.terrarium-chrome {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--glass-color-dialog);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow-chrome);
+  overflow: hidden;
+  color: var(--glass-color-foreground);
+  font-family: var(--glass-font-family);
+}
+
+/* The main content area (game view sits here) */
+.terrarium-chrome__body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Side panel (Developer Panel / Mini Map) */
+.terrarium-chrome__sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+/* Game viewport */
+.terrarium-chrome__viewport {
+  flex: 1;
+  position: relative;
+  background-color: #000000;
+  overflow: hidden;
+}
