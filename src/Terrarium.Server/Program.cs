@@ -20,3 +20,6 @@ app.MapGroup("/api/messaging")
     .MapMessagingEndpoints();
 
 app.Run();
+
+// Make Program visible to integration tests using WebApplicationFactory<Program>
+public partial class Program { }

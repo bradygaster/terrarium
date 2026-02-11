@@ -98,3 +98,41 @@
 - Mock species (`MockAnimalSpecies`, `MockPlantSpecies`) in `TestHelpers.cs` — reusable across all state tests
 - Many constructors are `internal` (Action, OrganismState) — tests use concrete subclasses (AnimalState, PlantState) instead
 - Build command: `dotnet test src/Terrarium.OrganismBase.Tests/`
+
+### 2026-02-11 — Server Integration Tests (#13)
+
+**Test Project Created:** `src/Terrarium.Server.Tests/`
+- xUnit on net10.0, references `Terrarium.Server` project
+- Uses `Microsoft.AspNetCore.Mvc.Testing` with `WebApplicationFactory<Program>`
+- **17 tests total: 4 passing, 13 awaiting Gus's server implementation**
+- PR → `squad/13-server-tests` → `squadified`
+
+**What's Tested:**
+- ServerHealthTests (4 tests):
+  - `Server_Starts_And_Responds` ✅ — root endpoint returns success
+  - `Root_Returns_Terrarium_Server` ✅ — verifies exact response text
+  - `Health_Endpoint_Returns_Healthy` ⏳ — awaits ServiceDefaults/MapDefaultEndpoints
+  - `Alive_Endpoint_Returns_OK` ⏳ — awaits ServiceDefaults/MapDefaultEndpoints
+- MessagingEndpointTests (8 tests):
+  - `Welcome_Returns_OK` ⏳ — GET /api/messaging/welcome
+  - `Welcome_Returns_Json_With_Message` ⏳ — JSON shape { message: "..." }
+  - `Welcome_Default_Contains_Terrarium` ⏳ — default "Welcome to .NET Terrarium 2.0!"
+  - `Motd_Returns_OK` ⏳ — GET /api/messaging/motd
+  - `Motd_Returns_Json_With_Message` ⏳ — JSON shape { message: "..." }
+  - `Version_Returns_OK` ⏳ — GET /api/messaging/version
+  - `Version_Returns_Json_With_Version` ⏳ — JSON shape { version: "..." }
+  - `Version_Default_Looks_Like_A_Version` ⏳ — default "1.0.0.0" pattern
+- ThrottleTests (5 tests):
+  - `Single_Request_Should_Succeed` ✅ — basic happy path
+  - `Multiple_Normal_Requests_Should_Succeed` ✅ — 5 sequential requests
+  - `Excessive_Requests_Should_Return_429` ⏳ — rate limit enforcement
+  - `Throttled_Response_Contains_Retry_After_Header` ⏳ — Retry-After header
+  - `Throttled_Response_Body_Contains_Rate_Limit_Message` ⏳ — body text
+
+**Key Decisions:**
+- Tests written against expected interfaces from legacy code analysis
+- `public partial class Program { }` added to Program.cs for WebApplicationFactory access
+- Each ThrottleTests test creates its own WebApplicationFactory to isolate throttle state
+- JSON response expectations derived from Gus's MessagingEndpoints.cs pattern (seen on squad/9-server-bootstrap)
+- Legacy Throttle.cs (60 req/min, per-IP, Hashtable+Cache) informed the rate-limit test expectations
+- Build command: `dotnet test src/Terrarium.Server.Tests/`
