@@ -1,9 +1,14 @@
 @page "/"
+@rendermode InteractiveServer
+@using Terrarium.Web.Models
 
 <PageTitle>.NET Terrarium</PageTitle>
 
 <div class="terrarium-home">
-    <EcosystemStatus />
+    <EcosystemStatus TickCount="@_tickCount"
+                     CreatureCount="@_creatures.Count"
+                     PeerCount="@_peerCount"
+                     IsRunning="@_isRunning" />
 
     <div class="terrarium-home__content">
         <div class="terrarium-chrome__viewport">
@@ -11,8 +16,45 @@
         </div>
 
         <aside class="terrarium-chrome__sidebar">
-            <CreaturePanel />
-            <MessageLog />
+            <CreaturePanel Creatures="@_creatures"
+                           OnCreatureSelected="@OnCreatureSelected" />
         </aside>
     </div>
+
+    <div class="terrarium-home__log">
+        <MessageLog Messages="@_messages" />
+    </div>
 </div>
+
+@code {
+    private List<CreatureInfo> _creatures = [];
+    private List<MessageLog.GameMessage> _messages = [];
+    private CreatureInfo? _selectedCreature;
+    private int _tickCount;
+    private int _peerCount;
+    private bool _isRunning;
+
+    protected override void OnInitialized()
+    {
+        // Placeholder: seed with sample data for layout verification
+        _creatures =
+        [
+            new CreatureInfo("Herbivore", "Leafy", 80, 100, 12, "120, 340"),
+            new CreatureInfo("Carnivore", "Fang", 45, 100, 7, "300, 150"),
+        ];
+
+        _messages =
+        [
+            new MessageLog.GameMessage(DateTime.Now, "Terrarium initialized."),
+        ];
+
+        _peerCount = 0;
+        _isRunning = false;
+        _tickCount = 0;
+    }
+
+    private void OnCreatureSelected(CreatureInfo creature)
+    {
+        _selectedCreature = creature;
+    }
+}

@@ -1,12 +1,63 @@
-@* TerrariumViewport — Canvas game viewport placeholder *@
+@* TerrariumViewport — Canvas game viewport with JS interop *@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <div class="terrarium-viewport glass-panel glass-panel--no-glass">
     <canvas @ref="_canvasRef" class="terrarium-viewport__canvas"></canvas>
-    <div class="terrarium-viewport__overlay">
-        <span class="glass-label">Ecosystem viewport — awaiting creature data</span>
-    </div>
+    @if (!_initialized)
+    {
+        <div class="terrarium-viewport__overlay">
+            <span class="glass-label">Ecosystem viewport — awaiting creature data</span>
+        </div>
+    }
 </div>
 
 @code {
     private ElementReference _canvasRef;
+    private IJSObjectReference? _module;
+    private bool _initialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./js/terrarium-interop.js");
+
+            await _module.InvokeAsync<object>("initializeCanvas", _canvasRef);
+            _initialized = true;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Resizes the canvas to match its container. Call on layout changes.
+    /// </summary>
+    public async Task ResizeCanvasAsync()
+    {
+        if (_module is not null)
+        {
+            await _module.InvokeVoidAsync("resizeCanvas");
+        }
+    }
+
+    /// <summary>
+    /// Draws a frame of the world state to the canvas.
+    /// </summary>
+    public async Task DrawFrameAsync(object? worldState)
+    {
+        if (_module is not null)
+        {
+            await _module.InvokeVoidAsync("drawFrame", worldState);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            await _module.InvokeVoidAsync("dispose");
+            await _module.DisposeAsync();
+        }
+    }
 }
