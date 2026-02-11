@@ -1,0 +1,189 @@
+/*
+ * ==========================================================================
+ * Terrarium Glass Theme — CSS Design Tokens
+ * ==========================================================================
+ *
+ * Extracted from the original .NET Terrarium Glass UI framework:
+ *   - Client/Glass/GlassStyle.cs       (default style values)
+ *   - Client/Glass/GlassGradient.cs    (gradient model: top→bottom, 90°)
+ *   - Client/Glass/GlassHelper.cs      (glass overlay rendering logic)
+ *   - Client/Glass/GlassPanel.cs       (panel defaults)
+ *   - Client/Glass/GlassButton.cs      (button state gradients)
+ *   - Client/Controls/                 (TitleBar, StatusBar, LED indicators)
+ *   - Client/ControlsWPF/ResourceDictionary.xaml (WPF port values)
+ *
+ * TOKEN NAMING CONVENTION:
+ *   --glass-{category}-{element}-{modifier}
+ *
+ *   Categories: color, gradient, border, shadow, font, spacing, size
+ *   Elements:   panel, button, titlebar, chrome, led, label, dialog
+ *   Modifiers:  top, bottom, normal, hover, pressed, disabled, highlight,
+ *               idle, waiting, failed
+ *
+ * All color values are direct 1:1 extractions from Color.FromArgb() calls
+ * in the legacy C# source. No artistic interpretation — this IS the
+ * original Terrarium.
+ * ==========================================================================
+ */
+
+:root {
+  /* ========================================================================
+   * COLOR PALETTE — Core Colors
+   * Source: GlassStyle.cs default field values
+   * ======================================================================== */
+
+  /* Foreground / text */
+  --glass-color-foreground:          #ffffff;  /* Color.White — all labels, titles */
+  --glass-color-foreground-disabled: #404040;  /* ControlPaint.Dark(White) approx */
+
+  /* Borders */
+  --glass-color-border:              #202020;  /* Color.FromArgb(32, 32, 32) — GlassStyle.borderColor */
+  --glass-color-border-button:       #000000;  /* Color.Black — GlassButton.borderColor */
+
+  /* Dialog / chrome background */
+  --glass-color-dialog:              #101010;  /* Color.FromArgb(16, 16, 16) — GlassStyle.dialogColor */
+
+  /* Text shadow */
+  --glass-color-text-shadow:         #000000;  /* GlassHelper.DrawText shadow color */
+
+  /* ========================================================================
+   * GRADIENT TOKENS — Panel
+   * Source: GlassStyle.cs → panel field
+   * The signature Terrarium look: blue-to-dark-blue vertical gradient
+   * ======================================================================== */
+
+  --glass-gradient-panel-top:        #8080ff;  /* Color.FromArgb(128, 128, 255) */
+  --glass-gradient-panel-bottom:     #000060;  /* Color.FromArgb(0, 0, 96) */
+
+  /* Panel fallback (GlassPanel.cs constructor — used when UseStyles=false) */
+  --glass-gradient-panel-alt-top:    #606060;  /* Color.FromArgb(96, 96, 96) */
+  --glass-gradient-panel-alt-bottom: #000000;  /* Color.FromArgb(0, 0, 0) */
+
+  /* ========================================================================
+   * GRADIENT TOKENS — Buttons
+   * Source: GlassStyle.cs → button* fields
+   * ======================================================================== */
+
+  /* Normal state */
+  --glass-gradient-button-normal-top:      #a0a0a0;  /* Color.FromArgb(160, 160, 160) */
+  --glass-gradient-button-normal-bottom:   #404040;  /* Color.FromArgb(64, 64, 64) */
+
+  /* Hover state — the signature green glow */
+  --glass-gradient-button-hover-top:       #80ff80;  /* Color.FromArgb(128, 255, 128) */
+  --glass-gradient-button-hover-bottom:    #006000;  /* Color.FromArgb(0, 96, 0) */
+
+  /* Pressed state — inverted green */
+  --glass-gradient-button-pressed-top:     #004000;  /* Color.FromArgb(0, 64, 0) */
+  --glass-gradient-button-pressed-bottom:  #60a060;  /* Color.FromArgb(96, 160, 96) */
+
+  /* Disabled state */
+  --glass-gradient-button-disabled-top:    #404040;  /* Color.FromArgb(64, 64, 64) */
+  --glass-gradient-button-disabled-bottom: #606060;  /* Color.FromArgb(96, 96, 96) */
+
+  /* Highlight state */
+  --glass-gradient-button-highlight-top:    #d8d8d8;  /* Color.FromArgb(216, 216, 216) */
+  --glass-gradient-button-highlight-bottom: #808080;  /* Color.FromArgb(128, 128, 128) */
+
+  /* Button local defaults (GlassButton.cs constructor — UseStyles=false) */
+  --glass-gradient-button-local-hover-top:       #00d800;  /* Color.FromArgb(0, 216, 0) */
+  --glass-gradient-button-local-hover-bottom:    #004000;  /* Color.FromArgb(0, 64, 0) */
+  --glass-gradient-button-local-pressed-top:     #004000;  /* Color.FromArgb(0, 64, 0) */
+  --glass-gradient-button-local-pressed-bottom:  #00d800;  /* Color.FromArgb(0, 216, 0) */
+
+  /* ========================================================================
+   * GRADIENT TOKENS — Glass Overlay Effect
+   * Source: GlassHelper.cs → FillRectangle / FillRoundedRectangle / DrawGlass
+   * The "glass" effect is a semi-transparent white gradient on the top half
+   * ======================================================================== */
+
+  --glass-overlay-start:             transparent;                /* Color.Transparent */
+  --glass-overlay-end:               rgba(255, 255, 255, 0.125); /* Color.FromArgb(32, 255, 255, 255) */
+  --glass-overlay-subtle:            rgba(255, 255, 255, 0.063); /* Color.FromArgb(16, Color.White) */
+
+  /* Sunk variant — semi-transparent button depression */
+  --glass-sunk-start:                rgba(255, 255, 255, 0.188); /* Color.FromArgb(48, Color.White) */
+  --glass-sunk-end:                  rgba(0, 0, 0, 0.627);       /* Color.FromArgb(160, Color.Black) */
+
+  /* Textured gradient overlay (GlassHelper.FillTexturedRectangle) */
+  --glass-texture-overlay-start:     rgba(255, 255, 255, 0.376); /* Color.FromArgb(96, Color.White) */
+  --glass-texture-overlay-end:       rgba(0, 0, 0, 0.627);       /* Color.FromArgb(160, Color.Black) */
+
+  /* ========================================================================
+   * GRADIENT TOKENS — LED Indicators
+   * Source: TerrariumLed.cs — status indicator pill lights
+   * ======================================================================== */
+
+  /* Idle (green) */
+  --glass-gradient-led-idle-top:     #80ff80;  /* Color.FromArgb(128, 255, 128) */
+  --glass-gradient-led-idle-bottom:  #006000;  /* Color.FromArgb(0, 96, 0) */
+
+  /* Waiting (yellow) */
+  --glass-gradient-led-waiting-top:    #ffff80;  /* Color.FromArgb(255, 255, 128) */
+  --glass-gradient-led-waiting-bottom: #808000;  /* Color.FromArgb(128, 128, 0) */
+
+  /* Failed (red) */
+  --glass-gradient-led-failed-top:     #ff8080;  /* Color.FromArgb(255, 128, 128) */
+  --glass-gradient-led-failed-bottom:  #800000;  /* Color.FromArgb(128, 0, 0) */
+
+  /* ========================================================================
+   * BORDER & SHADOW TOKENS
+   * Source: GlassHelper.cs, GlassButton.cs
+   * ======================================================================== */
+
+  --glass-border-width:              1px;
+  --glass-border-color:              var(--glass-color-border);
+  --glass-border:                    var(--glass-border-width) solid var(--glass-border-color);
+
+  --glass-border-button-width:       0.75px;  /* Depth/4.0f where Depth=3 */
+  --glass-border-button-color:       var(--glass-color-border-button);
+
+  --glass-shadow-text:               1px 1px 0 var(--glass-color-text-shadow);
+
+  /* Panel/chrome drop shadow — not in original (WinForms had no shadows)
+     but adds the depth that the gradient+border combo implied */
+  --glass-shadow-panel:              0 2px 8px rgba(0, 0, 0, 0.5);
+  --glass-shadow-chrome:             0 4px 16px rgba(0, 0, 0, 0.6);
+
+  /* ========================================================================
+   * TYPOGRAPHY TOKENS
+   * Source: GlassStyle.cs → font field, GlassLabel.cs, ResourceDictionary.xaml
+   * ======================================================================== */
+
+  --glass-font-family:               "Verdana", Geneva, Tahoma, sans-serif;
+  --glass-font-size:                 6.75pt;   /* new Font("Verdana", 6.75f) */
+  --glass-font-size-label:           9px;      /* ResourceDictionary.xaml FontSize="9" */
+  --glass-font-weight:               700;      /* FontStyle.Bold */
+  --glass-font-shadow:               true;     /* GlassStyle.fontShadow = true */
+
+  /* ========================================================================
+   * SPACING & LAYOUT TOKENS
+   * Source: GlassButton.cs (Depth, padding), GlassTitleBar.cs, StatusBar.cs
+   * ======================================================================== */
+
+  --glass-spacing-button-depth:      3px;   /* GlassButton.depth = 3 */
+  --glass-spacing-button-padding:    5px;   /* Depth + (Depth/4) + 2 = 3+0+2 */
+  --glass-spacing-button-margin:     4px;   /* ResourceDictionary.xaml Margin="4" */
+  --glass-spacing-label-padding:     5px;   /* ResourceDictionary.xaml Padding="5" */
+  --glass-spacing-panel-inset:       1px;   /* clientRectangle.Inflate(-1, -1) */
+
+  /* ========================================================================
+   * SIZE TOKENS
+   * Source: GlassTitleBar.cs, StatusBar.cs, GlassButton dimensions
+   * ======================================================================== */
+
+  --glass-size-titlebar-height:      32px;   /* GlassTitleBar: Size(640, 32) */
+  --glass-size-titlebar-icon:        32px;   /* imagePanel: Size(32, 32) */
+  --glass-size-statusbar-height:     16px;   /* StatusBar: Size(800, 16) */
+  --glass-size-button-chrome:        28px;   /* close/min/max buttons: Size(28, 28) */
+  --glass-size-led:                  16px;   /* TerrariumLed: Size(16, 16) */
+
+  /* ========================================================================
+   * BORDER RADIUS
+   * Source: GlassHelper.GetRoundedRectanglePath — pill-shaped (height/2)
+   * The original used full GDI+ arcs equal to the control's height
+   * ======================================================================== */
+
+  --glass-radius-button:             9999px; /* Pill shape — arc = height */
+  --glass-radius-panel:              0;      /* Panels are rectangular */
+  --glass-radius-led:                50%;    /* Circular when square */
+}
