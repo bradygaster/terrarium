@@ -60,3 +60,6 @@
 - Solution path is `src/Terrarium.sln` (Heisenberg's new structure, not the legacy `Terrraium2010.sln`)
 - Cache key includes Directory.Packages.props and Directory.Build.props for central package management support
 - Single workflow handles both push CI and PR checks — no unnecessary ceremony
+📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
+📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
+📌 Team update (2026-02-10): Keep ArrayList on Scan() until Game project ported — decided by Mike

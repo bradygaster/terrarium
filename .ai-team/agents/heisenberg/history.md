@@ -69,3 +69,5 @@
 - **EngineSettings fully ported** from `Client/OrganismBase/Classes/Engine/EngineSettings.cs` — all 50+ game constants preserved.
 - **Aspire SDK migration:** `IsAspireHost` property and workload-based approach replaced with `Aspire.AppHost.Sdk/13.1.0` as project SDK — workloads deprecated in .NET 10.
 - **Key convention:** All new code goes under `src/`. Legacy code stays untouched.
+📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
+📌 Team update (2026-02-10): Keep ArrayList on Scan() until Game project ported — decided by Mike

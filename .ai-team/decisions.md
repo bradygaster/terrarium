@@ -75,3 +75,24 @@ Similarly for the server: `Server/Website/` is the functional server; `ServerMVC
 **By:** bradygaster (via Copilot)
 **What:** Beth is inspired by someone who was the voice of .NET's marketing program for years, then moved into the product team. She's done it all. Beth is the fearless voice of the .NET developer toiling away. Beth is our voice.
 **Why:** User request — establishes Beth's identity and tone. She writes from the trenches, not the press box. Advocacy-to-engineering energy. Community-first.
+
+### 2025-07-16: Solution uses classic .sln format, not .slnx; CS1591 suppressed
+**By:** Heisenberg
+**Status:** Decided
+**What:**
+1. `src/Terrarium.sln` uses classic Visual Studio solution format (Format Version 12.00), not `.slnx`. Classic format has universal tooling support; `.slnx` is too new.
+2. CS1591 (missing XML doc comments) suppressed via `<NoWarn>` in `Directory.Build.props` during initial port phase.
+3. EngineSettings fully ported with all 50+ original game constants — single source of truth for game balance.
+**Why:** `.slnx` tooling is immature. `dotnet sln add` was broken by workload manifest issue, requiring manual `.sln` authoring (simpler in classic format). CS1591 suppression is temporary until APIs stabilize.
+
+### 2025-07-15: CSS token naming convention for Glass theme
+**By:** Jesse (Client Dev)
+**Status:** Implemented (PR #102)
+**What:** All CSS design tokens follow `--glass-{category}-{element}-{modifier}`. Categories: color, gradient, border, shadow, font, spacing, size, radius. Component classes use BEM: `.glass-panel`, `.glass-panel--sunk`, `.glass-titlebar__controls`. Tokens in `glass-theme.css` are the single source of truth for Terrarium's visual identity.
+**Why:** Predictable, discoverable naming that maps directly to legacy C# code (e.g., `GlassStyle.ButtonHover.Top` → `--glass-gradient-button-hover-top`). All UI agents must use tokens, not hard-coded values.
+
+### 2026-02-10: Keep ArrayList on Scan() until Game project ported
+**By:** Mike (Networking / Engine Dev)
+**Status:** Proposed
+**What:** `IAnimalWorldBoundary.Scan()` retains `ArrayList` return type. Changing to `List<OrganismState>` now would create compile-time dependency on the unported Game project. When Game is ported, change return type and remove `using System.Collections`.
+**Why:** Preserves source compatibility with existing creature code. Avoids blocking OrganismBase port on Game port.
