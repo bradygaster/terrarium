@@ -53,3 +53,19 @@
 - **Sprint plan rationale:** Leaf-to-root ordering (OrganismBase first, main client last). Server work fully parallelized with client work. Security sandboxing (Sprint 6) and Renderer (Sprint 8) identified as highest-risk sprints.
 - **Flagged 6 decisions for Brady's input:** SQL hosting, deployment target, VB.NET support, legacy code disposition, sprite assets, cross-platform aspirations.
 - **Written to:** `MODERNIZATION.md` in repo root
+
+### 2025-07-16 — .NET 10 Solution Structure Created (Sprint 0)
+
+- **New solution:** `src/Terrarium.sln` (classic `.sln` format, not `.slnx`) with 6 SDK-style projects.
+- **global.json** at repo root pins .NET SDK 10.0.103 with `rollForward: latestFeature`.
+- **Directory.Build.props** in `src/` sets `net10.0`, nullable, implicit usings, TreatWarningsAsErrors, NoWarn CS1591 (XML doc comments suppressed during initial port).
+- **Project structure:**
+  - `Terrarium.OrganismBase` — class library (namespace `OrganismBase`). Mike's partial port includes enums, interfaces, actions, event args, exceptions, attributes, and state stubs.
+  - `Terrarium.Game` — class library, references OrganismBase.
+  - `Terrarium.Server` — ASP.NET Core web project (Microsoft.NET.Sdk.Web), minimal Program.cs.
+  - `Terrarium.Web` — Blazor Interactive Server project (Microsoft.NET.Sdk.Web), minimal Program.cs.
+  - `Terrarium.AppHost` — .NET Aspire AppHost using `Aspire.AppHost.Sdk/13.1.0` (no workload needed on .NET 10).
+  - `Terrarium.ServiceDefaults` — Aspire shared project with OpenTelemetry, health checks, service discovery, resilience.
+- **EngineSettings fully ported** from `Client/OrganismBase/Classes/Engine/EngineSettings.cs` — all 50+ game constants preserved.
+- **Aspire SDK migration:** `IsAspireHost` property and workload-based approach replaced with `Aspire.AppHost.Sdk/13.1.0` as project SDK — workloads deprecated in .NET 10.
+- **Key convention:** All new code goes under `src/`. Legacy code stays untouched.
