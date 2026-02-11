@@ -7,22 +7,29 @@ public sealed class MessagingServiceClient(HttpClient httpClient) : IMessagingSe
 {
     public async Task<string> GetWelcomeMessageAsync(CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.GetAsync("messaging/welcome", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken) ?? string.Empty;
+        var result = await httpClient.GetFromJsonAsync<MessageResponse>("messaging/welcome", cancellationToken);
+        return result?.Message ?? string.Empty;
     }
 
     public async Task<string> GetMessageOfTheDayAsync(CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.GetAsync("messaging/motd", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken) ?? string.Empty;
+        var result = await httpClient.GetFromJsonAsync<MessageResponse>("messaging/motd", cancellationToken);
+        return result?.Message ?? string.Empty;
     }
 
     public async Task<string> GetLatestVersionAsync(CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.GetAsync("messaging/version", cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken) ?? string.Empty;
+        var result = await httpClient.GetFromJsonAsync<VersionResponse>("messaging/version", cancellationToken);
+        return result?.Version ?? string.Empty;
+    }
+
+    private sealed class MessageResponse
+    {
+        public string? Message { get; init; }
+    }
+
+    private sealed class VersionResponse
+    {
+        public string? Version { get; init; }
     }
 }

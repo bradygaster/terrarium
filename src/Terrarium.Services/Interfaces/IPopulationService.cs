@@ -4,5 +4,7 @@ namespace Terrarium.Services.Interfaces;
 
 public interface IPopulationService
 {
-    Task<int> ReportPopulationAsync(PopulationData data, CancellationToken cancellationToken = default);
+    Task<ReportPopulationResult> ReportPopulationAsync(Guid peerGuid, int currentTick,
+        IReadOnlyList<PopulationHistoryRow> history,
+        CancellationToken cancellationToken = default);
 }

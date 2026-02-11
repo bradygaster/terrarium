@@ -30,6 +30,12 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<IChartService, ChartServiceClient>(client =>
             client.BaseAddress = new Uri(baseAddress, "api/"));
 
+        services.AddHttpClient<IUsageService, UsageServiceClient>(client =>
+            client.BaseAddress = new Uri(baseAddress, "api/"));
+
+        services.AddHttpClient<IWatsonService, WatsonServiceClient>(client =>
+            client.BaseAddress = new Uri(baseAddress, "api/"));
+
         return services;
     }
 

@@ -4,17 +4,14 @@ namespace Terrarium.Services.Interfaces;
 
 public interface IChartService
 {
-    Task<IReadOnlyList<SpeciesInfo>> GetSpeciesListAsync(CancellationToken cancellationToken = default);
-
-    Task<string> ChartPopulationAsync(DateTime start, DateTime end, IReadOnlyList<string> speciesNames,
+    Task<IReadOnlyList<PopulationHistoryEntry>> GetPopulationHistoryAsync(string species,
+        DateTime? beginDate = null, DateTime? endDate = null,
         CancellationToken cancellationToken = default);
 
-    Task<string> ChartVitalsAsync(DateTime start, DateTime end, string species,
+    Task<IReadOnlyList<SpeciesDistributionEntry>> GetSpeciesDistributionAsync(
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<SpeciesInfo>> GrabLatestSpeciesDataAsync(string species,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<SpeciesInfo>> GetTopAnimalsAsync(string version, OrganismType type, int count,
+    Task<IReadOnlyList<TopCreatureEntry>> GetTopCreaturesAsync(string version,
+        string? type = null, int? count = null,
         CancellationToken cancellationToken = default);
 }
