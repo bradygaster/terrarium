@@ -16,6 +16,10 @@ namespace Microsoft.Extensions.Hosting;
 /// </summary>
 public static class Extensions
 {
+    /// <summary>
+    /// Adds standard service defaults used by all Terrarium services:
+    /// OpenTelemetry (tracing, metrics, logging), health checks, service discovery, and HTTP resilience.
+    /// </summary>
     public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
         builder.ConfigureOpenTelemetry();
@@ -30,6 +34,9 @@ public static class Extensions
         return builder;
     }
 
+    /// <summary>
+    /// Configures OpenTelemetry with OTLP export for tracing, metrics, and logging.
+    /// </summary>
     public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
     {
         builder.Logging.AddOpenTelemetry(logging =>
@@ -70,6 +77,9 @@ public static class Extensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds default health checks for liveness and readiness.
+    /// </summary>
     public static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
     {
         builder.Services.AddHealthChecks()
@@ -78,6 +88,11 @@ public static class Extensions
         return builder;
     }
 
+    /// <summary>
+    /// Maps health check endpoints:
+    /// /health — readiness (all checks)
+    /// /alive  — liveness (only "live" tagged checks)
+    /// </summary>
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
         app.MapHealthChecks("/health");
