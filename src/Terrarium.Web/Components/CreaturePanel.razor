@@ -1,28 +1,53 @@
 @* CreaturePanel — sidebar showing selected creature stats *@
+@using Terrarium.Web.Models
 
 <div class="creature-panel glass-panel">
     <div class="creature-panel__header glass-label">
         Creature Details
     </div>
 
-    @if (SelectedCreature is not null)
+    @if (Creatures is not null && Creatures.Count > 0)
+    {
+        <div class="creature-panel__list">
+            @foreach (var creature in Creatures)
+            {
+                <div class="creature-panel__item @(creature == _selected ? "creature-panel__item--selected" : "")"
+                     @onclick="() => SelectCreature(creature)">
+                    <span class="glass-label">@creature.Name (@creature.Species)</span>
+                </div>
+            }
+        </div>
+    }
+
+    @if (_selected is not null)
     {
         <div class="creature-panel__stats">
             <div class="creature-panel__stat">
                 <span class="creature-panel__stat-label">Species</span>
-                <span class="creature-panel__stat-value">@SelectedCreature.Species</span>
+                <span class="creature-panel__stat-value">@_selected.Species</span>
+            </div>
+            <div class="creature-panel__stat">
+                <span class="creature-panel__stat-label">Name</span>
+                <span class="creature-panel__stat-value">@_selected.Name</span>
             </div>
             <div class="creature-panel__stat">
                 <span class="creature-panel__stat-label">Energy</span>
-                <span class="creature-panel__stat-value">@SelectedCreature.Energy</span>
+                <span class="creature-panel__stat-value">
+                    <div class="creature-panel__energy-bar">
+                        <div class="creature-panel__energy-fill"
+                             style="width: @(EnergyPercent)%">
+                        </div>
+                    </div>
+                    <span>@_selected.Energy / @_selected.MaxEnergy</span>
+                </span>
             </div>
             <div class="creature-panel__stat">
                 <span class="creature-panel__stat-label">Age</span>
-                <span class="creature-panel__stat-value">@SelectedCreature.Age</span>
+                <span class="creature-panel__stat-value">@_selected.Age</span>
             </div>
             <div class="creature-panel__stat">
                 <span class="creature-panel__stat-label">Position</span>
-                <span class="creature-panel__stat-value">(@SelectedCreature.X, @SelectedCreature.Y)</span>
+                <span class="creature-panel__stat-value">@_selected.Position</span>
             </div>
         </div>
     }
@@ -36,7 +61,21 @@
 
 @code {
     [Parameter]
-    public CreatureInfo? SelectedCreature { get; set; }
+    public IReadOnlyList<CreatureInfo>? Creatures { get; set; }
 
-    public sealed record CreatureInfo(string Species, int Energy, int Age, int X, int Y);
+    [Parameter]
+    public EventCallback<CreatureInfo> OnCreatureSelected { get; set; }
+
+    private CreatureInfo? _selected;
+
+    private int EnergyPercent =>
+        _selected is not null && _selected.MaxEnergy > 0
+            ? (int)(100.0 * _selected.Energy / _selected.MaxEnergy)
+            : 0;
+
+    private async Task SelectCreature(CreatureInfo creature)
+    {
+        _selected = creature;
+        await OnCreatureSelected.InvokeAsync(creature);
+    }
 }

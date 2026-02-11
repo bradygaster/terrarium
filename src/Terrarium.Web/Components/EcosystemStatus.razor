@@ -1,13 +1,17 @@
-@* EcosystemStatus — header bar with ecosystem metrics *@
+@* EcosystemStatus — header bar with ecosystem metrics and play/pause state *@
 
 <div class="ecosystem-status glass-panel">
+    <div class="ecosystem-status__metric">
+        <span class="glass-led @(IsRunning ? "glass-led--active" : "glass-led--idle")"></span>
+        <span class="glass-label glass-label--nowrap">@(IsRunning ? "Running" : "Paused")</span>
+    </div>
     <div class="ecosystem-status__metric">
         <span class="glass-led glass-led--idle"></span>
         <span class="glass-label glass-label--nowrap">Creatures: @CreatureCount</span>
     </div>
     <div class="ecosystem-status__metric">
         <span class="glass-led glass-led--waiting"></span>
-        <span class="glass-label glass-label--nowrap">Tick: @TickNumber</span>
+        <span class="glass-label glass-label--nowrap">Tick: @TickCount</span>
     </div>
     <div class="ecosystem-status__metric">
         <span class="glass-led glass-led--idle"></span>
@@ -17,11 +21,14 @@
 
 @code {
     [Parameter]
+    public int TickCount { get; set; }
+
+    [Parameter]
     public int CreatureCount { get; set; }
 
     [Parameter]
-    public int TickNumber { get; set; }
+    public int PeerCount { get; set; }
 
     [Parameter]
-    public int PeerCount { get; set; }
+    public bool IsRunning { get; set; }
 }
