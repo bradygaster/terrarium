@@ -69,3 +69,32 @@
 📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
 📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
 📌 Team update (2026-02-10): Keep ArrayList on Scan() until Game project ported — decided by Mike
+### 2026-02-11 — OrganismBase Unit Tests (#7)
+
+**Test Project Created:** `src/Terrarium.OrganismBase.Tests/`
+- xUnit on net10.0, references `Terrarium.OrganismBase` project
+- **197 tests, 0 failures** across 16 test files + 1 helper file
+- PR #106 → `squad/7-organismbase-tests` → `squad/3-port-organismbase`
+
+**What's Tested:**
+- Point-based attributes (AttackDamage, DefendDamage, EatingSpeed, Eyesight, MaxSpeed, MaxEnergy, Camouflage) — zero/mid/max points, validation, GetWarnings
+- Non-point attributes (Carnivore, MatureSize, SeedSpread, AuthorInfo, OrganismClass, AnimalSkin, PlantSkin, MarkingColor)
+- OrganismState — energy management, EnergyState buckets, UpperBoundary, BurnEnergy, tick aging, growth, position, immutability, FoodChunks, reproduction wait, CompareTo, IsAdjacentOrOverlapping
+- AnimalState — damage/healing, PercentInjured, EnergyRequiredToMove, rot, IncreaseRadiusTo, CloneMutable, PreviousDisplayAction, Antennas
+- PlantState — food chunks, GiveEnergy (optimal/zero light), IncreaseRadiusTo (height+food), CloneMutable, immutability
+- Vector — constructor, magnitude (true + fast), direction, Scale, Rotate, GetUnitVector, Subtract, Add, ToRadians/ToDegrees
+- MovementVector — speed validation, empty destination, defensive copy
+- PendingActions — all 5 action setters, immutability guard
+- OrganismEventResults — all 7 event properties, immutability guard
+- AttackedEventArgsCollection — Add, indexer, enumerator, immutability (generic List<T> modernization verified)
+- AntennaState — constructors, position encoding, AntennaValue get/set, immutability
+- Growth — animal and plant grow mechanics, already-mature, low-energy, immutable guards
+- EngineSettings — constant relationships, EngineSettingsAsserts()
+- Exceptions — GameEngineException, TooManyPoints, SizeOutOfRange hierarchy
+- GenericTypeDescriptor — ICustomTypeDescriptor implementation
+- Species interfaces — IAnimalSpecies, IPlantSpecies, IsSameSpecies
+
+**Testing Patterns Established:**
+- Mock species (`MockAnimalSpecies`, `MockPlantSpecies`) in `TestHelpers.cs` — reusable across all state tests
+- Many constructors are `internal` (Action, OrganismState) — tests use concrete subclasses (AnimalState, PlantState) instead
+- Build command: `dotnet test src/Terrarium.OrganismBase.Tests/`
