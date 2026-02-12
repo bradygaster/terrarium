@@ -464,3 +464,25 @@
 - Templates package: src/Terrarium.Templates/Terrarium.Templates.csproj
 - Decision log: .ai-team/decisions/inbox/hank-sdk-packaging-finalized.md
 
+
+### 2026-02-12 — Playwright Diagnostic Tests Created
+
+**What:** Created src/Terrarium.Web.Tests.E2E/ — Node.js Playwright project with 9 diagnostic tests.
+
+**Key Diagnostic Findings:**
+- **SignalR hub endpoint 404:** POST http://localhost:5180/terrarium/negotiate returns 404. The server does not map /terrarium as a SignalR hub. This is the root cause of the "Disconnected" status.
+- **Server is healthy:** Root, /health, /alive all return 200. The server process is running, just missing the hub mapping.
+- **Connection status shows glass-led--idle (red):** LED stays "Disconnected" for the full 30s observation period. Never attempts to reconnect because the initial negotiate fails.
+- **Canvas is blank:** 972x619 canvas exists but has 0 non-transparent pixels. Renderer initializes but receives no world state data.
+- **Browser makes zero requests to :5180:** Correct for Blazor Server — the TerrariumHubClient runs server-side, not in the browser. All browser traffic goes to :5190.
+- **Blazor circuit is functional:** WebSocket to ws://localhost:5190/_blazor is open and active.
+- **PeerList LED shows glass-led--failed:** Separate CSS class from ConnectionStatus's glass-led--idle.
+- **Only console error:** 404 for /images/terrarium-icon.png (missing asset, unrelated).
+
+**Architecture Notes:**
+- Chose Node.js Playwright over .NET Playwright — faster setup, better docs, diagnostic-only scope.
+- TerrariumHubClient reads server URL from Services:server:https:0 or Services:server:http:0 config, falls back to https+http://server (Aspire service discovery).
+- The Web app uses @rendermode InteractiveServer — all SignalR hub communication is server-side C#, not browser JavaScript.
+- Connection status uses HubConnectionState enum mapped to CSS: glass-led--active (connected), glass-led--waiting (connecting/reconnecting), glass-led--idle (disconnected).
+
+**Run command:** `cd src/Terrarium.Web.Tests.E2E && npm test`

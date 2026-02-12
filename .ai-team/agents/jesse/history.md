@@ -84,3 +84,41 @@ Created `manifest.json` cataloging every asset with path, original location, and
 - The teleporter sheet is 768×48 (16 frames × 48px in a single row), not 10 columns like animals.
 - `SpriteLoader` (existing) uses `createImageBitmap(blob)` from fetched BMPs — works well for the original `.bmp` format sprite sheets.
 - `sprite-manager.js` and `terrarium-sprites.js` are loaded as globals (IIFE/const) so the ES module `terrarium-interop.js` can reference them. This matches the existing `sprite-loader.js` pattern.
+
+### 2025-07-17 — Frontend Connectivity Diagnosis
+
+**SignalR connection lifecycle:**
+- `TerrariumHubClient` (`src/Terrarium.Web/Services/TerrariumHubClient.cs`) is a singleton managing SignalR connection to the game server hub. Reads server URL from Aspire service discovery config keys `Services:server:https:0` / `Services:server:http:0`.
+- `ConnectionStatus.razor` shows LED indicator based on `HubClient.State` and `OnStateChanged` event — purely reactive, does not initiate connections.
+- `Home.razor` wires up all hub callback events in `OnInitialized()` but does NOT call `HubClient.StartAsync()` — the connection is never opened.
+
+**Hub URL mismatch:**
+- Server maps hub at `/hubs/terrarium` (`Terrarium.Server/Program.cs:66`)
+- Client connects to `{serverUrl}/terrarium` (missing `/hubs/` prefix) in `TerrariumHubClient.cs:52`
+- `GameServiceExtensions.cs:53` also uses wrong path `"https+http://server/terrarium"`
+
+**Canvas rendering pipeline:**
+- `GameView.razor` → `CanvasGameRenderer` → `terrarium-renderer.js` (ES module)
+- On first render: canvas is initialized, terrain tiles loaded from `/assets/terrain/*.bmp`, viewport set to 5000×5000, events bound
+- `renderFrame(worldState)` draws: clear → terrain → creatures → overlays → tooltip → performance stats
+- `drawTerrain(null)` works fine standalone — tiles green grass from loaded BMPs or falls back to `#2d5a27` fill
+- Canvas appears "blue" when empty because `clearRect` makes it transparent, showing parent's Glass theme gradient (`--glass-gradient-panel-bottom: #000060`)
+- No game loop or initial `renderFrame()` call exists — canvas stays cleared after init
+
+**Aspire wiring:**
+- `AppHost/Program.cs`: web `.WithReference(server)` correctly injects service discovery URLs
+- No CORS needed — Blazor Server's SignalR client runs server-side (backend HTTP), not in browser
+
+### 2025-07-17 — Hub URL + Connection Startup Fix
+
+**Fixed three client-side connectivity bugs preventing SignalR from ever connecting:**
+
+1. **Hub URL path mismatch** — `TerrariumHubClient.cs` was connecting to `{serverUrl}/terrarium` but the server maps the hub at `/hubs/terrarium`. Changed to `{serverUrl}/hubs/terrarium`.
+2. **Same URL bug in GameServiceExtensions.cs** — `NetworkEngineOptions.HubUrl` was `"https+http://server/terrarium"`, changed to `"https+http://server/hubs/terrarium"`.
+3. **`StartAsync()` never called** — `Home.razor` wired all event handlers in `OnInitialized()` but never opened the connection. Added `OnAfterRenderAsync(firstRender)` that calls `await HubClient.StartAsync()` with try/catch fallback to local-only mode.
+4. **Initial terrain render** — Added `RenderFrameAsync(new GameRenderState())` call in `OnAfterRenderAsync` before starting SignalR, so users see green terrain tiles immediately instead of a blue (CSS gradient) canvas.
+
+**Key files modified:**
+- `src/Terrarium.Web/Services/TerrariumHubClient.cs` (line 52: URL fix)
+- `src/Terrarium.Game/GameServiceExtensions.cs` (line 53: URL fix)
+- `src/Terrarium.Web/Components/Pages/Home.razor` (added `OnAfterRenderAsync`)

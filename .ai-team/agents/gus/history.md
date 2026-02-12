@@ -133,3 +133,45 @@
 - Assembly uploads counter exists but not yet wired (pending Sprint 13 when assembly storage is implemented)
 - Log properties renamed from generic names to semantic names: `ConnectionId` → `PeerId`, `Total` → `TotalOrganisms`
 - Metrics use dimensional tags (e.g., `ecosystem_id`) for filtering in Aspire dashboard
+
+### 2025-07-17 — Server Connectivity Diagnosis
+
+**Context:** Web frontend at :5190 shows "network status: red", empty blue canvas, zero traffic to server at :5180.
+
+**Findings:**
+
+1. **Hub path mismatch:** Server maps `TerrariumHub` at `/hubs/terrarium` (`Program.cs:66`), but `TerrariumHubClient.cs:52` connects to `/terrarium`. SignalR negotiate would 404.
+2. **No CORS configured:** Server has zero CORS setup — no `AddCors()`, no `UseCors()`. Not blocking for Blazor Server (server-side hub client), but needed for any browser-direct SignalR.
+3. **Hub connection never started:** `TerrariumHubClient` is registered as singleton and callbacks are wired in `Home.razor`, but `StartAsync()` is never called anywhere. The connection is built but never opened — primary cause of zero traffic.
+4. **Aspire service discovery: correct.** Server registered as `"server"` in AppHost, web resolves via `Services:server:http:0` config key.
+5. **API endpoints: correct.** All 8 endpoint groups match what `Terrarium.Services` clients expect.
+6. **No auth middleware:** No `UseAuthentication`/`UseAuthorization` — unauthenticated SignalR is fine.
+7. **ThrottleMiddleware** runs on all requests including WebSocket upgrades — 60 req/min/IP, minor concern for rapid reconnect cycles.
+
+**Key file paths:**
+- `src/Terrarium.Server/Program.cs` — server startup, hub mapping at line 66, endpoint groups lines 68-91
+- `src/Terrarium.Server/Middleware/ThrottleMiddleware.cs` — global rate limiter, 60 req/min/IP
+- `src/Terrarium.Net/TerrariumHub.cs` — hub implementation with in-memory peer state
+- `src/Terrarium.Net/ITerrariumHub.cs` — 8 server methods (contract)
+- `src/Terrarium.Net/ITerrariumClient.cs` — 7 client callbacks (contract)
+- `src/Terrarium.Web/Services/TerrariumHubClient.cs` — SignalR client, connects to `{serverUrl}/terrarium`
+- `src/Terrarium.Web/Program.cs` — web startup, registers hub client singleton at line 31
+- `src/Terrarium.Services/ServiceCollectionExtensions.cs` — typed HttpClient registrations for all API services
+- `src/Terrarium.AppHost/Program.cs` — Aspire orchestration, server="server", web="web"
+- `src/Terrarium.Server/Properties/launchSettings.json` — server on port 5180
+- `src/Terrarium.Web/Properties/launchSettings.json` — web on port 5190
+
+### 2025-07-17 — CORS Configuration for SignalR
+
+**What was done:**
+- Confirmed hub path: `TerrariumHub` is mapped at `/hubs/terrarium` in `Program.cs:84` — no change needed, already matches canonical path
+- Added `AddCors()` with a default policy allowing localhost (any port), 127.0.0.1, and `*.internal` origins
+- Policy allows GET + POST methods (SignalR requirements), all headers, and credentials
+- Added `app.UseCors()` in the middleware pipeline before endpoint mapping
+- Build verified: 0 warnings, 0 errors
+
+**Key decisions:**
+- Used `SetIsOriginAllowed` with host check rather than hardcoded origin list — handles any localhost port and Aspire's `.internal` service discovery URLs
+- Default policy (no named policy) keeps it simple — one CORS config for the whole server
+- `AllowCredentials()` required for SignalR's negotiate handshake
+- Placed `UseCors()` after `UseMiddleware<ThrottleMiddleware>()` and before `MapHub`/`MapGet` — correct middleware ordering
