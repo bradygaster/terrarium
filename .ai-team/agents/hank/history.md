@@ -475,3 +475,34 @@
 - Connection status uses HubConnectionState enum mapped to CSS: glass-led--active (connected), glass-led--waiting (connecting/reconnecting), glass-led--idle (disconnected).
 
 **Run command:** `cd src/Terrarium.Web.Tests.E2E && npm test`
+
+### 2025-07-XX — Playwright Integration Tests (Replacing Diagnostics)
+
+**What changed:**
+- Deleted `tests/terrarium-diagnostics.spec.js` — 9 diagnostic/logging-only tests with zero assertions on real behavior
+- Created `tests/terrarium-integration.spec.js` — 8 proper integration tests with real assertions
+- Updated `package.json` description and `playwright.config.js` screenshots to `only-on-failure`
+
+**Test coverage (8 tests):**
+1. **map renders** — canvas visible, non-zero dimensions, drawn pixel content (samples 9-point grid)
+2. **connection status green** — `glass-led--active` class, label text "Connected"
+3. **organisms appear on canvas** — pixel sampling for non-terrain colors OR population > 0
+4. **tick counter advances** — reads tick, waits 5s, reads again, asserts increase
+5. **population stats show organisms** — statusbar Population > 0, sidebar Creatures > 0
+6. **ecosystem status shows running** — "Running" label visible, LED active
+7. **canvas is interactive** — mouse drag changes pixel hash (viewport pans)
+8. **event log shows activity** — message-log has ≥1 entry with non-empty text
+
+**Key selectors used:**
+- `.game-view__canvas` — the main rendering canvas
+- `.connection-status .glass-led` / `.connection-status__label` — connection LED + text
+- `.ecosystem-status__metric .glass-label` — tick, creature, peer counts
+- `.glass-statusbar__section` — footer status sections (Population, Tick, Peers)
+- `.message-log__entry` — event log entries
+
+**Architecture notes:**
+- Shared helper functions: `waitForCanvas`, `waitForConnection`, `waitForTicks`, `readTickCount`, `readPopulation`
+- Tests use `waitForFunction` / `waitForSelector` over `waitForTimeout` wherever possible
+- Each test is independent (all start with `page.goto('/')`)
+- Timeouts: 15s for canvas init, 30s for SignalR connection + tick data, 60s per test overall
+- Screenshot captured on failure automatically via playwright config

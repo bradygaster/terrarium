@@ -294,3 +294,21 @@
 📌 `PeerAnnounce.Action` enum has `Join`, `Leave`, `Heartbeat` — only `Join` and `Leave` trigger peer list refresh
 📌 Relative time formatting improves UX for connection timestamps — "just now" feels more natural than "0s ago"
 📌 Canvas notifications need careful layer ordering: terrain → creatures → zones → portals → status → tooltip → notifications
+
+### 2026-02-12: Wire Client to Render Incoming World State Updates
+- **What I did:**
+  - Rewired `HandleWorldStateUpdate` in `Home.razor` to map `CreatureStateData` from `WorldStateUpdate` into `GameRenderState`/`CreatureRenderData` and call `_gameView.RenderFrameAsync()` — this is the critical missing link that makes creatures appear on canvas
+  - Removed hardcoded dummy creatures from `OnInitialized` — `_creatures` now starts empty, populated by live server data
+  - Updated `HandleWorldStateUpdate` to also sync the sidebar creature list (`_creatures`) from world state data, so `CreaturePanel` shows real creatures with live positions
+  - Set `_isRunning = true` and `_tickCount` in `HandleWorldStateUpdate` (not just in tick handler) since world state updates are the primary render driver
+  - Mike had already added `CreatureStateData` and `Creatures` collection to `WorldStateUpdate` — I initially added a duplicate `CreatureState` class but caught the conflict in build and removed my version, converging on Mike's `CreatureStateData`
+- **Build:** `dotnet build src/Terrarium.Web/Terrarium.Web.csproj` — 0 errors, 0 warnings
+- **Files changed:**
+  - `src/Terrarium.Web/Components/Pages/Home.razor` — HandleWorldStateUpdate rewritten, dummy creatures removed
+  - `src/Terrarium.Net/Messages/WorldStateUpdate.cs` — removed duplicate CreatureState class (conflict resolution with Mike)
+- **Data flow:** `GameLoopService` → SignalR `ReceiveWorldStateUpdate` → `TerrariumHubClient.OnWorldStateUpdate` → `Home.HandleWorldStateUpdate` → maps `CreatureStateData[]` to `CreatureRenderData[]` → `GameView.RenderFrameAsync(GameRenderState)` → `CanvasGameRenderer` → JS `renderFrame()` → canvas pixels
+
+## Learnings
+
+📌 `WorldStateUpdate.Creatures` uses `CreatureStateData` (Mike's type in Terrarium.Net), mapped to `CreatureRenderData` (Skyler's type in Terrarium.Web.Rendering) in Home.razor — two separate types for server vs. client rendering concerns
+📌 When working in parallel with Mike on shared types, always check the current file state before adding new classes — build-then-fix is faster than trying to coordinate

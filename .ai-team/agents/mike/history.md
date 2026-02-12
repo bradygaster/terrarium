@@ -318,3 +318,36 @@ PR #113, branch `squad/16-networking-layer`.
 - Build blocked by pre-existing dependency errors in Terrarium.Net and Terrarium.Services (unrelated to Sprint 12 work)
 - Code is correct, waiting on dependency fixes for full solution build
 
+### 2025-07-17 — Game Loop BackgroundService (EcosystemSimulationWorker)
+
+**What was built:**
+- Created `src/Terrarium.Server/Workers/EcosystemSimulationWorker.cs` — a `BackgroundService` that seeds an ecosystem and runs a 500ms simulation tick loop, broadcasting state to all SignalR clients
+- Added `CreatureStateData` class and `Creatures` list property to `WorldStateUpdate` in `src/Terrarium.Net/Messages/WorldStateUpdate.cs`
+- Registered the worker in `src/Terrarium.Server/Program.cs` via `AddHostedService<EcosystemSimulationWorker>()`
+
+**Simulation details:**
+- World: 5000×5000 pixels (matches GameView defaults)
+- Seeds 2000–3000 plants, 200–300 herbivores, 30–50 carnivores on startup
+- Plants: stationary, regenerate energy (+1/tick), reproduce at low probability (0.1%)
+- Herbivores: random movement (8px/tick), eat nearby plants (+20 energy), lose 1 energy/tick, reproduce at >80 energy (2% chance), die at 0
+- Carnivores: faster random movement (14px/tick), eat nearby herbivores (+30 energy, kills prey), lose 1 energy/tick, reproduce at >80 energy (1% chance), die at 0
+- Population capped at 5000 organisms to prevent runaway growth
+- Edge bouncing keeps organisms in bounds
+
+**SignalR broadcasting:**
+- Every tick: `ReceiveEcosystemTick` (tick number, organism count, peer count) + `ReceiveWorldStateUpdate` (full creature list with positions)
+- Uses `IHubContext<TerrariumHub, ITerrariumClient>` — broadcasts to all connected clients, not just ecosystem groups (server-driven simulation)
+- Log summary every 100 ticks showing population breakdown
+
+**CreatureStateData shape:**
+- Id, Name, Species, SkinFamily, X, Y, Energy — matches what `CreatureRenderData` expects in Terrarium.Web
+- Home.razor was already wired to map `WorldStateUpdate.Creatures` to `CreatureRenderData` and call `GameView.RenderFrameAsync()`
+
+**Key decisions:**
+- Simple in-process simulation, no Orleans grains needed yet — this is demo scaffolding
+- `PeriodicTimer` for the tick loop — clean async, no thread blocking
+- Broadcast to `Clients.All` since this is a server-driven simulation, not per-ecosystem peer groups
+- `CreatureStateData` lives in Terrarium.Net alongside `WorldStateUpdate` — serializable DTO, no rendering concerns
+
+**Build verified:** Terrarium.Net, Terrarium.Server, and Terrarium.Web all compile with zero errors and zero warnings.
+
