@@ -461,3 +461,54 @@ graph TD
 
 **Why:** Brady's directive is "blog everything." These posts are the historical record of Sprint 7–8 work. They establish that modernization respects the past while embracing the future. They are Hanselman-ready and set the tone for future documentation.
 
+### 2026-02-11: Sprint 9 Blog Post — "It Lives!"
+**By:** Beth (Technical Writer)
+**Status:** Complete
+**Blog Location:** `docs/blog/journal/09-it-lives.md`
+
+**What:** Sprint 9 blog post capturing the integration moment when Terrarium runs for the first time as a complete, connected system in a browser.
+
+**Rationale:** Sprint 9 represents the critical inflection point: parts becoming system. Integration of game engine (30 Hz), SignalR hub (dispatcher), Blazor Interactive Server (renderer host), TerrariumHubClient (event bridge), CanvasGameRenderer (60 FPS), and .NET Aspire orchestration. This is where the narrative shifts from "look what we built" to "look what we built *work*." Emotional core—"It Lives"—reflects the 25-year arc: DirectX 7 → HTML5 Canvas, Windows → web, museum piece → living application.
+
+**Structure:**
+1. Opening beat — "The moment when all pieces talk to each other"
+2. Sprint 8 scorecard — What was missing (integration)
+3. Integration story (6 steps): Aspire orchestration, Blazor DI wiring, component hierarchy, game engine heartbeat, SignalR hub dispatcher, render loop
+4. Full DI chain (Mermaid diagram) — From Aspire through GameEngine, Hub, Blazor components to Canvas
+5. User experience — Creatures moving, selection, population statistics live
+6. Emotional core — "It Lives": 25 years, legacy → modern, DirectX → Canvas, Windows → web
+7. Technical checklist — Sprint 9 deliverables (14 items)
+8. Epilogue — The inflection point; next steps (Sprints 10-13)
+
+**Key Narrative Choices:**
+- **DI as First-Class Story** — Dependency injection chain shown in code + Mermaid diagram (teaches pattern without preaching)
+- **"It Lives" vs "It Works"** — Chosen for emotional resonance and 25-year historical context
+- **.NET Aspire as a Story** — "Distributed systems made simple": infrastructure as dependency injection
+- **Hub as Thin Dispatcher** — Emphasizes design principle: never throws, never holds state, never does business logic
+- **30 Hz Server, 60 FPS Canvas** — Explains tick/frame mismatch: pragmatic game engine design with interpolation
+
+**Technical Content:**
+- Mermaid DI integration chain: Aspire orchestration → server registration → web registration → data flow
+- Code examples: AppHost/Program.cs, Web/Program.cs, GameView.razor, GameService.cs, TerrariumHub.cs, CanvasGameRenderer.js
+- GameEngine heartbeat (10-phase turn processor ticking at 30 Hz)
+- TerrariumHubClient event-driven integration
+- CanvasGameRenderer requestAnimationFrame loop at 60 FPS
+
+**Acceptance Criteria:**
+✅ Blog saved to `docs/blog/journal/09-it-lives.md`
+✅ Covers .NET Aspire orchestration with code examples
+✅ Explains DI chain from Aspire through Blazor components to Canvas
+✅ Includes full Mermaid DI diagram
+✅ Explains GameEngine heartbeat (30 Hz)
+✅ Explains SignalR hub philosophy (thin dispatcher)
+✅ Explains CanvasGameRenderer (60 FPS, requestAnimationFrame)
+✅ User experience section (creatures moving, selection, population stats)
+✅ Emotional core ("It Lives") with 25-year arc
+✅ Technical checklist (14 Sprint 9 deliverables)
+✅ Developer-first tone (Hanselman-ready)
+✅ Mermaid diagrams only (no ASCII art)
+
+**Word Count:** ~4,500
+
+**Why:** Brady's "blog everything" directive. Sprint 9 is the integration moment—the emotional peak of the modernization story. This post proves that pieces work together and sets up the final three sprints (10-12 feature work, 13 announcement).
+
