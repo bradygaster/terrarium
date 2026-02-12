@@ -123,6 +123,30 @@
         HubClient.OnReconnected += HandleReconnected;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Render initial terrain so the canvas isn't blank before server data arrives
+        if (_gameView is not null)
+        {
+            await _gameView.RenderFrameAsync(new Terrarium.Web.Rendering.GameRenderState());
+        }
+
+        // Start the SignalR connection
+        try
+        {
+            await HubClient.StartAsync();
+            _messages.Add(new MessageLog.GameMessage(DateTime.Now, "✅ Connected to server"));
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to connect to server on startup");
+            await SwitchToLocalOnlyMode("Server unavailable at startup");
+        }
+    }
+
     private async Task HandleEcosystemTick(Terrarium.Net.EcosystemTick tick)
     {
         _tickCount = tick.TickNumber;

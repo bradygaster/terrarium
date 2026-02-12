@@ -50,7 +50,7 @@ public static class GameServiceExtensions
 
         services.AddSingleton<NetworkEngineOptions>(sp =>
         {
-            var options = new NetworkEngineOptions { HubUrl = "https+http://server/terrarium" };
+            var options = new NetworkEngineOptions { HubUrl = "https+http://server/hubs/terrarium" };
             configure?.Invoke(options);
             return options;
         });

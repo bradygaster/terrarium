@@ -49,7 +49,7 @@ public sealed class TerrariumHubClient : IAsyncDisposable
             ?? "https+http://server";
 
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{serverUrl}/terrarium")
+            .WithUrl($"{serverUrl}/hubs/terrarium")
             .WithAutomaticReconnect(new ExponentialBackoffRetryPolicy())
             .Build();
 

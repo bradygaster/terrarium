@@ -18,6 +18,22 @@ builder.Services.AddSingleton<IPopulationTrackingService, PopulationTrackingServ
 builder.Services.AddHostedService<NonPageServicesWorker>();
 builder.Services.AddOpenApi();
 
+// CORS policy for SignalR — allows local dev and Aspire service discovery origins
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(origin =>
+            {
+                var uri = new Uri(origin);
+                return uri.Host == "localhost" || uri.Host == "127.0.0.1" || uri.Host.EndsWith(".internal");
+            })
+            .AllowAnyHeader()
+            .WithMethods("GET", "POST")
+            .AllowCredentials();
+    });
+});
+
 // Register server-specific metrics with peer/species count providers
 builder.Services.AddSingleton(sp =>
 {
@@ -60,6 +76,8 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.MapOpenApi();
 app.UseMiddleware<ThrottleMiddleware>();
+
+app.UseCors();
 
 app.MapGet("/", () => "Terrarium Server");
 
