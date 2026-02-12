@@ -351,3 +351,6 @@ PR #113, branch `squad/16-networking-layer`.
 
 **Build verified:** Terrarium.Net, Terrarium.Server, and Terrarium.Web all compile with zero errors and zero warnings.
 
+📌 Team update (2026-02-12): Game loop BackgroundService implemented and wired end-to-end (server simulation → SignalR broadcast → client rendering) — decided by Mike
+📌 Team update (2026-02-12): CreatureStateData type in WorldStateUpdate provides wire format for creatures with position/energy/species — decided by Mike
+

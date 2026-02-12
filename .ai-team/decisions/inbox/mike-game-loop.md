@@ -1,4 +1,0 @@
-### 2025-07-17: Server-driven game loop via EcosystemSimulationWorker
-**By:** Mike
-**What:** Created a `BackgroundService` (`EcosystemSimulationWorker`) that seeds plants/herbivores/carnivores and runs a 500ms simulation tick, broadcasting full creature state via SignalR. Added `CreatureStateData` class and `Creatures` list to `WorldStateUpdate` in Terrarium.Net so clients can render creatures.
-**Why:** The frontend was blank because nothing pushed game state to clients. The SignalR contracts existed but nothing invoked them. This worker fills the gap — it's a simple demo simulation that makes the UI visually alive while the real engine (GameEngine, Orleans grains) is still being wired. It broadcasts to all clients via `IHubContext` and the Home.razor was already wired to map `WorldStateUpdate.Creatures` → `CreatureRenderData` → canvas rendering. Population is capped at 5000 to prevent runaway growth.

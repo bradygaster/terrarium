@@ -312,3 +312,4 @@
 
 📌 `WorldStateUpdate.Creatures` uses `CreatureStateData` (Mike's type in Terrarium.Net), mapped to `CreatureRenderData` (Skyler's type in Terrarium.Web.Rendering) in Home.razor — two separate types for server vs. client rendering concerns
 📌 When working in parallel with Mike on shared types, always check the current file state before adding new classes — build-then-fix is faster than trying to coordinate
+📌 Team update (2026-02-12): Client render pipeline wired — SignalR creatures → CreatureStateData → CreatureRenderData → Canvas pixels — decided by Skyler

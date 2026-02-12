@@ -506,3 +506,5 @@
 - Each test is independent (all start with `page.goto('/')`)
 - Timeouts: 15s for canvas init, 30s for SignalR connection + tick data, 60s per test overall
 - Screenshot captured on failure automatically via playwright config
+
+📌 Team update (2026-02-12): Playwright integration tests replace diagnostics — 8 assertions validate rendering, connectivity, game loop, population, UI interactivity — decided by Hank
