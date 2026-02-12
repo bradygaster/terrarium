@@ -1,6 +1,11 @@
+using System.Diagnostics.Metrics;
+using Terrarium.Net;
 using Terrarium.Server;
+using Terrarium.Server.HealthChecks;
 using Terrarium.Server.Middleware;
+using Terrarium.Server.Services;
 using Terrarium.Server.Workers;
+using Terrarium.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,8 +14,46 @@ builder.Services.Configure<ServerSettings>(
     builder.Configuration.GetSection("Terrarium"));
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ThrottleService>();
+builder.Services.AddSingleton<IPopulationTrackingService, PopulationTrackingService>();
 builder.Services.AddHostedService<NonPageServicesWorker>();
 builder.Services.AddOpenApi();
+
+// Register server-specific metrics with peer/species count providers
+builder.Services.AddSingleton(sp =>
+{
+    var meterFactory = sp.GetRequiredService<IMeterFactory>();
+    return new TerrariumMetrics(
+        meterFactory,
+        connectedPeerCountProvider: () => TerrariumHub.GetConnectedPeerCount(),
+        activeSpeciesCountProvider: () => sp.GetRequiredService<IPopulationTrackingService>().GetActiveSpeciesCount());
+});
+
+// Add custom health checks
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"])
+    .AddCheck<SignalRHubHealthCheck>("signalr_hub", tags: ["ready"])
+    .AddCheck<AssemblyCacheHealthCheck>("assembly_cache", tags: ["ready"]);
+
+// SignalR configuration — optional Azure SignalR Service backplane
+var signalRBuilder = builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 512 * 1024; // 512 KB for assembly transfers
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
+});
+
+// If Azure SignalR connection string is configured, use it for horizontal scaling
+// Otherwise, fall back to in-process SignalR (local dev)
+var signalRConnectionString = builder.Configuration.GetConnectionString("signalr");
+if (!string.IsNullOrEmpty(signalRConnectionString))
+{
+    signalRBuilder.AddAzureSignalR(options =>
+    {
+        options.ServerStickyMode = Microsoft.Azure.SignalR.ServerStickyMode.Required;
+    });
+    builder.Services.AddSingleton<IHostedService>(sp =>
+        new SignalRScalingService(sp.GetRequiredService<ILogger<SignalRScalingService>>()));
+}
 
 var app = builder.Build();
 
@@ -19,6 +62,8 @@ app.MapOpenApi();
 app.UseMiddleware<ThrottleMiddleware>();
 
 app.MapGet("/", () => "Terrarium Server");
+
+app.MapHub<TerrariumHub>("/hubs/terrarium");
 
 app.MapGroup("/api/messaging")
     .MapMessagingEndpoints();

@@ -3,17 +3,53 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="description" content="A digital ecosystem simulation where creatures compete for survival" />
+    <meta name="theme-color" content="#8080ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Terrarium" />
     <base href="/" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" href="assets/icon-192.png" />
+    <link rel="apple-touch-icon" href="assets/icon-192.png" />
     <link rel="stylesheet" href="css/glass-theme.css" />
     <link rel="stylesheet" href="css/glass-components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
     <link rel="stylesheet" href="css/app.css" />
     <HeadOutlet />
 </head>
 
 <body>
     <Routes />
+    <script src="js/terrarium-sprites.js"></script>
+    <script src="js/sprite-loader.js"></script>
+    <script src="js/sprite-manager.js"></script>
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+                    .catch(err => console.error('[PWA] Service Worker registration failed:', err));
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('[PWA] Install prompt ready');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] App installed');
+            deferredPrompt = null;
+        });
+    </script>
 </body>
 
 </html>

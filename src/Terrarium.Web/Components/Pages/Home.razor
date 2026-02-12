@@ -1,42 +1,101 @@
 @page "/"
 @rendermode InteractiveServer
 @using Terrarium.Web.Models
+@using Terrarium.Web.Services
+@using Terrarium.Web.Rendering
+@using Microsoft.AspNetCore.SignalR.Client
+@inject TerrariumHubClient HubClient
+@implements IDisposable
 
 <PageTitle>.NET Terrarium</PageTitle>
 
 <div class="terrarium-home">
-    <EcosystemStatus TickCount="@_tickCount"
-                     CreatureCount="@_creatures.Count"
-                     PeerCount="@_peerCount"
-                     IsRunning="@_isRunning" />
-
     <div class="terrarium-home__content">
-        <div class="terrarium-chrome__viewport">
-            <TerrariumViewport />
+        <div class="terrarium-home__viewport">
+            <GameView @ref="_gameView"
+                      WorldWidth="5000"
+                      WorldHeight="5000"
+                      OnCreatureClicked="@OnGameCreatureClicked"
+                      OnSelectionCleared="@OnGameSelectionCleared" />
         </div>
 
-        <aside class="terrarium-chrome__sidebar">
-            <CreaturePanel Creatures="@_creatures"
-                           OnCreatureSelected="@OnCreatureSelected" />
+        <aside class="terrarium-home__sidebar glass-sidebar">
+            <div class="glass-sidebar__section-header">
+                <span class="glass-label">Ecosystem</span>
+            </div>
+            <div class="glass-sidebar__section-body">
+                <EcosystemStatus TickCount="@_tickCount"
+                                 CreatureCount="@_creatures.Count"
+                                 PeerCount="@_peerCount"
+                                 IsRunning="@_isRunning" />
+            </div>
+
+            <div class="glass-sidebar__section-header">
+                <span class="glass-label">Creatures</span>
+            </div>
+            <div class="glass-sidebar__section-body terrarium-home__creature-section">
+                <CreaturePanel Creatures="@_creatures"
+                               OnCreatureSelected="@OnCreatureSelected" />
+            </div>
+
+            <div class="glass-sidebar__section-header">
+                <span class="glass-label">Network</span>
+            </div>
+            <div class="glass-sidebar__section-body">
+                <PeerList EcosystemId="@_ecosystemId" />
+            </div>
+
+            <div class="glass-sidebar__section-header">
+                <span class="glass-label">Global Population</span>
+            </div>
+            <div class="glass-sidebar__section-body terrarium-home__population-section">
+                <PopulationChart Report="@_populationReport" />
+            </div>
+
+            <div class="glass-sidebar__section-header">
+                <span class="glass-label">Event Log</span>
+            </div>
+            <div class="glass-sidebar__section-body terrarium-home__log-section">
+                <MessageLog Messages="@_messages" />
+            </div>
         </aside>
     </div>
 
-    <div class="terrarium-home__log">
-        <MessageLog Messages="@_messages" />
-    </div>
+    <footer class="terrarium-home__statusbar glass-statusbar">
+        <div class="glass-statusbar__section">
+            <ConnectionStatus />
+        </div>
+        <div class="glass-statusbar__section" style="flex:1;">
+            Population: @_creatures.Count
+        </div>
+        <div class="glass-statusbar__section">
+            Tick: @_tickCount
+        </div>
+        <div class="glass-statusbar__section">
+            Peers: @_peerCount
+        </div>
+    </footer>
 </div>
 
 @code {
+    private GameView? _gameView;
     private List<CreatureInfo> _creatures = [];
     private List<MessageLog.GameMessage> _messages = [];
     private CreatureInfo? _selectedCreature;
-    private int _tickCount;
+    private PopulationReport? _populationReport;
+    private long _tickCount;
     private int _peerCount;
     private bool _isRunning;
+    private string _ecosystemId = "default";
+    private bool _localOnlyMode = false;
+    private int _connectionAttempts = 0;
+    private const int MaxConnectionAttempts = 3;
+
+    [Inject]
+    private ILogger<Home> Logger { get; set; } = default!;
 
     protected override void OnInitialized()
     {
-        // Placeholder: seed with sample data for layout verification
         _creatures =
         [
             new CreatureInfo("Herbivore", "Leafy", 80, 100, 12, "120, 340"),
@@ -51,10 +110,151 @@
         _peerCount = 0;
         _isRunning = false;
         _tickCount = 0;
+
+        // Wire SignalR hub client callbacks
+        HubClient.OnEcosystemTick += HandleEcosystemTick;
+        HubClient.OnPopulationReport += HandlePopulationReport;
+        HubClient.OnPeerAnnounce += HandlePeerAnnounce;
+        HubClient.OnWorldStateUpdate += HandleWorldStateUpdate;
+        HubClient.OnCreatureTeleport += HandleCreatureTeleport;
+        HubClient.OnError += HandleHubError;
+        HubClient.OnClosed += HandleConnectionClosed;
+        HubClient.OnReconnecting += HandleReconnecting;
+        HubClient.OnReconnected += HandleReconnected;
+    }
+
+    private async Task HandleEcosystemTick(Terrarium.Net.EcosystemTick tick)
+    {
+        _tickCount = tick.TickNumber;
+        _peerCount = tick.PeerCount;
+        _isRunning = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandlePopulationReport(Terrarium.Net.PopulationReport report)
+    {
+        _populationReport = report;
+        _creatures = report.Species
+            .Select(s => new CreatureInfo(s.SpeciesName, s.SpeciesName, s.Population, s.Population, 0, "—"))
+            .ToList();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandlePeerAnnounce(Terrarium.Net.PeerAnnounce announce)
+    {
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now, $"Peer {announce.PeerId} {announce.Action}"));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleWorldStateUpdate(Terrarium.Net.WorldStateUpdate update)
+    {
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now,
+            $"World update tick {update.TickNumber}: {update.OrganismCount} organisms"));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleHubError(Terrarium.Net.HubError error)
+    {
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now, $"Error [{error.Code}]: {error.Message}"));
+        
+        // If error indicates server is unreachable and not transient, switch to local-only
+        if (!error.IsTransient && error.Code.Contains("Connection", StringComparison.OrdinalIgnoreCase))
+        {
+            await SwitchToLocalOnlyMode("Server connection error");
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleCreatureTeleport(Terrarium.Net.CreatureTeleport teleport)
+    {
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now,
+            $"🌀 Creature teleported: {teleport.OrganismId} from {teleport.SourcePeerId}"));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleConnectionClosed(Exception? error)
+    {
+        _connectionAttempts++;
+        
+        if (error is not null)
+        {
+            Logger.LogWarning(error, "SignalR connection closed unexpectedly (attempt {Attempt}/{Max})", 
+                _connectionAttempts, MaxConnectionAttempts);
+            _messages.Add(new MessageLog.GameMessage(DateTime.Now, 
+                $"⚠️ Connection lost (attempt {_connectionAttempts}/{MaxConnectionAttempts})"));
+        }
+        
+        // After max attempts, switch to local-only mode
+        if (_connectionAttempts >= MaxConnectionAttempts)
+        {
+            await SwitchToLocalOnlyMode("Max connection attempts exceeded");
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleReconnecting(string? error)
+    {
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now, "🔄 Reconnecting to server..."));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleReconnected(string? connectionId)
+    {
+        _connectionAttempts = 0; // Reset on successful reconnection
+        _localOnlyMode = false;  // Exit local-only mode
+        
+        Logger.LogInformation("SignalR reconnected successfully with connection ID {ConnectionId}", connectionId);
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now, "✅ Reconnected to server"));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SwitchToLocalOnlyMode(string reason)
+    {
+        if (_localOnlyMode) return; // Already in local-only mode
+        
+        _localOnlyMode = true;
+        Logger.LogWarning("Switching to local-only mode: {Reason}", reason);
+        
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now, 
+            "🏠 Running in local-only mode — server unavailable"));
+        _messages.Add(new MessageLog.GameMessage(DateTime.Now, 
+            "Your ecosystem will continue running locally without network features"));
+        
+        // Disable network-dependent features
+        _peerCount = 0;
+        
+        await InvokeAsync(StateHasChanged);
     }
 
     private void OnCreatureSelected(CreatureInfo creature)
     {
         _selectedCreature = creature;
+    }
+
+    private void OnGameCreatureClicked(string creatureId)
+    {
+        var creature = _creatures.FirstOrDefault(c => c.Name == creatureId);
+        if (creature is not null)
+            _selectedCreature = creature;
+    }
+
+    private void OnGameSelectionCleared()
+    {
+        _selectedCreature = null;
+    }
+
+    public void Dispose()
+    {
+        HubClient.OnEcosystemTick -= HandleEcosystemTick;
+        HubClient.OnPopulationReport -= HandlePopulationReport;
+        HubClient.OnPeerAnnounce -= HandlePeerAnnounce;
+        HubClient.OnWorldStateUpdate -= HandleWorldStateUpdate;
+        HubClient.OnCreatureTeleport -= HandleCreatureTeleport;
+        HubClient.OnError -= HandleHubError;
+        HubClient.OnClosed -= HandleConnectionClosed;
+        HubClient.OnReconnecting -= HandleReconnecting;
+        HubClient.OnReconnected -= HandleReconnected;
     }
 }

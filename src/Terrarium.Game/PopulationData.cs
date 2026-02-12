@@ -2,11 +2,13 @@
 
 using Microsoft.Extensions.Logging;
 using OrganismBase;
+using Terrarium.Game.Services;
 
 namespace Terrarium.Game;
 
 /// <summary>
 /// Tracks population metrics. Replaces legacy DataSet/WebService with ILogger.
+/// When a GameServiceBridge is attached, reports population to the server every 600 ticks.
 /// </summary>
 public sealed class PopulationData
 {
@@ -17,12 +19,28 @@ public sealed class PopulationData
     private int _currentTick = -1;
     private int _lastReportedTick = -1;
     private Guid _currentStateGuid;
+    private GameServiceBridge? _serviceBridge;
+    private EcosystemMode _mode = EcosystemMode.LocalOnly;
 
     public PopulationData(bool reportData, ILogger<PopulationData> logger)
     { _reportDataToServer = reportData; _logger = logger; }
 
     public int LastReportedTick => _lastReportedTick;
     public bool IsReportingTick(int tickNumber) => tickNumber > 0 && tickNumber % TicksToReport == 0;
+
+    /// <summary>Sets the service bridge for HTTP-based population reporting.</summary>
+    public GameServiceBridge? ServiceBridge
+    {
+        get => _serviceBridge;
+        set => _serviceBridge = value;
+    }
+
+    /// <summary>Gets or sets the ecosystem mode (affects population reporting).</summary>
+    public EcosystemMode Mode
+    {
+        get => _mode;
+        set => _mode = value;
+    }
 
     public void BeginTick(int tickNumber, Guid stateGuid)
     { _currentTick = tickNumber; _currentStateGuid = stateGuid; }
@@ -32,11 +50,18 @@ public sealed class PopulationData
         if (IsReportingTick(tickNumber))
         {
             _lastReportedTick = tickNumber;
-            if (_reportDataToServer)
+            // Skip population reporting in local-only mode
+            if (_reportDataToServer && _mode == EcosystemMode.Networked)
             {
-                // TODO: Sprint 7 - report population data via Orleans grain or HTTP
                 _logger.LogInformation("Population report at tick {Tick}: {Count} species tracked",
                     tickNumber, _speciesPopulations.Count);
+
+                if (_serviceBridge is not null)
+                {
+                    var snapshot = GetPopulationSnapshot();
+                    // Fire-and-forget: reporting should not block the game loop
+                    _ = _serviceBridge.ReportPopulationAsync(tickNumber, snapshot);
+                }
             }
         }
     }

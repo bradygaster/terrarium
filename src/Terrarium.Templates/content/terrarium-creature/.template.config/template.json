@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Terrarium Team",
+  "classifications": [ "Game", "Terrarium", "Creature" ],
+  "identity": "Terrarium.Templates.Creature",
+  "name": "Terrarium Creature",
+  "shortName": "terrarium-creature",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "TerrariumCreature",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "net10.0",
+          "description": "Target net10.0"
+        }
+      ],
+      "replaces": "net10.0",
+      "defaultValue": "net10.0"
+    },
+    "CreatureType": {
+      "type": "parameter",
+      "description": "The type of creature to create (Animal or Plant).",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "Animal",
+          "description": "A mobile creature that can move, attack, and eat"
+        },
+        {
+          "choice": "Plant",
+          "description": "A stationary organism that spreads seeds"
+        }
+      ],
+      "defaultValue": "Animal"
+    },
+    "IsCarnivore": {
+      "type": "parameter",
+      "description": "Whether the animal is a carnivore (eats other animals) or herbivore (eats plants).",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "true",
+          "description": "Carnivore - eats other animals"
+        },
+        {
+          "choice": "false",
+          "description": "Herbivore - eats plants"
+        }
+      ],
+      "defaultValue": "false",
+      "replaces": "CARNIVORE_VALUE"
+    },
+    "AuthorName": {
+      "type": "parameter",
+      "description": "The creature author's name.",
+      "datatype": "string",
+      "defaultValue": "Anonymous",
+      "replaces": "AUTHOR_NAME"
+    },
+    "AuthorEmail": {
+      "type": "parameter",
+      "description": "The creature author's email.",
+      "datatype": "string",
+      "defaultValue": "author@example.com",
+      "replaces": "AUTHOR_EMAIL"
+    },
+    "IsAnimal": {
+      "type": "computed",
+      "value": "(CreatureType == \"Animal\")"
+    },
+    "IsPlant": {
+      "type": "computed",
+      "value": "(CreatureType == \"Plant\")"
+    }
+  }
+}

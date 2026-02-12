@@ -1,0 +1,87 @@
+@using Microsoft.AspNetCore.Components.Web
+@inherits ErrorBoundary
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else
+{
+    <div class="terrarium-error-boundary">
+        <div class="terrarium-error-boundary__panel glass-panel">
+            <div class="terrarium-error-boundary__icon">⚠️</div>
+            <div class="terrarium-error-boundary__title glass-label">
+                Something went wrong
+            </div>
+            <div class="terrarium-error-boundary__message glass-label">
+                @if (ShowDetails)
+                {
+                    <pre class="terrarium-error-boundary__details">@CurrentException.Message</pre>
+                    if (CurrentException.StackTrace is not null)
+                    {
+                        <details class="terrarium-error-boundary__stack">
+                            <summary>Stack Trace</summary>
+                            <pre>@CurrentException.StackTrace</pre>
+                        </details>
+                    }
+                }
+                else
+                {
+                    <p>An unexpected error occurred while rendering this component.</p>
+                    <p>The rest of the application should continue to work normally.</p>
+                }
+            </div>
+            <div class="terrarium-error-boundary__actions">
+                <button class="glass-button" @onclick="Recover">
+                    Try Again
+                </button>
+                @if (!string.IsNullOrEmpty(FallbackRoute))
+                {
+                    <a href="@FallbackRoute" class="glass-button">
+                        Go to @FallbackLabel
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Whether to show detailed error information (exception message and stack trace).
+    /// Default: false (production-safe). Set to true in development environments.
+    /// </summary>
+    [Parameter]
+    public bool ShowDetails { get; set; }
+
+    /// <summary>
+    /// Optional fallback route to navigate to (e.g., "/" for home).
+    /// </summary>
+    [Parameter]
+    public string? FallbackRoute { get; set; }
+
+    /// <summary>
+    /// Label for the fallback route button (e.g., "Home", "Dashboard").
+    /// </summary>
+    [Parameter]
+    public string FallbackLabel { get; set; } = "Home";
+
+    /// <summary>
+    /// Callback invoked when an error is caught. Use this to log errors to telemetry.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Exception> OnError { get; set; }
+
+    [Inject]
+    private ILogger<TerrariumErrorBoundary>? Logger { get; set; }
+
+    protected override async Task OnErrorAsync(Exception exception)
+    {
+        Logger?.LogError(exception, "ErrorBoundary caught exception in component tree");
+        
+        if (OnError.HasDelegate)
+        {
+            await OnError.InvokeAsync(exception);
+        }
+    }
+}

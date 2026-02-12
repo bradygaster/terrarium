@@ -153,6 +153,25 @@ public static class SpeciesEndpoints
                     return Results.Ok(new RegisterSpeciesResponse { Status = SpeciesServiceStatus.AlreadyExists });
                 }
 
+                // Save assembly to disk
+                var assemblyPath = settings.Value.AssemblyPath;
+                if (!string.IsNullOrEmpty(assemblyPath) && request.AssemblyCode != null)
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(assemblyPath);
+                        var shortName = request.AssemblyFullName.Split(',')[0].ToLowerInvariant();
+                        var fileName = Path.Combine(assemblyPath, $"{shortName}.dll");
+                        await File.WriteAllBytesAsync(fileName, request.AssemblyCode);
+                        logger.LogInformation("Saved species assembly to {FileName}", fileName);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Failed to save assembly to disk for {Name}", request.Name);
+                        // Don't fail the registration if disk save fails
+                    }
+                }
+
                 // Apply throttles after successful insert
                 var introductionWait = settings.Value.IntroductionWait;
                 throttle.AddThrottle(ipAddress, "AddSpecies5MinuteThrottle", 1, TimeSpan.FromMinutes(introductionWait));
@@ -209,6 +228,8 @@ public static class SpeciesEndpoints
         .Produces<IEnumerable<SpeciesInfo>>();
 
         group.MapGet("/extinct", async (
+            string version,
+            string? filter,
             IOptions<ServerSettings> settings,
             ILogger<Program> logger) =>
         {
@@ -265,6 +286,68 @@ public static class SpeciesEndpoints
         })
         .WithName("GetBlacklistedSpecies")
         .Produces<IEnumerable<string>>();
+
+        group.MapGet("/{name}/assembly", async (
+            string name,
+            string version,
+            IOptions<ServerSettings> settings,
+            ILogger<Program> logger) =>
+        {
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(version))
+            {
+                return Results.BadRequest("Name and version are required");
+            }
+
+            var normalizedVersion = new Version(version).ToString(3);
+
+            try
+            {
+                using var connection = new SqlConnection(settings.Value.SpeciesDsn);
+                await connection.OpenAsync();
+
+                // First check if the species exists and is not blacklisted
+                var species = await connection.QuerySingleOrDefaultAsync<SpeciesInfo>(
+                    "SELECT * FROM Species WHERE Name = @Name AND Version = @Version",
+                    new { Name = name, Version = normalizedVersion });
+
+                if (species == null)
+                {
+                    return Results.NotFound();
+                }
+
+                if (species.BlackListed)
+                {
+                    return Results.BadRequest("Species is blacklisted");
+                }
+
+                // Load assembly from disk
+                var assemblyPath = settings.Value.AssemblyPath;
+                if (string.IsNullOrEmpty(assemblyPath))
+                {
+                    logger.LogWarning("AssemblyPath not configured in ServerSettings");
+                    return Results.Problem("Server configuration error");
+                }
+
+                var shortName = species.AssemblyFullName.Split(',')[0].ToLowerInvariant();
+                var fileName = Path.Combine(assemblyPath, $"{shortName}.dll");
+
+                if (!File.Exists(fileName))
+                {
+                    logger.LogWarning("Assembly file not found: {FileName}", fileName);
+                    return Results.NotFound("Assembly file not found");
+                }
+
+                var assemblyBytes = await File.ReadAllBytesAsync(fileName);
+                return Results.Bytes(assemblyBytes, "application/octet-stream");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Species: GetAssembly failed for {Name}", name);
+                return Results.Problem("Failed to retrieve species assembly");
+            }
+        })
+        .WithName("GetSpeciesAssembly")
+        .Produces<byte[]>();
 
         group.MapPost("/reintroduce", async (
             ReintroduceSpeciesRequest request,

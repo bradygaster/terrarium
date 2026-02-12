@@ -1,0 +1,409 @@
+/*
+ * ==========================================================================
+ * Upload Page — Creature DLL Upload Component
+ * ==========================================================================
+ */
+
+.upload-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
+  overflow: auto;
+}
+
+.upload-page__header {
+  padding: var(--glass-spacing-label-padding);
+}
+
+.upload-page__header h1 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+}
+
+.upload-page__description {
+  font-size: 8px;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.upload-page__content {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.upload-page__dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 24px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.upload-page__dropzone--dragging {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-button-hover-top) 0%,
+    var(--glass-gradient-button-hover-bottom) 100%
+  );
+  border-color: var(--glass-color-input-border-focus);
+  box-shadow: 0 0 12px rgba(128, 255, 128, 0.4);
+}
+
+.upload-page__dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.upload-page__dropzone-icon {
+  font-size: 64px;
+  opacity: 0.6;
+}
+
+.upload-page__dropzone-or {
+  font-size: 8px;
+  opacity: 0.6;
+}
+
+.upload-page__file-input {
+  display: none;
+}
+
+.upload-page__progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-page__spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(128, 128, 255, 0.2);
+  border-top-color: var(--glass-gradient-panel-top);
+  border-radius: 50%;
+  animation: upload-spinner 1s linear infinite;
+}
+
+@keyframes upload-spinner {
+  to { transform: rotate(360deg); }
+}
+
+.upload-page__progress-bar {
+  width: 200px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: var(--glass-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.upload-page__progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--glass-gradient-button-hover-top),
+    var(--glass-gradient-button-hover-bottom)
+  );
+  animation: upload-progress 1.5s ease-in-out infinite;
+}
+
+@keyframes upload-progress {
+  0% { width: 0%; }
+  50% { width: 100%; }
+  100% { width: 0%; }
+}
+
+.upload-page__result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-page__result-icon {
+  font-size: 64px;
+}
+
+.upload-page__result--success .upload-page__result-icon {
+  animation: upload-success 0.5s ease-out;
+}
+
+@keyframes upload-success {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.upload-page__result-message {
+  font-size: 8px;
+  text-align: center;
+  max-width: 300px;
+}
+
+.upload-page__errors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 400px;
+  padding: 12px;
+  background: rgba(255, 128, 128, 0.1);
+  border: 1px solid var(--glass-gradient-led-failed-bottom);
+  border-radius: var(--glass-radius-input);
+}
+
+.upload-page__error {
+  display: flex;
+  gap: 8px;
+  text-align: left;
+}
+
+.upload-page__error-bullet {
+  color: var(--glass-gradient-led-failed-top);
+  flex-shrink: 0;
+}
+
+.upload-page__sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.upload-page__requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upload-page__requirement {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.upload-page__requirement-icon {
+  color: var(--glass-gradient-led-idle-top);
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.upload-page__examples-text {
+  font-size: 8px;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.upload-page__examples {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 8px;
+  opacity: 0.9;
+}
+
+/*
+ * ==========================================================================
+ * Gallery Page — Creature Browser
+ * ==========================================================================
+ */
+
+.gallery-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gallery-page__header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--glass-spacing-label-padding);
+}
+
+.gallery-page__header h1 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.gallery-page__search {
+  width: 100%;
+}
+
+.gallery-page__filters {
+  display: flex;
+  gap: var(--glass-spacing-button-margin);
+  flex-wrap: wrap;
+}
+
+.gallery-page__content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.gallery-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 4px;
+}
+
+.gallery-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px;
+  text-align: center;
+}
+
+.gallery-page__empty-icon {
+  font-size: 64px;
+  opacity: 0.4;
+}
+
+.gallery-page__empty-hint {
+  font-size: 8px;
+  opacity: 0.6;
+}
+
+.gallery-card {
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.gallery-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(128, 128, 255, 0.3);
+}
+
+.gallery-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--glass-spacing-label-padding);
+  border-bottom: var(--glass-border);
+}
+
+.gallery-card__type-badge {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gallery-card__type-badge--herbivore {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-led-idle-top) 0%,
+    var(--glass-gradient-led-idle-bottom) 100%
+  );
+}
+
+.gallery-card__type-badge--carnivore {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-led-failed-top) 0%,
+    var(--glass-gradient-led-failed-bottom) 100%
+  );
+}
+
+.gallery-card__type-badge--plant {
+  background: linear-gradient(
+    180deg,
+    var(--glass-gradient-led-waiting-top) 0%,
+    var(--glass-gradient-led-waiting-bottom) 100%
+  );
+}
+
+.gallery-card__name {
+  flex: 1;
+  font-size: 11px;
+}
+
+.gallery-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--glass-spacing-label-padding);
+  flex: 1;
+}
+
+.gallery-card__stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gallery-card__stat-label {
+  color: var(--glass-color-stat-label);
+  font-size: 8px;
+}
+
+.gallery-card__stat-value {
+  font-size: 8px;
+  text-align: right;
+}
+
+.gallery-card__footer {
+  padding: var(--glass-spacing-label-padding);
+  border-top: var(--glass-border);
+}
+
+.gallery-card__action {
+  width: 100%;
+  margin: 0;
+}
+
+/*
+ * ==========================================================================
+ * Responsive adjustments
+ * ==========================================================================
+ */
+
+@media (max-width: 1024px) {
+  .upload-page__content {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-page__sidebar {
+    display: none;
+  }
+
+  .gallery-page__grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .gallery-page__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-page__filters {
+    flex-direction: column;
+  }
+
+  .gallery-page__filters .glass-button {
+    width: 100%;
+    margin: 0;
+  }
+}

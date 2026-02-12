@@ -1,0 +1,49 @@
+@using Microsoft.AspNetCore.SignalR.Client
+@using Terrarium.Web.Services
+@implements IDisposable
+
+@* ConnectionStatus — LED indicator showing SignalR connection state *@
+
+<div class="connection-status">
+    <span class="glass-led @LedClass" title="@StatusText"></span>
+    <span class="glass-label glass-label--nowrap connection-status__label">@StatusText</span>
+</div>
+
+@code {
+    [Inject]
+    private TerrariumHubClient HubClient { get; set; } = default!;
+
+    private HubConnectionState _currentState = HubConnectionState.Disconnected;
+    private string StatusText => _currentState switch
+    {
+        HubConnectionState.Connected => "Connected",
+        HubConnectionState.Connecting => "Connecting…",
+        HubConnectionState.Reconnecting => "Reconnecting…",
+        _ => "Disconnected"
+    };
+
+    private string LedClass => _currentState switch
+    {
+        HubConnectionState.Connected => "glass-led--active",
+        HubConnectionState.Connecting => "glass-led--waiting",
+        HubConnectionState.Reconnecting => "glass-led--waiting",
+        _ => "glass-led--idle"
+    };
+
+    protected override void OnInitialized()
+    {
+        _currentState = HubClient.State;
+        HubClient.OnStateChanged += HandleStateChanged;
+    }
+
+    private void HandleStateChanged(HubConnectionState newState)
+    {
+        _currentState = newState;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        HubClient.OnStateChanged -= HandleStateChanged;
+    }
+}

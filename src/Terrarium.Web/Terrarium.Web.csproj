@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Terrarium.Configuration\Terrarium.Configuration.csproj" />
+    <ProjectReference Include="..\Terrarium.Game\Terrarium.Game.csproj" />
+    <ProjectReference Include="..\Terrarium.Net\Terrarium.Net.csproj" />
     <ProjectReference Include="..\Terrarium.ServiceDefaults\Terrarium.ServiceDefaults.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,58 @@
+# Docker Compose file for running multi-client integration tests in CI
+# Sprint 11 Issue #73
+#
+# Usage:
+#   docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+#
+# This spins up:
+# - PostgreSQL database
+# - Terrarium server
+# - Test runner container that executes multi-client tests
+
+services:
+  # Database service
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: terrarium_test
+      POSTGRES_USER: terrarium
+      POSTGRES_DB: terrarium_test
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terrarium"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Terrarium server
+  server:
+    build:
+      context: .
+      dockerfile: src/Terrarium.Server/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__TerrariumDb: "Host=postgres;Port=5432;Database=terrarium_test;Username=terrarium;Password=terrarium_test"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Test runner — runs multi-client tests against the server
+  tests:
+    build:
+      context: .
+      dockerfile: src/Terrarium.MultiClient.Tests/Dockerfile.test
+    environment:
+      TERRARIUM_SERVER_URL: http://server:8080
+    depends_on:
+      server:
+        condition: service_healthy
+    command: dotnet test /src/Terrarium.MultiClient.Tests/Terrarium.MultiClient.Tests.csproj --logger "console;verbosity=normal"

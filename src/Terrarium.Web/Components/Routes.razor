@@ -3,4 +3,25 @@
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <PageTitle>Not Found</PageTitle>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <div class="terrarium-error-boundary">
+                <div class="terrarium-error-boundary__panel glass-panel">
+                    <div class="terrarium-error-boundary__icon">🔍</div>
+                    <div class="terrarium-error-boundary__title glass-label">
+                        Page Not Found
+                    </div>
+                    <div class="terrarium-error-boundary__message glass-label">
+                        <p>Sorry, there's nothing at this address.</p>
+                    </div>
+                    <div class="terrarium-error-boundary__actions">
+                        <a href="/" class="glass-button">
+                            Go to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </LayoutView>
+    </NotFound>
 </Router>

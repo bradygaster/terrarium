@@ -1,0 +1,105 @@
+@* GameView — Full game viewport with Canvas rendering, terrain, overlays, and interaction *@
+@using Terrarium.Web.Rendering
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="game-view glass-panel glass-panel--no-glass" tabindex="0">
+    <canvas @ref="_canvasRef" class="game-view__canvas"></canvas>
+    @if (!_initialized)
+    {
+        <div class="game-view__overlay">
+            <span class="glass-label">Initializing renderer…</span>
+        </div>
+    }
+    @if (_selectedCreatureName is not null)
+    {
+        <div class="game-view__selection-bar glass-panel">
+            <span class="glass-label">Selected: @_selectedCreatureName (@_selectedCreatureSpecies)</span>
+        </div>
+    }
+</div>
+
+@code {
+    private ElementReference _canvasRef;
+    private CanvasGameRenderer? _renderer;
+    private bool _initialized;
+    private string? _selectedCreatureId;
+    private string? _selectedCreatureName;
+    private string? _selectedCreatureSpecies;
+
+    /// <summary>World width in pixels. Default 5000.</summary>
+    [Parameter] public int WorldWidth { get; set; } = 5000;
+
+    /// <summary>World height in pixels. Default 5000.</summary>
+    [Parameter] public int WorldHeight { get; set; } = 5000;
+
+    /// <summary>Callback when a creature is clicked.</summary>
+    [Parameter] public EventCallback<string> OnCreatureClicked { get; set; }
+
+    /// <summary>Callback when creature selection is cleared.</summary>
+    [Parameter] public EventCallback OnSelectionCleared { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _renderer = new CanvasGameRenderer(JS);
+            _renderer.SetCanvas(_canvasRef);
+            _renderer.OnCreatureSelected += HandleCreatureSelected;
+            _renderer.OnCreatureDeselected += HandleCreatureDeselected;
+            await _renderer.InitializeAsync(WorldWidth, WorldHeight);
+            _initialized = true;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>Renders a complete frame from the given world state.</summary>
+    public async Task RenderFrameAsync(GameRenderState worldState)
+    {
+        if (_renderer is { IsInitialized: true })
+            await _renderer.RenderFrameAsync(worldState);
+    }
+
+    /// <summary>Gets the underlying renderer for advanced usage.</summary>
+    public IGameRenderer? Renderer => _renderer;
+
+    private async Task HandleCreatureSelected(string id, string name, string species)
+    {
+        _selectedCreatureId = id;
+        _selectedCreatureName = name;
+        _selectedCreatureSpecies = species;
+        await InvokeAsync(StateHasChanged);
+        await OnCreatureClicked.InvokeAsync(id);
+    }
+
+    private async Task HandleCreatureDeselected()
+    {
+        _selectedCreatureId = null;
+        _selectedCreatureName = null;
+        _selectedCreatureSpecies = null;
+        await InvokeAsync(StateHasChanged);
+        await OnSelectionCleared.InvokeAsync();
+    }
+
+    [JSInvokable]
+    public async Task OnCreatureSelected(string id, string name, string species)
+    {
+        await HandleCreatureSelected(id, name, species);
+    }
+
+    [JSInvokable]
+    public Task OnCreatureDeselected()
+    {
+        return HandleCreatureDeselected();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_renderer is not null)
+        {
+            _renderer.OnCreatureSelected -= HandleCreatureSelected;
+            _renderer.OnCreatureDeselected -= HandleCreatureDeselected;
+            await _renderer.DisposeAsync();
+        }
+    }
+}

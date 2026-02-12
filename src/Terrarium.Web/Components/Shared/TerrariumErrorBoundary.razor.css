@@ -1,0 +1,75 @@
+.terrarium-error-boundary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    padding: 2rem;
+}
+
+.terrarium-error-boundary__panel {
+    max-width: 600px;
+    width: 100%;
+    padding: 2rem;
+    text-align: center;
+}
+
+.terrarium-error-boundary__icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.terrarium-error-boundary__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--color-error, #ef4444);
+}
+
+.terrarium-error-boundary__message {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.terrarium-error-boundary__message p {
+    margin: 0.5rem 0;
+}
+
+.terrarium-error-boundary__details {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: left;
+    font-family: monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.terrarium-error-boundary__stack {
+    margin-top: 1rem;
+}
+
+.terrarium-error-boundary__stack summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.terrarium-error-boundary__stack pre {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.terrarium-error-boundary__actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}

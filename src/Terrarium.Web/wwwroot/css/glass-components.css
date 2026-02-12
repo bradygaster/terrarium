@@ -1053,3 +1053,221 @@
   height: 100%;
   object-fit: contain;
 }
+
+/* ==========================================================================
+ * .peer-list
+ *
+ * Connected peers list with network health indicators.
+ * Displays peer ID, version, connection status, and relative connection time.
+ * Part of Sprint 11 — Issue #76.
+ * ========================================================================== */
+
+.peer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  min-height: 120px;
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.peer-list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.peer-list__count {
+  padding: 4px 0;
+  font-size: 9px;
+  color: var(--glass-color-stat-label);
+}
+
+.peer-list__empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--glass-color-input-placeholder);
+  font-style: italic;
+}
+
+.peer-list__items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for peer list */
+.peer-list__items::-webkit-scrollbar {
+  width: var(--glass-size-scrollbar);
+}
+
+.peer-list__items::-webkit-scrollbar-track {
+  background: var(--glass-color-scrollbar-track);
+  border-radius: 4px;
+}
+
+.peer-list__items::-webkit-scrollbar-thumb {
+  background: var(--glass-color-scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.peer-list__items::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-color-scrollbar-thumb-hover);
+}
+
+.peer-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.peer-list__item:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(128, 128, 255, 0.3);
+}
+
+.peer-list__item-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.peer-list__peer-id {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--glass-color-foreground);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.peer-list__item-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8px;
+  color: var(--glass-color-stat-label);
+  padding-left: 22px; /* Align with peer ID after LED */
+}
+
+.peer-list__version {
+  font-family: 'Consolas', 'Courier New', monospace;
+  color: var(--glass-color-stat-value);
+}
+
+.peer-list__connected-time {
+  color: var(--glass-color-stat-label);
+  font-style: italic;
+}
+
+/* ==========================================================================
+ * .population-chart
+ *
+ * Real-time population statistics panel with species breakdown and bar chart.
+ * Part of Sprint 11 — Issue #75: Global population tracking.
+ * ========================================================================== */
+
+.population-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  min-height: 200px;
+}
+
+.population-chart__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.population-chart__species-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 300px;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for population chart */
+.population-chart__species-list::-webkit-scrollbar {
+  width: var(--glass-size-scrollbar);
+}
+
+.population-chart__species-list::-webkit-scrollbar-track {
+  background: var(--glass-color-scrollbar-track);
+  border-radius: 4px;
+}
+
+.population-chart__species-list::-webkit-scrollbar-thumb {
+  background: var(--glass-color-scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.population-chart__species-list::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-color-scrollbar-thumb-hover);
+}
+
+.population-chart__species-row {
+  display: grid;
+  grid-template-columns: 1fr 3fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 9px;
+}
+
+.population-chart__bar-container {
+  position: relative;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.population-chart__bar {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--glass-gradient-button-hover-top) 0%,
+    var(--glass-gradient-button-hover-bottom) 100%
+  );
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.glass-label--header {
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.glass-label--muted {
+  color: var(--glass-color-stat-label);
+  font-size: 9px;
+}
+
+.glass-label--center {
+  text-align: center;
+}
+
+.glass-label--right {
+  text-align: right;
+}
+

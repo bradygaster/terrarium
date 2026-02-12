@@ -1,0 +1,249 @@
+@page "/upload"
+@rendermode InteractiveServer
+@using Terrarium.Game.Hosting
+@using Microsoft.AspNetCore.Components.Forms
+@inject ILogger<Upload> Logger
+@inject AssemblyValidator Validator
+
+<PageTitle>Upload Creature - .NET Terrarium</PageTitle>
+
+<div class="upload-page">
+    <div class="upload-page__header glass-panel">
+        <h1 class="glass-label">Upload Creature</h1>
+        <p class="glass-label upload-page__description">
+            Upload a creature DLL to introduce a new species into the ecosystem.
+            Your creature must inherit from Animal or Plant.
+        </p>
+    </div>
+
+    <div class="upload-page__content">
+        <div class="upload-page__dropzone glass-panel">
+            
+            @if (_uploadState == UploadState.Idle)
+            {
+                <div class="upload-page__dropzone-content">
+                    <div class="upload-page__dropzone-icon">📦</div>
+                    <div class="glass-label">
+                        Select a creature DLL to upload
+                    </div>
+                    <InputFile OnChange="@HandleFileSelected"
+                               accept=".dll"
+                               class="upload-page__file-input"
+                               id="creature-file-input" />
+                    <label for="creature-file-input" class="glass-button">
+                        Browse Files
+                    </label>
+                </div>
+            }
+            else if (_uploadState == UploadState.Validating)
+            {
+                <div class="upload-page__progress">
+                    <div class="upload-page__spinner"></div>
+                    <div class="glass-label">Validating @_selectedFileName...</div>
+                    <div class="upload-page__progress-bar">
+                        <div class="upload-page__progress-fill"></div>
+                    </div>
+                </div>
+            }
+            else if (_uploadState == UploadState.Success)
+            {
+                <div class="upload-page__result upload-page__result--success">
+                    <div class="upload-page__result-icon">✅</div>
+                    <div class="glass-label">Success!</div>
+                    <div class="glass-label upload-page__result-message">
+                        @_selectedFileName has been validated and uploaded successfully.
+                    </div>
+                    <button class="glass-button" @onclick="Reset">
+                        Upload Another Creature
+                    </button>
+                </div>
+            }
+            else if (_uploadState == UploadState.Failed)
+            {
+                <div class="upload-page__result upload-page__result--failed">
+                    <div class="upload-page__result-icon">❌</div>
+                    <div class="glass-label">Validation Failed</div>
+                    <div class="upload-page__errors">
+                        @foreach (var error in _validationErrors)
+                        {
+                            <div class="upload-page__error">
+                                <span class="upload-page__error-bullet">•</span>
+                                <span class="glass-label">@error</span>
+                            </div>
+                        }
+                    </div>
+                    <button class="glass-button" @onclick="Reset">
+                        Try Again
+                    </button>
+                </div>
+            }
+        </div>
+
+        <aside class="upload-page__sidebar glass-panel">
+            <div class="glass-sidebar__section-header">
+                <span class="glass-label">Requirements</span>
+            </div>
+            <div class="glass-sidebar__section-body">
+                <div class="upload-page__requirements">
+                    <div class="upload-page__requirement">
+                        <span class="upload-page__requirement-icon">✓</span>
+                        <span class="glass-label">Must inherit from Animal or Plant</span>
+                    </div>
+                    <div class="upload-page__requirement">
+                        <span class="upload-page__requirement-icon">✓</span>
+                        <span class="glass-label">No P/Invoke or unmanaged code</span>
+                    </div>
+                    <div class="upload-page__requirement">
+                        <span class="upload-page__requirement-icon">✓</span>
+                        <span class="glass-label">No forbidden namespaces (System.IO, System.Net, etc.)</span>
+                    </div>
+                    <div class="upload-page__requirement">
+                        <span class="upload-page__requirement-icon">✓</span>
+                        <span class="glass-label">Valid .NET assembly</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-sidebar__section-header">
+                <span class="glass-label">Examples</span>
+            </div>
+            <div class="glass-sidebar__section-body">
+                <div class="glass-label upload-page__examples-text">
+                    Check the Samples folder for working creature implementations:
+                </div>
+                <div class="upload-page__examples">
+                    <div class="glass-label">• SimplePlant.dll</div>
+                    <div class="glass-label">• SimpleHerbivore.dll</div>
+                    <div class="glass-label">• SimpleCarnivore.dll</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+@code {
+    private enum UploadState
+    {
+        Idle,
+        Validating,
+        Success,
+        Failed
+    }
+
+    private UploadState _uploadState = UploadState.Idle;
+    private string? _selectedFileName;
+    private List<string> _validationErrors = new();
+    private string? _uploadedFilePath;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        await ProcessFile(file);
+    }
+
+    private async Task ProcessFile(IBrowserFile file)
+    {
+        _selectedFileName = file.Name;
+        _uploadState = UploadState.Validating;
+        _validationErrors.Clear();
+
+        try
+        {
+            // Create a temporary directory for upload
+            var tempDir = Path.Combine(Path.GetTempPath(), "terrarium-uploads");
+            Directory.CreateDirectory(tempDir);
+
+            // Save the uploaded file to a temporary location
+            var tempFilePath = Path.Combine(tempDir, $"{Guid.NewGuid()}.dll");
+            _uploadedFilePath = tempFilePath;
+
+            // Stream the file to disk (max 10MB)
+            const long maxFileSize = 10 * 1024 * 1024;
+            
+            try
+            {
+                await using var stream = file.OpenReadStream(maxFileSize);
+                await using var fileStream = File.Create(tempFilePath);
+                await stream.CopyToAsync(fileStream);
+                fileStream.Close();
+            }
+            catch (IOException ex)
+            {
+                Logger.LogError(ex, "Failed to save uploaded file to disk: {FileName}", file.Name);
+                throw new InvalidOperationException($"Failed to save uploaded file: {ex.Message}", ex);
+            }
+
+            // Give UI a moment to show progress
+            await Task.Delay(500);
+
+            // Validate the assembly
+            Logger.LogInformation("Validating uploaded assembly: {FileName}", file.Name);
+            var validationResult = Validator.Validate(tempFilePath);
+
+            if (validationResult.IsValid)
+            {
+                _uploadState = UploadState.Success;
+                Logger.LogInformation("Assembly validation succeeded: {FileName}", file.Name);
+                
+                // TODO: Copy the validated assembly to the creatures directory
+                // This would be done via a service call to the game engine
+            }
+            else
+            {
+                _uploadState = UploadState.Failed;
+                _validationErrors = validationResult.Reasons.ToList();
+                Logger.LogWarning("Assembly validation failed for {FileName}: {Errors}",
+                    file.Name, string.Join(", ", validationResult.Reasons));
+                
+                // Clean up the temporary file on failure
+                CleanupTempFile();
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Rethrow validation/IO errors with context preserved
+            _uploadState = UploadState.Failed;
+            _validationErrors = new List<string> { ex.Message };
+            Logger.LogError(ex, "Upload validation error for {FileName}", file.Name);
+            CleanupTempFile();
+        }
+        catch (Exception ex)
+        {
+            _uploadState = UploadState.Failed;
+            _validationErrors = new List<string> { $"Unexpected error: {ex.Message}" };
+            Logger.LogError(ex, "Unexpected error processing uploaded file: {FileName}", file.Name);
+            CleanupTempFile();
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Reset()
+    {
+        _uploadState = UploadState.Idle;
+        _selectedFileName = null;
+        _validationErrors.Clear();
+        CleanupTempFile();
+    }
+
+    private void CleanupTempFile()
+    {
+        if (_uploadedFilePath is not null && File.Exists(_uploadedFilePath))
+        {
+            try
+            {
+                File.Delete(_uploadedFilePath);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Failed to delete temporary file: {Path}", _uploadedFilePath);
+            }
+            _uploadedFilePath = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        CleanupTempFile();
+    }
+}

@@ -2,11 +2,16 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using OrganismBase;
 using Terrarium.Configuration;
+using Terrarium.Game.Networking;
+using Terrarium.Game.Rendering;
+using Terrarium.Game.Services;
+using Terrarium.Net;
 
 namespace Terrarium.Game;
 
@@ -15,12 +20,16 @@ namespace Terrarium.Game;
 /// and manages all game events. The 10-phase ProcessTurn() method is the heart
 /// of the game loop.
 /// </summary>
-public class GameEngine
+public class GameEngine : IGameEngine
 {
     private readonly ILogger<GameEngine> _logger;
     private readonly Random _random = new(DateTime.Now.Millisecond);
     private readonly ConcurrentQueue<object> _newOrganismQueue = new();
     private readonly Queue<KilledOrganism> _removeOrganismQueue = new();
+    private GameRenderBridge? _renderBridge;
+    private GameNetworkBridge? _networkBridge;
+    private GameServiceBridge? _serviceBridge;
+    private IGameStatePersistence? _statePersistence;
 
     private int _maxAnimals = 50;
     private int _maxPlants = 50;
@@ -30,11 +39,40 @@ public class GameEngine
     private int _plantCount;
     private int _turnPhase;
 
+    // Performance metrics (System.Diagnostics.Metrics)
+    private static readonly Meter s_meter = new("Terrarium.Game.GameEngine", "1.0.0");
+    private static readonly Histogram<double> s_processTurnDuration = s_meter.CreateHistogram<double>(
+        "game_engine.process_turn.duration",
+        unit: "ms",
+        description: "Duration of complete ProcessTurn (10 phases) in milliseconds");
+    private static readonly Histogram<double> s_phaseDuration = s_meter.CreateHistogram<double>(
+        "game_engine.phase.duration",
+        unit: "ms",
+        description: "Duration of individual turn phases in milliseconds");
+    private static readonly Counter<long> s_ticksCompleted = s_meter.CreateCounter<long>(
+        "game_engine.ticks.completed",
+        unit: "ticks",
+        description: "Total number of completed game ticks");
+    private static readonly ObservableGauge<int> s_organismCount = s_meter.CreateObservableGauge<int>(
+        "game_engine.organisms.count",
+        () => new[] {
+            new Measurement<int>(_staticAnimalCount, new KeyValuePair<string, object?>("type", "animal")),
+            new Measurement<int>(_staticPlantCount, new KeyValuePair<string, object?>("type", "plant"))
+        },
+        unit: "organisms",
+        description: "Current organism count by type");
+
+    private readonly Stopwatch _tickStopwatch = new();
+    private readonly Stopwatch _phaseStopwatch = new();
+    private static int _staticAnimalCount;
+    private static int _staticPlantCount;
+
     private WorldVector? _currentVector;
     private WorldState? _newWorldState;
     private string[]? _organismIDList;
     private PopulationData? _populationData;
     private bool _ecosystemMode;
+    private EcosystemMode _mode;
 
     /// <summary>
     /// Creates a new headless GameEngine.
@@ -55,6 +93,7 @@ public class GameEngine
         _maxAnimals = maxAnimals;
         _maxPlants = maxPlants;
         _ecosystemMode = ecosystemMode;
+        _mode = ecosystemMode ? Game.EcosystemMode.Networked : Game.EcosystemMode.LocalOnly;
 
         EngineSettings.EngineSettingsAsserts();
 
@@ -108,8 +147,61 @@ public class GameEngine
     /// <summary>Whether in ecosystem mode.</summary>
     public bool EcosystemMode => _ecosystemMode;
 
+    /// <summary>Gets or sets the ecosystem networking mode.</summary>
+    public Game.EcosystemMode Mode
+    {
+        get => _mode;
+        set
+        {
+            if (_mode != value)
+            {
+                _mode = value;
+                _logger.LogInformation("Ecosystem mode changed to: {Mode}", _mode);
+                
+                // Propagate mode changes to PopulationData
+                if (_populationData is not null)
+                {
+                    _populationData.Mode = _mode;
+                }
+            }
+        }
+    }
+
     /// <summary>Population data tracker.</summary>
     public PopulationData? PopulationData => _populationData;
+
+    /// <summary>Sets the render bridge for tick-based rendering.</summary>
+    public GameRenderBridge? RenderBridge
+    {
+        get => _renderBridge;
+        set => _renderBridge = value;
+    }
+
+    /// <summary>Sets the network bridge for SignalR-based P2P networking.</summary>
+    public GameNetworkBridge? NetworkBridge
+    {
+        get => _networkBridge;
+        set => _networkBridge = value;
+    }
+
+    /// <summary>Sets the service bridge for server HTTP communication.</summary>
+    public GameServiceBridge? ServiceBridge
+    {
+        get => _serviceBridge;
+        set
+        {
+            _serviceBridge = value;
+            if (_populationData is not null)
+                _populationData.ServiceBridge = value;
+        }
+    }
+
+    /// <summary>Sets the game state persistence handler for save/load operations.</summary>
+    public IGameStatePersistence? StatePersistence
+    {
+        get => _statePersistence;
+        set => _statePersistence = value;
+    }
 
     /// <summary>The current world vector (state + actions).</summary>
     public WorldVector? CurrentVector
@@ -135,6 +227,14 @@ public class GameEngine
     /// <returns>True if a complete tick has been processed.</returns>
     public bool ProcessTurn()
     {
+        // Start timing if this is phase 0 (start of new tick)
+        if (_turnPhase == 0)
+        {
+            _tickStopwatch.Restart();
+        }
+
+        _phaseStopwatch.Restart();
+
         // The 10-phase processing loop. Each phase is designed to take roughly
         // equal time. The screen can be painted between phases for smooth frame rate.
         // After all 10 phases, one game "tick" is complete.
@@ -227,10 +327,29 @@ public class GameEngine
                 break;
         }
 
+        _phaseStopwatch.Stop();
+        s_phaseDuration.Record(_phaseStopwatch.Elapsed.TotalMilliseconds, 
+            new KeyValuePair<string, object?>("phase", _turnPhase));
+
         _turnPhase++;
         if (_turnPhase == 10)
         {
             _turnPhase = 0;
+
+            // Record tick metrics
+            _tickStopwatch.Stop();
+            s_processTurnDuration.Record(_tickStopwatch.Elapsed.TotalMilliseconds);
+            s_ticksCompleted.Add(1);
+            _staticAnimalCount = _animalCount;
+            _staticPlantCount = _plantCount;
+
+            // Dispatch render after each completed tick
+            if (_renderBridge is not null)
+            {
+                // Fire-and-forget: rendering should not block the game loop
+                _ = _renderBridge.RenderTickAsync(this);
+            }
+
             return true;
         }
         return false;
@@ -260,6 +379,155 @@ public class GameEngine
             newOrganism.AddAtRandomLocation = false;
         }
         _newOrganismQueue.Enqueue(newOrganism);
+    }
+
+    /// <summary>
+    /// Introduces a creature by loading its assembly from the private assembly cache,
+    /// validating it, extracting species information, and adding it to the game.
+    /// </summary>
+    /// <param name="assemblyFullName">The full name of the assembly to load.</param>
+    /// <param name="pac">The private assembly cache containing creature assemblies.</param>
+    /// <param name="validator">Optional assembly validator.</param>
+    /// <param name="preferredLocation">Optional preferred location for the new organism.</param>
+    /// <returns>True if the creature was successfully introduced; false otherwise.</returns>
+    public bool IntroduceCreatureFromPac(
+        string assemblyFullName,
+        Hosting.PrivateAssemblyCache pac,
+        Hosting.AssemblyValidator? validator = null,
+        Point? preferredLocation = null)
+    {
+        try
+        {
+            // Check if assembly exists in PAC
+            if (!pac.Exists(assemblyFullName))
+            {
+                _logger.LogWarning("Assembly not found in PAC: {AssemblyFullName}", assemblyFullName);
+                return false;
+            }
+
+            // Validate the assembly if validator is provided
+            if (validator != null)
+            {
+                var assemblyPath = pac.GetFileName(assemblyFullName);
+                var validationResult = validator.Validate(assemblyPath);
+                if (!validationResult.IsValid)
+                {
+                    _logger.LogWarning("Assembly validation failed: {Reasons}",
+                        string.Join("; ", validationResult.Reasons));
+                    return false;
+                }
+            }
+
+            // Load the assembly
+            var assembly = pac.LoadOrganismAssembly(assemblyFullName);
+
+            // Extract species information
+            var species = Species.GetSpeciesFromAssembly(assembly);
+
+            // Add the organism to the game
+            AddNewOrganism(species, preferredLocation ?? Point.Empty);
+
+            _logger.LogInformation("Successfully introduced creature: {SpeciesName} ({AssemblyFullName})",
+                species.Name, assemblyFullName);
+
+            // Register the species with the server if service bridge is available
+            if (_serviceBridge != null)
+            {
+                var assemblyBytes = File.ReadAllBytes(pac.GetFileName(assemblyFullName));
+                _ = _serviceBridge.RegisterSpeciesAsync(species, assemblyBytes);
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to introduce creature from PAC: {AssemblyFullName}", assemblyFullName);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Downloads a creature assembly from the server and introduces it into the local ecosystem.
+    /// </summary>
+    /// <param name="speciesName">The name of the species to download.</param>
+    /// <param name="version">The version of the species.</param>
+    /// <param name="pac">The private assembly cache to save the downloaded assembly to.</param>
+    /// <param name="validator">Optional assembly validator.</param>
+    /// <param name="preferredLocation">Optional preferred location for the new organism.</param>
+    /// <returns>True if the creature was successfully downloaded and introduced; false otherwise.</returns>
+    public async Task<bool> IntroduceCreatureFromServerAsync(
+        string speciesName,
+        string version,
+        Hosting.PrivateAssemblyCache pac,
+        Hosting.AssemblyValidator? validator = null,
+        Point? preferredLocation = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (_serviceBridge == null)
+            {
+                _logger.LogWarning("Cannot download creature: ServiceBridge is not configured");
+                return false;
+            }
+
+            // Download the assembly bytes from the server
+            var assemblyBytes = await _serviceBridge.GetSpeciesAssemblyAsync(speciesName, version, cancellationToken);
+            if (assemblyBytes == null || assemblyBytes.Length == 0)
+            {
+                _logger.LogWarning("Downloaded assembly is empty for species: {SpeciesName}", speciesName);
+                return false;
+            }
+
+            // Save to a temporary file for validation
+            var tempPath = Hosting.PrivateAssemblyCache.GetSafeTempFileName();
+            try
+            {
+                await File.WriteAllBytesAsync(tempPath, assemblyBytes, cancellationToken);
+
+                // Validate the assembly if validator is provided
+                if (validator != null)
+                {
+                    var validationResult = validator.Validate(tempPath);
+                    if (!validationResult.IsValid)
+                    {
+                        _logger.LogWarning("Downloaded assembly validation failed for {SpeciesName}: {Reasons}",
+                            speciesName, string.Join("; ", validationResult.Reasons));
+                        return false;
+                    }
+                }
+
+                // Load the assembly to extract full name and species info
+                using var ms = new System.IO.MemoryStream(assemblyBytes);
+                var assembly = System.Reflection.Assembly.Load(assemblyBytes);
+                var species = Species.GetSpeciesFromAssembly(assembly);
+                var assemblyFullName = assembly.FullName!;
+
+                // Save to PAC
+                await pac.SaveOrganismBytesAsync(assemblyBytes, assemblyFullName, cancellationToken);
+
+                // Introduce the creature
+                AddNewOrganism(species, preferredLocation ?? Point.Empty);
+
+                _logger.LogInformation("Successfully downloaded and introduced creature: {SpeciesName} ({AssemblyFullName})",
+                    species.Name, assemblyFullName);
+
+                return true;
+            }
+            finally
+            {
+                // Clean up temp file
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to download and introduce creature from server: {SpeciesName}", speciesName);
+            return false;
+        }
     }
 
     /// <summary>
@@ -454,6 +722,12 @@ public class GameEngine
 
     private void TeleportOrganisms()
     {
+        // Skip teleportation in local-only mode
+        if (_mode == Game.EcosystemMode.LocalOnly)
+        {
+            return;
+        }
+
         foreach (var organismID in _organismIDList!)
         {
             var organismState = _newWorldState!.GetOrganismState(organismID);
@@ -461,7 +735,10 @@ public class GameEngine
             if (organismState is AnimalState && !organismState.IsAlive) continue;
             if (_newWorldState.Teleporter != null && _newWorldState.Teleporter.IsInTeleporter(organismState))
             {
-                // TODO: Sprint 7 — teleportation via network engine / Orleans
+                if (_networkBridge is not null && _networkBridge.IsConnected)
+                {
+                    _networkBridge.SendTeleport(organismState);
+                }
                 _logger.LogDebug("Organism {ID} in teleporter zone", organismID);
             }
         }
@@ -613,6 +890,11 @@ public class GameEngine
                 CountOrganism(organismState, PopulationChangeReason.Born);
             }
             // TODO: Sprint 7 — handle TeleportState objects
+            if (queueObject is CreatureTeleport teleport)
+            {
+                _logger.LogDebug("Processing inbound teleport {TeleportId}", teleport.TeleportId);
+                // Teleported creatures will be fully materialized when scheduler/assembly loading is wired
+            }
         }
     }
 
@@ -681,10 +963,82 @@ public class GameEngine
                 newLocation.Y << EngineSettings.GridHeightPowerOfTwo);
     }
 
-    private void OnEngineStateChanged(EngineStateChangedEventArgs e)
+    /// <summary>
+    /// Queues a teleported creature received from the network for insertion.
+    /// </summary>
+    internal void OnTeleportReceived(CreatureTeleport teleport)
+    {
+        _newOrganismQueue.Enqueue(teleport);
+        _logger.LogDebug("Queued inbound teleport {Id} for insertion", teleport.TeleportId);
+    }
+
+    /// <summary>
+    /// Notifies listeners of an engine state change.
+    /// </summary>
+    internal void OnEngineStateChanged(EngineStateChangedEventArgs e)
     {
         _logger.LogDebug("Engine state changed: {Message}", e.Message);
         EngineStateChanged?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Saves the current game state to JSON via the StatePersistence handler.
+    /// </summary>
+    public async Task<string> SaveGameStateAsync(CancellationToken cancellationToken = default)
+    {
+        if (_statePersistence is null)
+        {
+            throw new InvalidOperationException("StatePersistence handler is not configured.");
+        }
+
+        var currentState = CurrentVector?.State;
+        if (currentState is null)
+        {
+            throw new InvalidOperationException("No world state available to save.");
+        }
+
+        _logger.LogInformation("Saving game state at tick {Tick}", currentState.TickNumber);
+        var json = await _statePersistence.SerializeWorldStateAsync(currentState, cancellationToken);
+        return json;
+    }
+
+    /// <summary>
+    /// Loads a saved game state from JSON and restores the world.
+    /// </summary>
+    public async Task LoadGameStateAsync(
+        string json,
+        Hosting.PrivateAssemblyCache pac,
+        CancellationToken cancellationToken = default)
+    {
+        if (_statePersistence is null)
+        {
+            throw new InvalidOperationException("StatePersistence handler is not configured.");
+        }
+
+        _logger.LogInformation("Loading game state from JSON ({Length} bytes)", json.Length);
+        var restoredState = await _statePersistence.DeserializeWorldStateAsync(json, cancellationToken);
+        
+        _logger.LogInformation("Restored state at tick {Tick} with {Count} organisms",
+            restoredState.TickNumber, restoredState.Organisms.Count);
+
+        // Replace current world state
+        var vector = new WorldVector(restoredState);
+        CurrentVector = vector;
+        
+        // Reset turn phase to start of tick
+        _turnPhase = 0;
+        
+        // Update organism counts
+        _animalCount = 0;
+        _plantCount = 0;
+        foreach (var organism in restoredState.Organisms)
+        {
+            if (organism is AnimalState) _animalCount++;
+            else _plantCount++;
+        }
+        
+        _logger.LogInformation("Game state loaded successfully: {Animals} animals, {Plants} plants",
+            _animalCount, _plantCount);
     }
 
     #endregion

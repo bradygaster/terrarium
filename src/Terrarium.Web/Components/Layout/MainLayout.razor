@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@using Terrarium.Web.Components.Shared
 
 <div class="terrarium-chrome terrarium-app">
     <header class="glass-titlebar">
@@ -9,16 +10,18 @@
         <div class="glass-titlebar__title">.NET Terrarium</div>
     </header>
 
-    <div class="terrarium-chrome__body">
-        @Body
-    </div>
+    <NavMenu />
 
-    <footer class="glass-statusbar">
-        <div class="glass-statusbar__section">
-            <span class="glass-led glass-led--idle"></span>
-        </div>
-        <div class="glass-statusbar__section" style="flex:1;">
-            Ready
-        </div>
-    </footer>
+    <div class="terrarium-chrome__body">
+        <TerrariumErrorBoundary ShowDetails="@IsDevelopment" FallbackRoute="/">
+            @Body
+        </TerrariumErrorBoundary>
+    </div>
 </div>
+
+@code {
+    [Inject]
+    private IWebHostEnvironment Environment { get; set; } = default!;
+
+    private bool IsDevelopment => Environment.IsDevelopment();
+}

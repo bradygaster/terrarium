@@ -1,0 +1,165 @@
+@using Microsoft.AspNetCore.SignalR.Client
+@using Terrarium.Net
+@using Terrarium.Web.Services
+@implements IDisposable
+
+@* PeerList — displays connected peers and network health indicators *@
+
+<div class="peer-list glass-panel">
+    <div class="peer-list__header">
+        <span class="glass-label">Network Status</span>
+        <span class="glass-led @NetworkHealthLed" title="@NetworkHealthText"></span>
+    </div>
+
+    <div class="peer-list__count">
+        <span class="glass-label glass-label--nowrap">
+            Connected Peers: @_peers.Count
+        </span>
+    </div>
+
+    @if (_peers.Count == 0)
+    {
+        <div class="peer-list__empty glass-label">
+            No peers connected
+        </div>
+    }
+    else
+    {
+        <div class="peer-list__items">
+            @foreach (var peer in _peers.OrderByDescending(p => p.ConnectedAt))
+            {
+                <div class="peer-list__item">
+                    <div class="peer-list__item-header">
+                        <span class="glass-led glass-led--active"></span>
+                        <span class="glass-label glass-label--nowrap peer-list__peer-id" title="@peer.PeerId">
+                            @TruncatePeerId(peer.PeerId)
+                        </span>
+                    </div>
+                    <div class="peer-list__item-details">
+                        @if (!string.IsNullOrEmpty(peer.Version))
+                        {
+                            <span class="peer-list__version">v@peer.Version</span>
+                        }
+                        <span class="peer-list__connected-time">
+                            @GetRelativeTime(peer.ConnectedAt)
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Inject]
+    private TerrariumHubClient HubClient { get; set; } = default!;
+
+    [Parameter]
+    public string? EcosystemId { get; set; }
+
+    private List<PeerInfo> _peers = [];
+    private HubConnectionState _connectionState = HubConnectionState.Disconnected;
+
+    private string NetworkHealthText => _connectionState switch
+    {
+        HubConnectionState.Connected => $"Connected ({_peers.Count} peers)",
+        HubConnectionState.Connecting => "Connecting…",
+        HubConnectionState.Reconnecting => "Reconnecting…",
+        _ => "Disconnected"
+    };
+
+    private string NetworkHealthLed => _connectionState switch
+    {
+        HubConnectionState.Connected => "glass-led--active",
+        HubConnectionState.Connecting => "glass-led--waiting",
+        HubConnectionState.Reconnecting => "glass-led--waiting",
+        _ => "glass-led--failed"
+    };
+
+    protected override void OnInitialized()
+    {
+        _connectionState = HubClient.State;
+        HubClient.OnStateChanged += HandleStateChanged;
+        HubClient.OnPeerList += HandlePeerListUpdate;
+        HubClient.OnPeerAnnounce += HandlePeerAnnounce;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrEmpty(EcosystemId) && _connectionState == HubConnectionState.Connected)
+        {
+            await RefreshPeerListAsync();
+        }
+    }
+
+    private void HandleStateChanged(HubConnectionState newState)
+    {
+        _connectionState = newState;
+        InvokeAsync(StateHasChanged);
+
+        // Refresh peer list when reconnected
+        if (newState == HubConnectionState.Connected && !string.IsNullOrEmpty(EcosystemId))
+        {
+            _ = RefreshPeerListAsync();
+        }
+    }
+
+    private async Task HandlePeerListUpdate(PeerListResponse peerList)
+    {
+        _peers = [..peerList.Peers];
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandlePeerAnnounce(PeerAnnounce announce)
+    {
+        // Refresh the full peer list on join/leave
+        if (announce.Action is PeerAction.Join or PeerAction.Leave)
+        {
+            await RefreshPeerListAsync();
+        }
+    }
+
+    private async Task RefreshPeerListAsync()
+    {
+        if (string.IsNullOrEmpty(EcosystemId) || _connectionState != HubConnectionState.Connected)
+            return;
+
+        try
+        {
+            var response = await HubClient.RequestPeerListAsync(EcosystemId);
+            _peers = [..response.Peers];
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to refresh peer list: {ex.Message}");
+        }
+    }
+
+    private static string TruncatePeerId(string peerId)
+    {
+        // Show first 8 chars for readability
+        return peerId.Length > 8 ? $"{peerId[..8]}…" : peerId;
+    }
+
+    private static string GetRelativeTime(DateTimeOffset timestamp)
+    {
+        var elapsed = DateTimeOffset.UtcNow - timestamp;
+        
+        if (elapsed.TotalSeconds < 60)
+            return "just now";
+        if (elapsed.TotalMinutes < 60)
+            return $"{(int)elapsed.TotalMinutes}m ago";
+        if (elapsed.TotalHours < 24)
+            return $"{(int)elapsed.TotalHours}h ago";
+        
+        return $"{(int)elapsed.TotalDays}d ago";
+    }
+
+    public void Dispose()
+    {
+        HubClient.OnStateChanged -= HandleStateChanged;
+        HubClient.OnPeerList -= HandlePeerListUpdate;
+        HubClient.OnPeerAnnounce -= HandlePeerAnnounce;
+    }
+}

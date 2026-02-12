@@ -31,6 +31,24 @@
     }
 
     /// <summary>
+    /// Preloads sprite sheets. Pass null/empty to load all.
+    /// </summary>
+    public async Task<string[]> LoadSpritesAsync(string[]? spriteIds = null, bool useLarge = true)
+    {
+        if (_module is null) return [];
+        return await _module.InvokeAsync<string[]>("loadSprites", spriteIds, useLarge);
+    }
+
+    /// <summary>
+    /// Draws a single sprite at a position (frame-indexed, no animation state).
+    /// </summary>
+    public async Task<bool> DrawSpriteAsync(string spriteId, string action, string direction, int frameIndex, double x, double y, double? size = null)
+    {
+        if (_module is null) return false;
+        return await _module.InvokeAsync<bool>("drawSprite", spriteId, action, direction, frameIndex, x, y, size);
+    }
+
+    /// <summary>
     /// Resizes the canvas to match its container. Call on layout changes.
     /// </summary>
     public async Task ResizeCanvasAsync()

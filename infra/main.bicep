@@ -42,6 +42,36 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+// ---------- Azure SignalR Service ----------
+
+resource signalR 'Microsoft.SignalRService/signalR@2024-03-01' = {
+  name: 'signalr-${environmentName}'
+  location: location
+  sku: {
+    name: 'Standard_S1'
+    tier: 'Standard'
+    capacity: 1
+  }
+  properties: {
+    features: [
+      {
+        flag: 'ServiceMode'
+        value: 'Default'
+      }
+      {
+        flag: 'EnableConnectivityLogs'
+        value: 'true'
+      }
+    ]
+    cors: {
+      allowedOrigins: ['*']
+    }
+    serverless: {
+      connectionTimeoutInSeconds: 60
+    }
+  }
+}
+
 // ---------- Azure SQL ----------
 
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
@@ -84,11 +114,18 @@ resource serverApp 'Microsoft.App/containerApps@2024-03-01' = {
         external: false
         targetPort: 8080
         transport: 'http'
+        stickySessions: {
+          affinity: 'sticky'
+        }
       }
       secrets: [
         {
           name: 'sql-connection'
           value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=Terrarium;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};Encrypt=true;TrustServerCertificate=false;'
+        }
+        {
+          name: 'signalr-connection'
+          value: listKeys(signalR.id, signalR.apiVersion).primaryConnectionString
         }
       ]
     }
@@ -106,12 +143,83 @@ resource serverApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'ConnectionStrings__Terrarium'
               secretRef: 'sql-connection'
             }
+            {
+              name: 'ConnectionStrings__signalr'
+              secretRef: 'signalr-connection'
+            }
+          ]
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/alive'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 3
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/health'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+            }
+            {
+              type: 'Startup'
+              httpGet: {
+                path: '/alive'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 0
+              periodSeconds: 5
+              timeoutSeconds: 5
+              failureThreshold: 30
+            }
           ]
         }
       ]
       scale: {
         minReplicas: 1
-        maxReplicas: 3
+        maxReplicas: 10
+        rules: [
+          {
+            name: 'cpu-scaling'
+            custom: {
+              type: 'cpu'
+              metadata: {
+                type: 'Utilization'
+                value: '70'
+              }
+            }
+          }
+          {
+            name: 'signalr-connection-scaling'
+            custom: {
+              type: 'azure-monitor'
+              metadata: {
+                metricName: 'ConnectionCount'
+                metricResourceUri: signalR.id
+                targetValue: '100'
+              }
+              auth: [
+                {
+                  secretRef: 'signalr-connection'
+                  triggerParameter: 'connectionFromEnv'
+                }
+              ]
+            }
+          }
+        ]
       }
     }
   }
@@ -146,11 +254,59 @@ resource webApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: 'https://${serverApp.properties.configuration.ingress.fqdn}'
             }
           ]
+          probes: [
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/alive'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 3
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/health'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+            }
+            {
+              type: 'Startup'
+              httpGet: {
+                path: '/alive'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 0
+              periodSeconds: 5
+              timeoutSeconds: 5
+              failureThreshold: 30
+            }
+          ]
         }
       ]
       scale: {
         minReplicas: 1
-        maxReplicas: 3
+        maxReplicas: 5
+        rules: [
+          {
+            name: 'http-scaling'
+            http: {
+              metadata: {
+                concurrentRequests: '50'
+              }
+            }
+          }
+        ]
       }
     }
   }
@@ -158,3 +314,5 @@ resource webApp 'Microsoft.App/containerApps@2024-03-01' = {
 
 output webUrl string = 'https://${webApp.properties.configuration.ingress.fqdn}'
 output serverUrl string = 'https://${serverApp.properties.configuration.ingress.fqdn}'
+output signalREndpoint string = signalR.properties.hostName
+output signalRResourceId string = signalR.id

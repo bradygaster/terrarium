@@ -12,24 +12,6 @@ using OrganismBase;
 namespace Terrarium.Game.Hosting;
 
 /// <summary>
-/// Structured result of assembly validation.
-/// </summary>
-public sealed class ValidationResult
-{
-    public bool IsValid { get; }
-    public IReadOnlyList<string> Reasons { get; }
-
-    private ValidationResult(bool isValid, IReadOnlyList<string> reasons)
-    {
-        IsValid = isValid;
-        Reasons = reasons;
-    }
-
-    public static ValidationResult Pass() => new(true, Array.Empty<string>());
-    public static ValidationResult Fail(IReadOnlyList<string> reasons) => new(false, reasons);
-}
-
-/// <summary>
 /// Static analysis of creature assemblies before loading.
 /// Inspects IL metadata for forbidden patterns (P/Invoke, unsafe, forbidden namespaces),
 /// validates creature base type (Animal or Plant), and checks required attributes.

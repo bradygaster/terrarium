@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -85,11 +86,23 @@ public static class Extensions
 
     /// <summary>
     /// Adds default health checks for liveness and readiness.
+    /// Liveness: basic self-check (app is running)
+    /// Readiness: database connectivity
     /// </summary>
     public static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
     {
-        builder.Services.AddHealthChecks()
+        var healthChecks = builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+
+        // Add SQL Server health check if connection string is configured
+        var sqlConnectionString = ((IConfiguration)builder.Configuration).GetConnectionString("Terrarium");
+        if (!string.IsNullOrEmpty(sqlConnectionString))
+        {
+            healthChecks.AddSqlServer(
+                sqlConnectionString,
+                name: "terrarium-db",
+                tags: ["ready"]);
+        }
 
         return builder;
     }

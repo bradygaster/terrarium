@@ -1,0 +1,47 @@
+@* PopulationChart — real-time population statistics display *@
+
+<div class="population-chart glass-panel">
+    <h3 class="glass-label glass-label--header">Population</h3>
+    
+    @if (Report is null)
+    {
+        <div class="glass-label glass-label--muted">No population data yet...</div>
+    }
+    else
+    {
+        <div class="population-chart__summary">
+            <div class="glass-label">Total Organisms: <strong>@Report.TotalOrganisms</strong></div>
+            <div class="glass-label glass-label--muted">Species: @Report.Species.Count</div>
+            <div class="glass-label glass-label--muted">Updated: @Report.Timestamp.ToString("HH:mm:ss")</div>
+        </div>
+        
+        <div class="population-chart__species-list">
+            @foreach (var species in Report.Species.OrderByDescending(s => s.Population).Take(10))
+            {
+                var percentage = Report.TotalOrganisms > 0 
+                    ? (double)species.Population / Report.TotalOrganisms * 100 
+                    : 0;
+                
+                <div class="population-chart__species-row">
+                    <span class="glass-label glass-label--nowrap">@species.SpeciesName</span>
+                    <div class="population-chart__bar-container">
+                        <div class="population-chart__bar" style="width: @(percentage)%"></div>
+                    </div>
+                    <span class="glass-label glass-label--nowrap glass-label--right">@species.Population</span>
+                </div>
+            }
+            
+            @if (Report.Species.Count > 10)
+            {
+                <div class="glass-label glass-label--muted glass-label--center">
+                    ... and @(Report.Species.Count - 10) more species
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public PopulationReport? Report { get; set; }
+}

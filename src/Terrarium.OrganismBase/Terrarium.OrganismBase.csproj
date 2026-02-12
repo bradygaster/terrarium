@@ -7,6 +7,26 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Terrarium.OrganismBase</PackageId>
+    <Version>10.0.0-preview.1</Version>
+    <Authors>Terrarium Team</Authors>
+    <Company>Terrarium</Company>
+    <Description>Base library for creating creatures (animals and plants) in the .NET Terrarium ecosystem simulation game. Provides core types, attributes, and engine interfaces for building autonomous organisms.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/terrarium-game/terrarium</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/terrarium-game/terrarium</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>terrarium;game;simulation;creatures;ecosystem;dotnet10</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>

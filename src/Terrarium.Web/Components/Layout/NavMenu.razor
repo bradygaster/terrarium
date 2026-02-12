@@ -1,0 +1,78 @@
+@* NavMenu — Navigation menu for switching between pages *@
+
+<nav class="nav-menu glass-panel">
+    <div class="nav-menu__items">
+        <NavLink href="/" class="nav-menu__link glass-button" Match="NavLinkMatch.All">
+            <span class="nav-menu__icon">🏠</span>
+            <span class="nav-menu__label">Home</span>
+        </NavLink>
+
+        <NavLink href="/gallery" class="nav-menu__link glass-button">
+            <span class="nav-menu__icon">🦁</span>
+            <span class="nav-menu__label">Gallery</span>
+        </NavLink>
+
+        <NavLink href="/upload" class="nav-menu__link glass-button">
+            <span class="nav-menu__icon">📦</span>
+            <span class="nav-menu__label">Upload</span>
+        </NavLink>
+
+        <NavLink href="/settings" class="nav-menu__link glass-button">
+            <span class="nav-menu__icon">⚙️</span>
+            <span class="nav-menu__label">Settings</span>
+        </NavLink>
+    </div>
+</nav>
+
+<style>
+    .nav-menu {
+        display: flex;
+        align-items: center;
+        padding: 4px;
+        border-left: none;
+        border-right: none;
+        border-top: none;
+    }
+
+    .nav-menu__items {
+        display: flex;
+        gap: var(--glass-spacing-button-margin);
+        flex-wrap: wrap;
+    }
+
+    .nav-menu__link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        text-decoration: none;
+        color: var(--glass-color-foreground);
+        transition: all 0.2s ease;
+    }
+
+    .nav-menu__icon {
+        font-size: 14px;
+    }
+
+    .nav-menu__label {
+        font-size: var(--glass-font-size-label);
+    }
+
+    /* Active link styling */
+    .nav-menu__link.active {
+        background: linear-gradient(
+            180deg,
+            var(--glass-gradient-panel-top) 0%,
+            var(--glass-gradient-panel-bottom) 100%
+        );
+    }
+
+    /* Remove default NavLink hover when already styled as glass-button */
+    .nav-menu__link:hover {
+        background: linear-gradient(
+            180deg,
+            var(--glass-gradient-button-hover-top) 0%,
+            var(--glass-gradient-button-hover-bottom) 100%
+        );
+    }
+</style>

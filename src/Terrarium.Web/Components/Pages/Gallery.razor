@@ -1,0 +1,255 @@
+@page "/gallery"
+@rendermode InteractiveServer
+@using Terrarium.Web.Models
+@using Terrarium.Web.Services
+@inject TerrariumHubClient HubClient
+@inject ILogger<Gallery> Logger
+
+<PageTitle>Creature Gallery - .NET Terrarium</PageTitle>
+
+<div class="gallery-page">
+    <div class="gallery-page__header glass-panel">
+        <h1 class="glass-label">Creature Gallery</h1>
+        <div class="gallery-page__search">
+            <input type="text"
+                   class="glass-input"
+                   placeholder="Search by name or type..."
+                   @bind="_searchQuery"
+                   @bind:event="oninput" />
+        </div>
+        <div class="gallery-page__filters">
+            <button class="glass-button @(IsFilterActive("all") ? "glass-button--highlight" : "")"
+                    @onclick='() => SetFilter("all")'>
+                All (@_allSpecies.Count)
+            </button>
+            <button class="glass-button @(IsFilterActive("herbivore") ? "glass-button--highlight" : "")"
+                    @onclick='() => SetFilter("herbivore")'>
+                Herbivores (@_allSpecies.Count(s => s.Type == "Herbivore"))
+            </button>
+            <button class="glass-button @(IsFilterActive("carnivore") ? "glass-button--highlight" : "")"
+                    @onclick='() => SetFilter("carnivore")'>
+                Carnivores (@_allSpecies.Count(s => s.Type == "Carnivore"))
+            </button>
+            <button class="glass-button @(IsFilterActive("plant") ? "glass-button--highlight" : "")"
+                    @onclick='() => SetFilter("plant")'>
+                Plants (@_allSpecies.Count(s => s.Type == "Plant"))
+            </button>
+        </div>
+    </div>
+
+    <div class="gallery-page__content">
+        @if (FilteredSpecies.Count == 0)
+        {
+            <div class="gallery-page__empty glass-panel">
+                <div class="gallery-page__empty-icon">🔍</div>
+                <div class="glass-label">No species found</div>
+                @if (!string.IsNullOrWhiteSpace(_searchQuery))
+                {
+                    <div class="glass-label gallery-page__empty-hint">
+                        Try adjusting your search or filters
+                    </div>
+                }
+                else
+                {
+                    <div class="glass-label gallery-page__empty-hint">
+                        Upload a creature to get started
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="gallery-page__grid">
+                @foreach (var species in FilteredSpecies)
+                {
+                    <div class="gallery-card glass-panel">
+                        <div class="gallery-card__header">
+                            <div class="gallery-card__type-badge gallery-card__type-badge--@species.Type.ToLower()">
+                                @species.TypeIcon
+                            </div>
+                            <div class="gallery-card__name glass-label">@species.Name</div>
+                        </div>
+                        <div class="gallery-card__body">
+                            <div class="gallery-card__stat">
+                                <span class="gallery-card__stat-label">Author</span>
+                                <span class="gallery-card__stat-value glass-label">@species.Author</span>
+                            </div>
+                            <div class="gallery-card__stat">
+                                <span class="gallery-card__stat-label">Type</span>
+                                <span class="gallery-card__stat-value glass-label">@species.Type</span>
+                            </div>
+                            <div class="gallery-card__stat">
+                                <span class="gallery-card__stat-label">Population</span>
+                                <span class="gallery-card__stat-value glass-label">@species.Population</span>
+                            </div>
+                            <div class="gallery-card__stat">
+                                <span class="gallery-card__stat-label">Max Size</span>
+                                <span class="gallery-card__stat-value glass-label">@species.MaxSize</span>
+                            </div>
+                        </div>
+                        <div class="gallery-card__footer">
+                            <button class="glass-button gallery-card__action"
+                                    @onclick="() => IntroduceSpecies(species)"
+                                    disabled="@_introducing">
+                                @if (_introducing && _introducingSpecies == species.Name)
+                                {
+                                    <span>Introducing...</span>
+                                }
+                                else
+                                {
+                                    <span>Introduce to Ecosystem</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private record SpeciesInfo(
+        string Name,
+        string Author,
+        string Type,
+        int Population,
+        int MaxSize)
+    {
+        public string TypeIcon => Type switch
+        {
+            "Herbivore" => "🦌",
+            "Carnivore" => "🦁",
+            "Plant" => "🌿",
+            _ => "❓"
+        };
+    }
+
+    private List<SpeciesInfo> _allSpecies = new();
+    private string _currentFilter = "all";
+    private string _searchQuery = string.Empty;
+    private bool _introducing = false;
+    private string? _introducingSpecies;
+
+    protected override void OnInitialized()
+    {
+        // Wire up SignalR events for population updates
+        HubClient.OnPopulationReport += HandlePopulationReport;
+
+        // Initialize with sample data
+        _allSpecies = new List<SpeciesInfo>
+        {
+            new("SimplePlant", "Terrarium Team", "Plant", 42, 24),
+            new("SimpleHerbivore", "Terrarium Team", "Herbivore", 15, 48),
+            new("SimpleCarnivore", "Terrarium Team", "Carnivore", 8, 64),
+            new("FastGrower", "Demo Author", "Plant", 38, 20),
+            new("TankHerbivore", "Demo Author", "Herbivore", 12, 72),
+            new("SpeedyPredator", "Demo Author", "Carnivore", 5, 56),
+        };
+    }
+
+    private async Task HandlePopulationReport(Terrarium.Net.PopulationReport report)
+    {
+        // Update population counts from server
+        foreach (var species in report.Species)
+        {
+            var existing = _allSpecies.FirstOrDefault(s => s.Name == species.SpeciesName);
+            if (existing is not null)
+            {
+                var index = _allSpecies.IndexOf(existing);
+                _allSpecies[index] = existing with { Population = species.Population };
+            }
+            else
+            {
+                // New species discovered
+                _allSpecies.Add(new SpeciesInfo(
+                    species.SpeciesName,
+                    "Unknown", // TODO: Get author from assembly metadata
+                    "Unknown", // TODO: Get type from assembly
+                    species.Population,
+                    48)); // Default size
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private IReadOnlyList<SpeciesInfo> FilteredSpecies
+    {
+        get
+        {
+            var filtered = _allSpecies.AsEnumerable();
+
+            // Apply type filter
+            if (_currentFilter != "all")
+            {
+                filtered = filtered.Where(s => s.Type.Equals(_currentFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Apply search query
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                var query = _searchQuery.Trim().ToLowerInvariant();
+                filtered = filtered.Where(s =>
+                    s.Name.ToLowerInvariant().Contains(query) ||
+                    s.Type.ToLowerInvariant().Contains(query) ||
+                    s.Author.ToLowerInvariant().Contains(query));
+            }
+
+            return filtered.ToList();
+        }
+    }
+
+    private bool IsFilterActive(string filter)
+    {
+        return _currentFilter == filter;
+    }
+
+    private void SetFilter(string filter)
+    {
+        _currentFilter = filter;
+    }
+
+    private async Task IntroduceSpecies(SpeciesInfo species)
+    {
+        _introducing = true;
+        _introducingSpecies = species.Name;
+
+        try
+        {
+            Logger.LogInformation("Introducing species {Species} to ecosystem", species.Name);
+
+            // TODO: Call server API to introduce the species
+            // For now, simulate the action with potential for network error
+            await Task.Delay(1500);
+
+            Logger.LogInformation("Successfully introduced {Species}", species.Name);
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.LogError(ex, "Network error introducing species {Species}", species.Name);
+            // Could show a toast notification here: "Network error — species introduction failed"
+        }
+        catch (TaskCanceledException ex)
+        {
+            Logger.LogError(ex, "Request timeout introducing species {Species}", species.Name);
+            // Could show a toast notification here: "Request timeout — please try again"
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error introducing species {Species}", species.Name);
+            // Could show a toast notification here: "Unexpected error — please try again"
+        }
+        finally
+        {
+            _introducing = false;
+            _introducingSpecies = null;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        HubClient.OnPopulationReport -= HandlePopulationReport;
+    }
+}

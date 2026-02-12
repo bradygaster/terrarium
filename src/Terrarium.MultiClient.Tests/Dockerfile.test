@@ -1,0 +1,27 @@
+# Dockerfile for running multi-client tests in CI
+# Sprint 11 Issue #73
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+
+WORKDIR /src
+
+# Copy solution and project files
+COPY src/Terrarium.sln .
+COPY src/Directory.Build.props .
+COPY src/Terrarium.MultiClient.Tests/*.csproj Terrarium.MultiClient.Tests/
+COPY src/Terrarium.Net/*.csproj Terrarium.Net/
+COPY src/Terrarium.Game/*.csproj Terrarium.Game/
+COPY src/Terrarium.Configuration/*.csproj Terrarium.Configuration/
+COPY src/Terrarium.ServiceDefaults/*.csproj Terrarium.ServiceDefaults/
+COPY src/Terrarium.OrganismBase/*.csproj Terrarium.OrganismBase/
+
+# Restore dependencies
+RUN dotnet restore Terrarium.MultiClient.Tests/Terrarium.MultiClient.Tests.csproj
+
+# Copy source files
+COPY src/ .
+
+# Build test project
+RUN dotnet build Terrarium.MultiClient.Tests/Terrarium.MultiClient.Tests.csproj -c Release --no-restore
+
+# Run tests
+ENTRYPOINT ["dotnet", "test", "Terrarium.MultiClient.Tests/Terrarium.MultiClient.Tests.csproj", "-c", "Release", "--no-build", "--logger", "console;verbosity=normal"]

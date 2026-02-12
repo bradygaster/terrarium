@@ -1,0 +1,401 @@
+@page "/settings"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<PageTitle>Settings — .NET Terrarium</PageTitle>
+
+<div class="settings-page">
+    <div class="settings-page__header glass-panel">
+        <h1 class="glass-label settings-page__title">⚙️ Settings</h1>
+    </div>
+
+    <div class="settings-page__content">
+        <div class="settings-page__section glass-panel">
+            <div class="settings-page__section-header">
+                <span class="glass-label">🌐 Ecosystem Mode</span>
+            </div>
+            <div class="settings-page__section-body">
+                <div class="settings-form">
+                    <label class="settings-form__label glass-label">
+                        <input type="radio"
+                               name="ecosystem-mode"
+                               value="local"
+                               checked="@(_settings.EcosystemMode == "local")"
+                               @onchange="@(() => UpdateEcosystemMode("local"))"
+                               class="settings-form__radio" />
+                        <span>Local Only</span>
+                    </label>
+                    <p class="settings-form__description">Run your ecosystem in isolation. No network sync, no peer creatures.</p>
+
+                    <label class="settings-form__label glass-label">
+                        <input type="radio"
+                               name="ecosystem-mode"
+                               value="networked"
+                               checked="@(_settings.EcosystemMode == "networked")"
+                               @onchange="@(() => UpdateEcosystemMode("networked"))"
+                               class="settings-form__radio" />
+                        <span>Networked</span>
+                    </label>
+                    <p class="settings-form__description">Connect to other Terrarium instances. Creatures can teleport between peers.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-page__section glass-panel">
+            <div class="settings-page__section-header">
+                <span class="glass-label">🔌 Network Configuration</span>
+            </div>
+            <div class="settings-page__section-body">
+                <div class="settings-form">
+                    <label class="settings-form__label glass-label">
+                        <span>Server URL</span>
+                        <input type="text"
+                               class="settings-form__input glass-input"
+                               @bind="_settings.ServerUrl"
+                               @bind:event="oninput"
+                               placeholder="https://terrarium-server.azurewebsites.net"
+                               disabled="@(_settings.EcosystemMode == "local")" />
+                    </label>
+                    <p class="settings-form__description">SignalR hub endpoint for ecosystem synchronization.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-page__section glass-panel">
+            <div class="settings-page__section-header">
+                <span class="glass-label">🎨 Display Settings</span>
+            </div>
+            <div class="settings-page__section-body">
+                <div class="settings-form">
+                    <label class="settings-form__label glass-label">
+                        <span>Zoom Level</span>
+                        <input type="range"
+                               class="settings-form__range glass-range"
+                               min="0.25"
+                               max="2.0"
+                               step="0.25"
+                               @bind="_settings.ZoomLevel"
+                               @bind:event="oninput" />
+                        <span class="settings-form__range-value">@(_settings.ZoomLevel.ToString("F2"))x</span>
+                    </label>
+
+                    <label class="settings-form__label glass-label settings-form__checkbox-wrapper">
+                        <input type="checkbox"
+                               class="settings-form__checkbox"
+                               @bind="_settings.ShowMinimap" />
+                        <span>Show Minimap</span>
+                    </label>
+
+                    <label class="settings-form__label glass-label settings-form__checkbox-wrapper">
+                        <input type="checkbox"
+                               class="settings-form__checkbox"
+                               @bind="_settings.ShowFpsCounter" />
+                        <span>Show FPS Counter</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-page__section glass-panel">
+            <div class="settings-page__section-header">
+                <span class="glass-label">🎨 Theme</span>
+            </div>
+            <div class="settings-page__section-body">
+                <div class="settings-form">
+                    <label class="settings-form__label glass-label">
+                        <input type="radio"
+                               name="theme"
+                               value="classic"
+                               checked="@(_settings.Theme == "classic")"
+                               @onchange="@(() => UpdateTheme("classic"))"
+                               class="settings-form__radio" />
+                        <span>Classic Green Glass</span>
+                    </label>
+                    <p class="settings-form__description">The original Terrarium look — blue panels with green button glows.</p>
+
+                    <label class="settings-form__label glass-label">
+                        <input type="radio"
+                               name="theme"
+                               value="dark"
+                               checked="@(_settings.Theme == "dark")"
+                               @onchange="@(() => UpdateTheme("dark"))"
+                               class="settings-form__radio" />
+                        <span>Dark Mode</span>
+                    </label>
+                    <p class="settings-form__description">Subdued colors for night-time ecosystem watching.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-page__actions">
+            <button class="glass-button" @onclick="SaveSettings">
+                💾 Save Settings
+            </button>
+            <button class="glass-button" @onclick="ResetSettings">
+                🔄 Reset to Defaults
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private TerrariumSettings _settings = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadSettings();
+        }
+    }
+
+    private async Task LoadSettings()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", "terrarium-settings");
+            if (!string.IsNullOrEmpty(json))
+            {
+                _settings = System.Text.Json.JsonSerializer.Deserialize<TerrariumSettings>(json) ?? new();
+            }
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            // localStorage not available or parse error — use defaults
+        }
+    }
+
+    private async Task SaveSettings()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_settings);
+            await JS.InvokeVoidAsync("localStorage.setItem", "terrarium-settings", json);
+            await JS.InvokeVoidAsync("alert", "✅ Settings saved successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"❌ Failed to save settings: {ex.Message}");
+        }
+    }
+
+    private async Task ResetSettings()
+    {
+        _settings = new TerrariumSettings();
+        await SaveSettings();
+        StateHasChanged();
+    }
+
+    private async Task UpdateEcosystemMode(string mode)
+    {
+        _settings.EcosystemMode = mode;
+        await SaveSettings();
+    }
+
+    private async Task UpdateTheme(string theme)
+    {
+        _settings.Theme = theme;
+        await SaveSettings();
+    }
+
+    private class TerrariumSettings
+    {
+        public string EcosystemMode { get; set; } = "local";
+        public string ServerUrl { get; set; } = "https://terrarium-server.azurewebsites.net";
+        public double ZoomLevel { get; set; } = 1.0;
+        public bool ShowMinimap { get; set; } = true;
+        public bool ShowFpsCounter { get; set; } = false;
+        public string Theme { get; set; } = "classic";
+    }
+}
+
+<style>
+    .settings-page {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: 8px;
+        padding: 8px;
+        overflow: auto;
+    }
+
+    .settings-page__header {
+        padding: 12px;
+    }
+
+    .settings-page__title {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .settings-page__content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .settings-page__section {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settings-page__section-header {
+        padding: 8px 12px;
+        background: linear-gradient(
+            180deg,
+            var(--glass-gradient-section-top) 0%,
+            var(--glass-gradient-section-bottom) 100%
+        );
+        border-bottom: var(--glass-border);
+    }
+
+    .settings-page__section-body {
+        padding: 16px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .settings-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .settings-form__label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .settings-form__checkbox-wrapper {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .settings-form__input,
+    .glass-input {
+        padding: 8px 12px;
+        background: var(--glass-color-input-bg);
+        border: 1px solid var(--glass-color-input-border);
+        border-radius: var(--glass-radius-input);
+        color: var(--glass-color-input-text);
+        font-family: var(--glass-font-family);
+        font-size: var(--glass-font-size-label);
+        transition: all 0.2s ease;
+    }
+
+    .settings-form__input:focus,
+    .glass-input:focus {
+        outline: none;
+        background: var(--glass-color-input-bg-focus);
+        border-color: var(--glass-color-input-border-focus);
+        box-shadow: 0 0 8px rgba(128, 128, 255, 0.3);
+    }
+
+    .settings-form__input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .settings-form__input::placeholder {
+        color: var(--glass-color-input-placeholder);
+    }
+
+    .settings-form__radio,
+    .settings-form__checkbox {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        cursor: pointer;
+        accent-color: var(--glass-gradient-button-hover-top);
+    }
+
+    .settings-form__range {
+        width: 100%;
+        height: 6px;
+        background: var(--glass-color-input-bg);
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .settings-form__range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        background: linear-gradient(
+            180deg,
+            var(--glass-gradient-button-hover-top) 0%,
+            var(--glass-gradient-button-hover-bottom) 100%
+        );
+        border: 1px solid var(--glass-color-border-button);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .settings-form__range::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        background: linear-gradient(
+            180deg,
+            var(--glass-gradient-button-hover-top) 0%,
+            var(--glass-gradient-button-hover-bottom) 100%
+        );
+        border: 1px solid var(--glass-color-border-button);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .settings-form__range-value {
+        font-size: var(--glass-font-size-label);
+        color: var(--glass-gradient-button-hover-top);
+        text-align: right;
+        min-width: 60px;
+    }
+
+    .settings-form__description {
+        font-size: 8px;
+        color: var(--glass-color-stat-label);
+        margin: 0;
+        padding-left: 26px;
+        line-height: 1.4;
+    }
+
+    .settings-page__actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        padding: 16px 0;
+    }
+
+    /* Mobile responsive adjustments */
+    @@media (max-width: 768px) {
+        .settings-page {
+            padding: 4px;
+        }
+
+        .settings-page__content {
+            max-width: 100%;
+        }
+
+        .settings-page__section-body {
+            padding: 12px;
+        }
+
+        .settings-page__actions {
+            flex-direction: column;
+        }
+
+        .settings-page__actions button {
+            width: 100%;
+        }
+    }
+</style>

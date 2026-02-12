@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Terrarium.OrganismBase\Terrarium.OrganismBase.csproj" />
     <ProjectReference Include="..\Terrarium.Configuration\Terrarium.Configuration.csproj" />
+    <ProjectReference Include="..\Terrarium.Net\Terrarium.Net.csproj" />
+    <ProjectReference Include="..\Terrarium.Services\Terrarium.Services.csproj" />
   </ItemGroup>
 
 </Project>

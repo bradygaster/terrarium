@@ -1,0 +1,79 @@
+name: Publish NuGet Packages
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version to publish'
+        required: true
+        default: '10.0.0-preview.1'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_QUALITY: 'preview'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: ${{ env.DOTNET_QUALITY }}
+    
+    - name: Extract version from tag
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Restore dependencies
+      run: dotnet restore src/Terrarium.sln
+    
+    - name: Build solution
+      run: dotnet build src/Terrarium.sln --configuration Release --no-restore
+    
+    - name: Pack OrganismBase
+      run: |
+        dotnet pack src/Terrarium.OrganismBase/Terrarium.OrganismBase.csproj \
+          --configuration Release \
+          --no-build \
+          --output ./packages \
+          /p:PackageVersion=${{ steps.version.outputs.VERSION }}
+    
+    - name: Pack Templates
+      run: |
+        dotnet pack src/Terrarium.Templates/Terrarium.Templates.csproj \
+          --configuration Release \
+          --output ./packages \
+          /p:PackageVersion=${{ steps.version.outputs.VERSION }}
+    
+    - name: Publish to GitHub Packages
+      run: |
+        dotnet nuget push "./packages/*.nupkg" \
+          --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+          --api-key ${{ secrets.GITHUB_TOKEN }} \
+          --skip-duplicate
+    
+    - name: Upload packages as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./packages/*.nupkg
+        retention-days: 30
