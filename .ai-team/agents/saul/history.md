@@ -29,3 +29,6 @@
 📌 Team update (2026-02-11): Road ahead blog post (48 issues, 89-minute parallelism) — decided by Beth
 
 📌 Aspire AppHost created (2026-02-11): Created Terrarium.AppHost (Aspire 13.1.0 with AppHost.Sdk) and Terrarium.ServiceDefaults (OpenTelemetry 1.15.0, ServiceDiscovery 10.3.0, Http.Resilience 10.3.0). Both build clean on .NET 10.0.103. Aspire no longer requires a workload in .NET 10 — it's purely NuGet-based. ServiceDefaults project reference needs IsAspireProjectResource="false" in the AppHost csproj to avoid ASPIRE004 warning. Server and Web project references are commented out until those projects are created.
+
+📌 NuGet packages for OrganismBase (2026-02-11): Created Terrarium.OrganismBase NuGet package (version 10.0.0-preview.1) with full package metadata, README, and symbol package generation. Created Terrarium.Templates package with dotnet new template for creature scaffolding. Template supports Animal (herbivore/carnivore) and Plant types with parameterized customization. Created CI/CD workflow (.github/workflows/nuget-publish.yml) for automated publishing to GitHub Packages on release tags. Both packages build and pack successfully. Template tested with all variations — herbivore, carnivore, and plant generation all work correctly. Documentation added to docs/nuget-packages.md covering installation, usage, publishing, and troubleshooting.
+

@@ -202,3 +202,32 @@ PR #113, branch `squad/16-networking-layer`.
 - `GameNetworkBridge` takes `INetworkEngine` (interface), not `NetworkEngine` (class) — DI/testability
 - `TeleportStatePayload` custom JSON type (not raw OrganismState) — clean serialization boundary, no internal state leakage
 - `GameServiceBridge` wraps all server calls in try/catch — server failures never crash the game loop
+
+### 2025-01-22 — Sprint 10 Creature Introduction Pipeline (#69)
+
+**What was built:**
+- Fixed pre-existing server build errors in `SpeciesEndpoints.cs` (missing parameters on `/extinct` endpoint)
+- Added `GET /{name}/assembly` endpoint to download species assemblies by name and version
+- Enhanced `POST /register` endpoint to save uploaded assemblies to disk at configured `AssemblyPath`
+- Created `GameEngine.IntroduceCreatureFromPac()` — loads creature from PrivateAssemblyCache, validates, extracts species, adds to game
+- Created `GameEngine.IntroduceCreatureFromServerAsync()` — downloads assembly from server, validates, saves to PAC, introduces into game
+- Added `GameServiceBridge.GetSpeciesAssemblyAsync()` — client-side method to download species assembly bytes
+- Updated `IGameEngine` interface with the two new introduction methods
+- Fixed Upload.razor drag-and-drop compilation error (removed unsupported DnD in Blazor Server)
+
+**Key implementation details:**
+- Server stores assemblies at `ServerSettings.AssemblyPath` (configured in appsettings.json)
+- Assembly validation runs at both upload (server) and download (client) points via `AssemblyValidator`
+- Uses existing `Species.GetSpeciesFromAssembly()` pattern for extracting species metadata
+- Auto-registers newly introduced creatures with server if `ServiceBridge` is configured
+- Full async download pipeline with temp file validation before committing to PAC
+- Synchronous PAC introduction path for already-cached assemblies
+
+**File locations:**
+- Server endpoints: `src/Terrarium.Server/SpeciesEndpoints.cs`
+- Game engine methods: `src/Terrarium.Game/GameEngine.cs` (lines ~291-450)
+- Service bridge: `src/Terrarium.Game/Services/GameServiceBridge.cs`
+- Interface: `src/Terrarium.Game/IGameEngine.cs`
+- Client service: `src/Terrarium.Services/Clients/SpeciesServiceClient.cs` (already had `GetSpeciesAssemblyAsync`)
+
+**Build verified:** Full solution compiles with zero errors.

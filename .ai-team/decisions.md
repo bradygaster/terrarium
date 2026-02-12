@@ -2,6 +2,130 @@
 
 > Team decisions that all agents must respect. Append-only — never edit existing entries.
 
+### 2026-02-11: Creature management UI architecture (Upload + Gallery)
+**By:** Skyler
+**What:** Created creature upload and gallery pages as separate routes with dedicated navigation menu, using AssemblyValidator for server-side DLL validation
+**Why:** 
+- **Separation of concerns:** Upload and Gallery are distinct user flows (adding vs. browsing creatures), each deserving its own route and UI
+- **Server-side validation is non-negotiable:** Creature DLLs can contain P/Invoke, forbidden namespaces, or malicious code — validation MUST happen server-side using AssemblyValidator before any assembly loading occurs. Client-side checks are insufficient for security.
+- **AssemblyValidator uses metadata inspection (no loading):** The validator uses `System.Reflection.Metadata.PEReader` to inspect assemblies without loading them into the runtime, preventing execution of untrusted code during validation.
+- **Inline error display improves UX:** Showing all validation failures inline (not just "failed" with a toast) helps users understand what's wrong with their creature and how to fix it. Each error is actionable (e.g., "Remove System.IO reference", "Inherit from Animal or Plant").
+- **File picker over drag-and-drop:** Blazor Server mode doesn't support native file drag-and-drop without JavaScript interop. Using `InputFile` component with file picker is the standard Blazor pattern and works reliably.
+- **Temporary file handling:** Uploaded DLLs are saved to `Path.GetTempPath()/terrarium-uploads/` for validation, then cleaned up on success or failure. Production deployment would move validated DLLs to a game engine–managed creatures directory.
+- **NavMenu component:** Adding dedicated navigation makes Upload and Gallery discoverable — users need a way to get to these pages from the main game view.
+- **Gallery search/filter:** Ecosystem can have dozens of species — search and type filtering make it usable at scale.
+
+### 2026-02-11: Package versioning aligned with .NET version
+**By:** Saul
+**What:** Established version numbering for Terrarium NuGet packages: `{major}.{minor}.{patch}-{suffix}` where major.minor matches the .NET version (10.0 for .NET 10), patch is incremental, and suffix is `-preview.X` for previews. Initial version is `10.0.0-preview.1`.
+**Why:** Makes it immediately clear which .NET version the packages target. Follows semantic versioning and .NET preview conventions. Aligns with user expectations — if you're on .NET 10, you use Terrarium 10.x packages.
+
+### 2026-02-11: OrganismBase NuGet package structure
+**By:** Saul
+**What:** Configured Terrarium.OrganismBase as a NuGet package (version 10.0.0-preview.1) with comprehensive metadata: PackageId, Authors, Description, License (MIT), symbols package generation (snupkg), and README inclusion. Package targets net10.0 and includes API documentation XML.
+**Why:** Creature developers need an easy way to reference OrganismBase without needing the full Terrarium source code. NuGet distribution makes it simple to add the dependency via `dotnet add package Terrarium.OrganismBase`.
+
+### 2026-02-11: GitHub Actions workflow for NuGet publishing
+**By:** Saul
+**What:** Created `.github/workflows/nuget-publish.yml` workflow that:
+- Triggers on release tags (`v*.*.*`) or manual dispatch
+- Builds Terrarium.sln
+- Packs both OrganismBase and Templates packages
+- Publishes to GitHub Packages (nuget.pkg.github.com)
+- Uploads packages as artifacts (30-day retention)
+- Uses .NET 10 preview quality
+**Why:** Automates package publishing on release. Tag-based triggering (`git tag v10.0.0-preview.1 && git push --tags`) ensures packages are published consistently when releases are created. Manual dispatch provides flexibility for testing or hotfix releases. GitHub Packages integration keeps packages in the same ecosystem as the source code.
+
+### 2026-02-11: dotnet new template for creature scaffolding
+**By:** Saul
+**What:** Created Terrarium.Templates NuGet package containing a `dotnet new terrarium-creature` template. Template generates a creature project with:
+- Parameterized customization: `--CreatureType` (Animal/Plant), `--IsCarnivore` (true/false), `--AuthorName`, `--AuthorEmail`
+- Pre-configured project file with Terrarium.OrganismBase package reference
+- Assembly attributes (OrganismClass, AuthorInformation)
+- Starter implementation with event handlers (Animals) or minimal structure (Plants)
+- Modern C# (file-scoped namespaces, nullable enabled)
+- Comments and TODOs guiding implementation
+**Why:** Lowers the barrier to entry for creature development. New developers can scaffold a working creature in seconds via `dotnet new terrarium-creature -n MyCreature` rather than manually setting up project files, attributes, and boilerplate. Template ensures consistent structure and best practices out of the box.
+
+### 2026-01-22: Creature upload and download pipeline implementation
+**By:** Mike (Engine/Networking)
+**What:** Implemented server-side API endpoints and game engine methods for uploading creature assemblies to the server and downloading them to introduce into local ecosystems
+**Why:** Issue #69 required wiring the complete creature introduction pipeline through the server
+
+#### Implementation Details
+
+##### Server Endpoints (SpeciesEndpoints.cs)
+
+1. **Fixed pre-existing build errors**: `/extinct` endpoint was missing `version` and `filter` parameters
+2. **Added GET `/{name}/assembly` endpoint**: Downloads species assembly bytes by name and version
+   - Validates species exists and is not blacklisted
+   - Reads assembly from disk at configured `AssemblyPath`
+   - Returns binary assembly data
+3. **Enhanced POST `/register` endpoint**: Now saves uploaded assemblies to disk at `AssemblyPath` location
+
+##### Game Engine Methods (GameEngine.cs)
+
+1. **`IntroduceCreatureFromPac`**: Loads and validates creature from PrivateAssemblyCache
+   - Validates assembly if validator provided
+   - Extracts species info using `Species.GetSpeciesFromAssembly`
+   - Adds organism to game via `AddNewOrganism`
+   - Auto-registers with server via ServiceBridge
+   
+2. **`IntroduceCreatureFromServerAsync`**: Downloads creature from server and introduces locally
+   - Downloads assembly bytes via `GameServiceBridge.GetSpeciesAssemblyAsync`
+   - Validates downloaded assembly
+   - Saves to PrivateAssemblyCache
+   - Introduces into game
+
+##### Service Bridge (GameServiceBridge.cs)
+
+Added **`GetSpeciesAssemblyAsync`** method to download species assemblies by name and version from the server.
+
+##### Interface Updates (IGameEngine.cs)
+
+Added the two new introduction methods to the interface for DI and testability.
+
+#### Key Design Decisions
+
+1. **Assembly storage**: Server stores assemblies on disk at `ServerSettings.AssemblyPath` (configured via appsettings.json)
+2. **Validation flow**: AssemblyValidator runs before assemblies are loaded, both on upload and download
+3. **Species extraction**: Uses existing `Species.GetSpeciesFromAssembly` pattern for consistency
+4. **Async by default**: Download path is fully async; PAC load path is synchronous per existing patterns
+5. **Auto-registration**: When introducing from PAC, automatically registers with server if ServiceBridge is configured
+
+#### Usage Pattern
+
+```csharp
+// Upload creature to server (web UI)
+// User uploads DLL → validates → saves to temp → registers via POST /api/species/register
+
+// Introduce from server
+var success = await gameEngine.IntroduceCreatureFromServerAsync(
+    "MyCreature", "1.0", pac, validator);
+
+// Introduce from PAC (already downloaded)
+var success = gameEngine.IntroduceCreatureFromPac(
+    "MyCreature, Version=1.0.0.0, ...", pac, validator);
+```
+
+#### Testing Notes
+
+- Server build verified (no errors)
+- Full solution build verified (no errors)
+- Pre-existing Upload.razor drag-and-drop error fixed (removed unsupported feature)
+- Assembly validation integrated at both upload and download points
+
+### 2026-07-16: SDK documentation structure and tutorial approach
+**By:** Hank
+**What:** SDK documentation lives in `docs/sdk/` with separate `tutorials/` and `api/` subdirectories. Tutorials teach modern C# (file-scoped namespaces, nullable types, pattern matching). API docs are comprehensive class/method references with complete examples.
+**Why:** 
+- Clear separation: tutorials for learning flow, API for lookup
+- Modern C# conventions make code easier to read and maintain
+- References existing `src/Terrarium.Samples/` implementations as proof
+- Covers the full creature development lifecycle: plant → herbivore → carnivore
+- Comprehensive API docs eliminate need to read source code for basic usage
+- Tutorials anticipate common mistakes and provide strategy patterns
+
 ### 2026-02-10: User directive
 **By:** bradygaster (via Copilot)
 **What:** This codebase is large — no single agent should try to scan it all at once. Document incrementally, piece by piece, until the whole codebase is documented.

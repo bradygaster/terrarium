@@ -259,3 +259,59 @@
 - GameEngine tests are standalone (no test server needed) — they use `NullLogger` and `PopulationData` directly.
 - Tests are intentionally shallow — they verify the app boots and nothing is broken at startup, not comprehensive behavior.
 - Build command: `dotnet test src/Terrarium.Smoke.Tests/`
+
+### 2025-07-16 — SDK Tutorials and OrganismBase API Documentation (Issues #67, #71)
+
+**What was done:**
+- Created comprehensive SDK tutorials in `docs/sdk/tutorials/` (modernized from legacy TUTORIAL_CS.doc)
+- Created complete OrganismBase API reference documentation in `docs/sdk/api/`
+- All content uses modern C# (file-scoped namespaces, nullable reference types, pattern matching, records)
+- C# only — no VB.NET (per team decision)
+- References existing samples in `src/Terrarium.Samples/` (SimpleHerbivore, SimpleCarnivore, SimplePlant)
+
+**Tutorials Created:**
+1. **getting-started.md** — Introduction to creature development, project setup, assembly attributes, base classes, namespaces
+2. **tutorial-1-simple-plant.md** — Creating plants: attributes, automatic behavior, size/spread strategies, complete working example
+3. **tutorial-2-herbivore.md** — Creating herbivores: event model (Load, Idle), scanning, movement, eating, characteristic points strategy patterns, 100-point distribution examples
+4. **tutorial-3-carnivore.md** — Creating carnivores: hunt cycle, attacking, eating dead prey, target management (IsMySpecies check), attack damage calculations, advanced targeting strategies
+
+**API Documentation Created:**
+1. **README.md** — Overview, namespace, base classes summary, state classes, attributes quick ref, events, actions, enumerations, EngineSettings, helper classes, complete examples, common patterns, best practices
+2. **animal.md** — Complete Animal class reference: all properties (State, Species, IsMoving, IsAttacking, IsEating, CanEat, WorldWidth/Height), all events (Load, Idle, MoveCompleted, AttackCompleted, EatCompleted, Attacked, etc.), all methods (Scan, LookFor, BeginMoving, StopMoving, BeginEating, BeginAttacking, WithinEatingRange, WithinAttackingRange, CanAttack, IsMySpecies), examples
+3. **plant.md** — Complete Plant class reference: properties, serialization methods, automatic behaviors (growth, energy generation, reproduction, healing, lifecycle), PlantState details, energy/light mechanics
+4. **attributes.md** — Complete attributes reference: assembly attributes (OrganismClass, AuthorInformation), universal attributes (MatureSize, MarkingColor), animal attributes (Carnivore, AnimalSkin, 7 characteristic point attributes with strategy examples), plant attributes (PlantSkin, SeedSpreadDistance), validation rules, complete examples
+
+**Key Architectural Documentation:**
+- OrganismBase uses namespace `OrganismBase` (not Terrarium.OrganismBase)
+- Creature assemblies require `[assembly: OrganismClass]` and `[assembly: AuthorInformation]` attributes
+- Animals derive from `Animal`, plants from `Plant`
+- Key types: OrganismState, AnimalState, PlantState, EngineSettings
+- Event-driven animal behavior model: Load (first each turn), Idle (when no actions in progress)
+- Animals must sum characteristic points to exactly 100
+- Characteristic point strategy patterns: stealth herbivore, pursuit carnivore, tank, endurance hunter, ambush predator
+- Plant automatic reproduction via base class (no custom logic needed)
+- MatureSize range: 25-48, SeedSpreadDistance range: 0-1000
+
+**Key Conventions Documented:**
+- Always use try-catch in event handlers
+- Check action state before starting new actions (IsMoving, IsEating, IsAttacking)
+- Validate targets in Load event using LookFor()
+- Never attack your own species — use IsMySpecies() check
+- Use OrganismRandom for reproducible random numbers
+- WriteTrace() for debugging
+
+**Tutorials teach modern C# patterns:**
+- File-scoped namespaces: `namespace MyCreatures.GreenBeetle;`
+- Nullable reference types: `PlantState?`, `AnimalState?`
+- Pattern matching: `if (organism is PlantState plant)`
+- Modern delegate syntax: `Load += LoadEvent` instead of `new LoadEventHandler(LoadEvent)`
+
+**Files created:**
+- `docs/sdk/tutorials/getting-started.md` (3104 chars)
+- `docs/sdk/tutorials/tutorial-1-simple-plant.md` (6165 chars)
+- `docs/sdk/tutorials/tutorial-2-herbivore.md` (14391 chars)
+- `docs/sdk/tutorials/tutorial-3-carnivore.md` (17356 chars)
+- `docs/sdk/api/README.md` (10060 chars)
+- `docs/sdk/api/animal.md` (17348 chars)
+- `docs/sdk/api/plant.md` (9269 chars)
+- `docs/sdk/api/attributes.md` (12441 chars)

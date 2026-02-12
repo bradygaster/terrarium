@@ -140,3 +140,54 @@
 📌 Status bar lives in `Home.razor` (not `MainLayout.razor`) so it can show data-driven content (population, ticks, peers)
 📌 `EcosystemTick.TickNumber` is `long`, not `int` — all tick counters must use `long`
 📌 `WorldStateUpdate` is a lightweight snapshot (no creature array) — creature data comes via `PopulationReport.Species`
+
+### 2026-02-11: Sprint 10 — Creature Upload UI and Gallery (#68, #70)
+- **What I built:**
+  - `Components/Pages/Upload.razor` — Creature DLL upload component with validation
+    - File picker for DLL upload (drag-and-drop UI for visual feedback only)
+    - Server-side validation using `AssemblyValidator` from `Terrarium.Game.Hosting`
+    - Progress indicator with spinner during validation
+    - Inline error display showing all validation failures (P/Invoke, forbidden namespaces, missing base type)
+    - Success/failure states with appropriate icons and messages
+    - Sidebar showing requirements and examples (SimplePlant, SimpleHerbivore, SimpleCarnivore)
+    - Temporary file handling with cleanup on dispose
+    - Max file size: 10MB
+  - `Components/Pages/Gallery.razor` — Species browser/gallery page
+    - Grid layout showing all available species as cards
+    - Type badges with color coding: 🦌 Herbivore (green), 🦁 Carnivore (red), 🌿 Plant (yellow)
+    - Search/filter by name, type, or author
+    - Filter buttons: All, Herbivores, Carnivores, Plants (with counts)
+    - Stats display: Author, Type, Population, Max Size
+    - "Introduce to Ecosystem" button per species (action stub for future work)
+    - Wired to `TerrariumHubClient.OnPopulationReport` for live population updates
+    - Sample species data for UI testing
+  - `Components/Layout/NavMenu.razor` — Navigation menu component
+    - Three routes: Home (🏠), Gallery (🦁), Upload (📦)
+    - Active link highlighting using Glass panel gradient
+    - Hover states with green glow (Glass theme signature)
+  - `wwwroot/css/pages.css` — Page-specific styles for Upload and Gallery
+    - Upload dropzone with hover states, spinner animation, progress bar
+    - Gallery grid with responsive breakpoints (auto-fill, 280px min cards)
+    - Error display with red background and bullet points
+    - Type badges with gradient backgrounds matching Glass LED colors
+    - Mobile-responsive: sidebar hidden on narrow screens, single-column gallery
+  - Updated `MainLayout.razor` to include NavMenu below title bar
+  - Updated `App.razor` to include `pages.css` in the CSS cascade
+- **Build:** `dotnet build src/Terrarium.Web/Terrarium.Web.csproj` — 0 errors, 0 warnings
+- **AssemblyValidator integration:** Already registered as singleton in `GameServiceExtensions.AddTerrariumGameEngine()`
+- **Design decisions:**
+  - Drag-and-drop removed from functional implementation (Blazor Server limitation) — file picker only
+  - Upload component uses temporary directory (`Path.GetTempPath()/terrarium-uploads`) for uploaded files
+  - Validation errors display inline in the upload zone (not just toast notifications)
+  - Gallery sample data hardcoded for now — real species discovery will come from game engine integration
+  - NavMenu uses `NavLink` with `active` class for routing state
+
+## Learnings
+
+📌 `AssemblyValidator` from `Terrarium.Game.Hosting` validates creature DLLs without loading them — checks P/Invoke, forbidden namespaces, base type inheritance
+📌 `ValidationResult` has `IsValid` bool and `Reasons` list — display all reasons inline to help users fix their creatures
+📌 Upload component uses `IBrowserFile.OpenReadStream(maxSize)` to stream files to disk — max 10MB enforced at stream level
+📌 `InputFile` component requires `accept=".dll"` attribute for file type filtering
+📌 `NavLink` component has `Match` parameter — use `NavLinkMatch.All` for exact home route matching, default prefix match for others
+📌 Gallery grid uses `repeat(auto-fill, minmax(280px, 1fr))` for responsive card layout without media queries
+📌 Type badges use LED gradient tokens for color coding: idle (green) for herbivores, failed (red) for carnivores, waiting (yellow) for plants
