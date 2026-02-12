@@ -95,3 +95,41 @@
 - `ReportPopulation` returns `Success` on error (matching legacy behavior to prevent retry storms)
 - Chart endpoints consolidated under `/api/reporting/stats/` rather than separate `/api/charts/`
 - `SpeciesServiceStatus` and `ReportingReturnCode` enums ported as-is for client compatibility
+
+### 2026-02-11 — Sprint 12: Server Monitoring & Observability (#84)
+
+**What was done:**
+- Created `src/Terrarium.Server/HealthChecks/` with three custom IHealthCheck implementations:
+  - `DatabaseHealthCheck` — placeholder for future DB connectivity check (returns Degraded until implemented)
+  - `SignalRHubHealthCheck` — verifies SignalR hub context is accessible
+  - `AssemblyCacheHealthCheck` — checks assembly cache disk space with configurable thresholds (100MB warning, 10MB unhealthy)
+- Created `TerrariumMetrics` class in `Terrarium.ServiceDefaults/` with System.Diagnostics.Metrics:
+  - `ConnectedPeerCount` (ObservableGauge) — current connected peers across all ecosystems
+  - `ActiveSpeciesCount` (ObservableGauge) — active species with non-zero population
+  - `SignalRConnections` (ObservableGauge) — active SignalR connections (same as peer count)
+  - `PopulationReportsReceived` (Counter) — total population reports processed
+  - `TeleportationEvents` (Counter) — total teleportation events processed
+  - `AssemblyUploads` (Counter) — total assembly uploads (future sprint)
+- Enhanced structured logging in `TerrariumHub.cs`:
+  - Added log scopes with structured properties: `PeerId`, `EcosystemId`, `TickNumber`, `TeleportId`, `OrganismId`
+  - Updated `JoinEcosystem`, `LeaveEcosystem`, `ReportPopulation`, `TeleportCreature`, `OnDisconnectedAsync`
+  - Consistent log levels: Information for normal ops, Warning for degraded, Error for failures
+- Enhanced structured logging in `PopulationTrackingService.cs`:
+  - Added log scopes for `RecordReport`, `RemovePeer`, `CleanupStaleEcosystems`
+- Wired metrics in `Program.cs` with lambda providers for peer/species counts
+- Wired health checks in `Program.cs` with tags: `["ready"]` for all custom checks, `["live"]` for self-check
+- Added `System.Diagnostics.Metrics` using to `Program.cs` for `IMeterFactory`
+- Added project reference from `Terrarium.Net` to `Terrarium.ServiceDefaults` to access `TerrariumMetrics`
+- Updated `IPopulationTrackingService` with `GetActiveSpeciesCount()` method for metrics
+- Added static `GetConnectedPeerCount()` method to `TerrariumHub` for metrics
+- All 4 ServerHealthTests passing: `/health`, `/alive`, root endpoint, Terrarium Server response
+
+**Key decisions:**
+- Health checks use Aspire-integrated pattern with tags for liveness vs readiness
+- Metrics use `System.Diagnostics.Metrics` (native .NET) rather than custom telemetry
+- Structured logging uses ILogger.BeginScope() with Dictionary<string, object> for consistent property names
+- DatabaseHealthCheck returns Degraded (not Unhealthy) until database layer is implemented
+- TerrariumMetrics lives in ServiceDefaults (shared) so both Server and Net projects can reference it
+- Assembly uploads counter exists but not yet wired (pending Sprint 13 when assembly storage is implemented)
+- Log properties renamed from generic names to semantic names: `ConnectionId` → `PeerId`, `Total` → `TotalOrganisms`
+- Metrics use dimensional tags (e.g., `ecosystem_id`) for filtering in Aspire dashboard

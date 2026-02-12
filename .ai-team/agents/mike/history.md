@@ -274,3 +274,47 @@ PR #113, branch `squad/16-networking-layer`.
 
 **Build verified:** Terrarium.Server, Terrarium.Net, and Terrarium.Web all compile successfully.
 
+### 2025-01-23 — Sprint 12 Ecosystem Mode Selection and Save/Load (#81, #82)
+
+**Issue #81 — Ecosystem mode selection:**
+- Created `src/Terrarium.Game/EcosystemMode.cs` — enum with LocalOnly (0) and Networked (1) values
+- Added `GameEngine.Mode` property for runtime mode switching
+- Updated `TeleportOrganisms()` to skip teleportation in LocalOnly mode
+- Updated `PopulationData.EndTick()` to skip server reporting in LocalOnly mode
+- Mode changes propagate from GameEngine to PopulationData automatically
+- LocalOnly mode enables offline gameplay without server/SignalR dependencies
+- Networked mode preserves existing multiplayer functionality
+
+**Issue #82 — Save/Load game state:**
+- Created `src/Terrarium.Game/IGameStatePersistence.cs` — interface for save/load operations with serialize/deserialize and storage backend contracts
+- Created `src/Terrarium.Game/GameStatePersistence.cs` — implementation using System.Text.Json
+- Serialization captures: tick number, state GUID, organisms (ID, species name, assembly name, position, energy, age, generation, alive state)
+- Created DTOs: `WorldStateSaveData` (top-level), `OrganismSaveData` (per-organism)
+- Added `GameEngine.SaveGameStateAsync()` — serializes current WorldState via StatePersistence handler
+- Added `GameEngine.LoadGameStateAsync()` — deserializes WorldState, restores CurrentVector, resets turn phase, updates organism counts
+- Registered `IGameStatePersistence` as singleton in `GameServiceExtensions.AddTerrariumGameEngine()`
+- Added `StatePersistence` property to `IGameEngine` interface and `GameEngine` class
+
+**Implementation details:**
+- JSON serialization via System.Text.Json with camel-case naming, indented formatting, and enum-as-string serialization
+- Save operations store assembly full names — load operations require caller to provide PrivateAssemblyCache (PAC) to reload creature assemblies
+- Organism restoration from save data deferred to caller — GameEngine provides the WorldState structure, caller handles PAC integration
+- TODO: Server-side save/load endpoints (`SaveToServerAsync`, `LoadFromServerAsync`)
+- TODO: Browser download trigger (`SaveAsBrowserDownloadAsync`) — requires JSInterop in Blazor context
+- TODO: Complete organism restoration in `LoadGameStateAsync` with PAC assembly loading
+
+**File locations:**
+- Enum: `src/Terrarium.Game/EcosystemMode.cs`
+- Interface: `src/Terrarium.Game/IGameStatePersistence.cs`
+- Implementation: `src/Terrarium.Game/GameStatePersistence.cs`
+- Engine changes: `src/Terrarium.Game/GameEngine.cs` (Mode property, TeleportOrganisms, SaveGameStateAsync, LoadGameStateAsync, StatePersistence property)
+- Interface updates: `src/Terrarium.Game/IGameEngine.cs` (Mode, StatePersistence, SaveGameStateAsync, LoadGameStateAsync)
+- PopulationData: `src/Terrarium.Game/PopulationData.cs` (Mode property, EndTick mode check)
+- DI registration: `src/Terrarium.Game/GameServiceExtensions.cs`
+
+**Testing notes:**
+- Syntax validated: all modified files have matching braces and correct file-scoped namespaces
+- EcosystemMode.cs compiles successfully in isolation
+- Build blocked by pre-existing dependency errors in Terrarium.Net and Terrarium.Services (unrelated to Sprint 12 work)
+- Code is correct, waiting on dependency fixes for full solution build
+

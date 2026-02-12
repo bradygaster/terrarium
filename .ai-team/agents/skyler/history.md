@@ -24,6 +24,54 @@
 
 ## Sprint 3 Work
 
+### 2026-02-11: Created Settings UI and PWA features (Issue #80, #85, Sprint 12)
+- **What I built:**
+  - **Settings.razor** (`src/Terrarium.Web/Components/Pages/Settings.razor`) — Full-featured settings panel:
+    - Ecosystem mode selection (local-only vs. networked)
+    - Network config (server URL input, disabled when local-only)
+    - Display settings (zoom slider 0.25x-2.0x, minimap toggle, FPS counter toggle)
+    - Theme selection (classic green glass vs. dark mode)
+    - localStorage persistence via IJSRuntime (auto-save on change)
+    - Glass theme CSS styling with section headers and form elements
+  - **PWA manifest** (`wwwroot/manifest.json`):
+    - App metadata (name, description, theme colors matching Terrarium blue)
+    - Icon references (192px, 512px)
+    - Screenshot placeholders (desktop 1280x720, mobile 750x1334)
+    - Shortcuts (Start Ecosystem, Browse Gallery)
+    - Standalone display mode for immersive experience
+  - **Service worker** (`wwwroot/sw.js`):
+    - Shell caching strategy (CSS, JS, HTML)
+    - Network-first with cache fallback for offline capability
+    - Install/activate/fetch handlers
+    - Message handler for cache control
+    - Skips SignalR/API requests (no caching of dynamic data)
+  - **Responsive CSS** (`wwwroot/css/responsive.css`):
+    - Mobile breakpoint (max-width 768px) — sidebar collapses to bottom, compact nav
+    - Tablet breakpoint (769px-1024px) — narrower sidebar, 3-column gallery
+    - Touch controls — larger tap targets (44px min), touch-action: none on canvas
+    - PWA standalone mode — safe-area-inset support for notches
+    - Landscape vs portrait orientation handling
+    - Accessibility support (prefers-reduced-motion, prefers-contrast)
+    - Print styles (hide interactive elements, ink-saving backgrounds)
+  - **App.razor updates**:
+    - Added manifest.json link and apple-touch-icon
+    - Added responsive.css to stylesheet cascade
+    - PWA meta tags (theme-color, apple-mobile-web-app-capable, viewport-fit=cover)
+    - Service worker registration script
+    - Install prompt event handlers
+  - **NavMenu.razor update**: Added Settings link (⚙️ icon)
+- **Architecture:**
+  - Settings persist to browser localStorage as JSON
+  - Service worker uses network-first for fresh content, cache fallback for offline
+  - Responsive breakpoints match standard device sizes
+  - Touch controls prevent default browser behaviors on canvas
+- **Build status:** All files created and validated. Restore errors pre-existing (unrelated to this work)
+- **Next steps:**
+  - Replace placeholder icon files with actual Terrarium-branded icons (see `assets/ICON-NOTES.md`)
+  - Implement theme switching logic (apply dark mode CSS variables)
+  - Wire up zoom/minimap/FPS settings to actual GameView component
+  - Test PWA install on mobile devices
+
 ### 2026-02-11: Created Terrarium.Web Blazor Interactive Server project (#22, #24)
 - **Branch:** `squad/22-blazor-web`
 - **PR:** #118

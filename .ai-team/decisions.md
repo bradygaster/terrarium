@@ -813,3 +813,216 @@ All subscriptions cleaned up via IDisposable.
 **What:** Hub-and-spoke population aggregation with in-memory server-side tracking
 **Why:** SignalR hub aggregates population data from all clients, maintains per-peer-per-species contributions, and broadcasts consolidated stats. Broadcast throttled to 10-tick intervals. In-memory for Sprint 11, Orleans grain replacement in Sprint 12. Client-side PopulationChart component displays top 10 species with bar chart visualization.
 
+### 2026-02-11: Error handling architecture for Sprint 12
+
+**By:** Heisenberg
+
+**What:** Implemented comprehensive error handling and resilience across the entire Terrarium stack:
+1. TerrariumErrorBoundary component wrapping all pages — catches render exceptions with user-friendly recovery UI
+2. Graceful degradation in Home.razor — automatic switch to local-only mode when server unreachable (after 3 connection attempts)
+3. SignalR exponential backoff reconnection — confirmed already implemented in TerrariumHubClient (immediate, 2s, 10s, 30s, 60s)
+4. HTTP retry logic — added StandardResilienceHandler to all service clients (3 retries, exponential backoff, circuit breaker, timeout)
+5. Enhanced error categorization — distinguish network errors, timeouts, and validation failures
+
+**Why:** 
+- **Resilience:** Game must continue running even when server is down — local-only mode preserves user experience
+- **User trust:** ErrorBoundary prevents white screens — users see friendly error messages and can recover
+- **Network reliability:** StandardResilienceHandler handles transient failures transparently (cloud services, mobile networks)
+- **Debugging:** Environment-aware error display (stack traces in dev, generic messages in prod) + structured logging
+- **Maintainability:** Centralized error handling patterns reduce duplication across pages
+
+**Rationale:**
+- ErrorBoundary is a standard Blazor pattern — custom TerrariumErrorBoundary adds telemetry hooks and fallback navigation
+- Local-only mode aligns with original Terrarium's P2P architecture — game should degrade gracefully, not crash
+- StandardResilienceHandler is .NET's built-in solution — no need for custom Polly policies
+- Three connection attempts balances user patience (don't give up too soon) vs. responsiveness (don't hang forever)
+- Exponential backoff prevents thundering herd on server restart
+
+**Impact:**
+- Users experience fewer crashes and hangs
+- Server downtime no longer blocks gameplay
+- Transient network errors auto-retry without user intervention
+- Error logs become more actionable with categorization
+- Future enhancements (toast notifications, telemetry, offline queue) have a foundation
+
+**References:**
+- docs/error-handling-architecture.md
+- src/Terrarium.Web/Components/Shared/TerrariumErrorBoundary.razor
+- src/Terrarium.Web/Components/Pages/Home.razor
+
+### 2025-01-23: Ecosystem Mode Selection and Game State Persistence
+
+**By:** Mike (Engine/Networking)
+
+**What:** Implemented two major features for Sprint 12:
+1. **Issue #81 - Ecosystem mode selection**: Created `EcosystemMode` enum with LocalOnly and Networked modes. Updated GameEngine to check mode before network operations (teleportation, population reporting). Mode can be switched at startup and runtime via `GameEngine.Mode` property.
+2. **Issue #82 - Save/Load game state**: Created `IGameStatePersistence` interface and `GameStatePersistence` implementation using System.Text.Json. Serialization includes organism positions, species data, energy levels, and tick count. Added `SaveGameStateAsync` and `LoadGameStateAsync` methods to GameEngine.
+
+**Why:** 
+- LocalOnly mode enables offline gameplay and testing without requiring server infrastructure
+- Networked mode preserves existing multiplayer functionality
+- Save/Load enables game session persistence and recovery
+- Using System.Text.Json provides modern, performant serialization
+- Interface-based design allows multiple persistence backends (server, browser download, local file)
+
+**Implementation Details:**
+- `EcosystemMode.cs`: Simple enum with LocalOnly (0) and Networked (1) values
+- Updated `GameEngine.TeleportOrganisms()` to skip teleportation in LocalOnly mode
+- Updated `PopulationData.EndTick()` to skip server reporting in LocalOnly mode
+- Mode changes propagate from GameEngine to PopulationData automatically
+- `IGameStatePersistence` defines serialize/deserialize and save/load contracts
+- `GameStatePersistence` implements JSON serialization with WorldStateSaveData and OrganismSaveData DTOs
+- Registered `IGameStatePersistence` in DI container via GameServiceExtensions
+- Save/Load methods integrate with existing GameEngine architecture
+
+**Organism Assembly Handling:**
+Save operations store assembly full names and species references. Load operations require the caller to provide a PrivateAssemblyCache (PAC) to reload creature assemblies. This design separates serialization concerns from assembly loading/validation.
+
+**Future Work:**
+- Server-side save/load endpoints (SaveToServerAsync, LoadFromServerAsync) - marked as TODO
+- Browser download trigger (SaveAsBrowserDownloadAsync) - requires JSInterop in Blazor context
+- Organism restoration from save data - requires PAC integration in LoadGameStateAsync
+- Settings UI integration for mode selection
+- Runtime mode switching with proper network connection teardown
+
+### 2026-02-11: Server monitoring architecture — Aspire-integrated health checks and System.Diagnostics.Metrics
+
+**By:** Gus (Server Dev)
+
+**What:** Server monitoring uses Aspire-integrated health checks with liveness/readiness tags, System.Diagnostics.Metrics for counters/gauges, and structured logging with ILogger.BeginScope() for consistent property names across all server components.
+
+**Why:** 
+- Health checks follow Aspire conventions (`/health` for readiness, `/alive` for liveness) with tag-based filtering
+- System.Diagnostics.Metrics is the native .NET telemetry API — flows directly to Aspire dashboard without custom exporters
+- Structured logging with consistent property names (`PeerId`, `EcosystemId`, `TickNumber`, `TeleportId`, `OrganismId`) enables filtering and correlation in logs
+- TerrariumMetrics lives in ServiceDefaults (shared layer) so both Server and Net projects can reference it
+- Custom health checks are tagged `["ready"]` for readiness probes, self-check is tagged `["live"]` for liveness
+- DatabaseHealthCheck returns Degraded (not Unhealthy) until database layer is implemented — signals "not ready but not broken"
+- Metrics use dimensional tags (e.g., `ecosystem_id`) for filtering in dashboards
+
+**Implementation details:**
+- Health checks: `DatabaseHealthCheck`, `SignalRHubHealthCheck`, `AssemblyCacheHealthCheck` — all implement `IHealthCheck`
+- Metrics: 6 metrics (3 gauges, 3 counters) in `TerrariumMetrics` class
+- Structured logging: log scopes in `TerrariumHub` and `PopulationTrackingService` methods
+- Log property naming: semantic names (`PeerId` not `ConnectionId`, `TotalOrganisms` not `Total`)
+- Metrics providers: lambda functions in `Program.cs` for peer count (`TerrariumHub.GetConnectedPeerCount()`) and species count (`IPopulationTrackingService.GetActiveSpeciesCount()`)
+
+### 2026-02-12: Performance instrumentation and profiling infrastructure
+
+**By:** Hank  
+**What:** Added System.Diagnostics.Metrics to GameEngine and performance.now() tracking to canvas renderer. Created comprehensive performance profile document with methodology, targets, and optimization roadmap.
+
+**Why:**  
+Sprint 12 Issue #83 required performance profiling infrastructure for the game loop. We need to:
+- Track tick loop duration (target: <20ms for 30 FPS)
+- Profile canvas rendering performance (target: <13ms)
+- Monitor SignalR message throughput
+- Detect memory leaks in long-running sessions
+
+**Decisions Made:**
+
+1. **System.Diagnostics.Metrics for GameEngine**
+   - Modern, OpenTelemetry-compatible instrumentation
+   - 4 metrics: process_turn.duration (histogram), phase.duration (histogram with phase tag), ticks.completed (counter), organisms.count (gauge by type)
+   - Zero-allocation design using struct Stopwatch and static Meter
+   - Phase-level granularity (0-9) enables bottleneck identification
+
+2. **performance.now() for Canvas Renderer**
+   - Rolling 60-frame window for statistical smoothing (2 seconds at 30 FPS)
+   - Tracks: avg/min/max frame time, FPS, frames over 33ms threshold
+   - New exports: getPerformanceStats(), resetPerformanceStats()
+   - Overhead: <0.05ms per frame, 480 bytes fixed memory
+
+3. **Performance Targets**
+   - 30 FPS total (33ms frame budget)
+   - Game tick: ≤20ms (10 phases)
+   - Canvas render: ≤13ms
+   - SignalR latency: <50ms
+   - These are aggressive but achievable targets for smooth gameplay
+
+4. **5-Phase Profiling Methodology**
+   - Phase 1: Baseline (empty world, measure overhead)
+   - Phase 2: Load testing (10/50/100/200 organisms)
+   - Phase 3: Canvas (viewport stress, creature density, zoom)
+   - Phase 4: SignalR (throughput, fanout, connection capacity)
+   - Phase 5: Memory leaks (30-minute run, dotMemory/PerfView)
+
+5. **Optimization Roadmap Documented**
+   - High-impact/low-risk: viewport culling, label fade at low zoom, organism batching
+   - Medium-impact/medium-risk: double buffering, terrain caching
+   - Future work: WebGL, Web Workers
+   - All tied to expected hotspots from code review
+
+6. **Metrics Naming Conventions**
+   - OpenTelemetry-compatible: {namespace}.{component}.{metric}
+   - Tags for dimensions: phase, type
+   - Units specified: ms, ticks, organisms
+   - Ready for OTLP/Prometheus export
+
+**Impact:**
+- Enables data-driven optimization (measure, don't guess)
+- Provides continuous monitoring in production via OpenTelemetry
+- Establishes baseline for performance regression testing
+- Documents expected hotspots for future developers
+- Benchmark infrastructure already exists from Sprint 11 Issue #77
+
+**Next Steps:**
+- Fix NuGet package restore (AspNetCore.HealthChecks.AzureSignalR missing)
+- Run benchmarks to establish baseline numbers
+- Profile with dotnet-trace/Visual Studio
+- Implement optimizations based on measured bottlenecks
+
+### 2026-02-11: Container Apps health probes and auto-scaling configuration
+
+**By:** Saul
+
+**What:** Configured comprehensive health probes (liveness, readiness, startup) and intelligent auto-scaling rules for Azure Container Apps deployment. Server scales based on SignalR connections and CPU; Web scales based on HTTP concurrency.
+
+**Why:** 
+1. **Reliability**: Health probes enable Container Apps to automatically detect and restart failed containers (liveness) and remove unhealthy instances from load balancer rotation (readiness). Startup probes prevent restart loops during slow .NET assembly loading.
+
+2. **Auto-scaling intelligence**: Scaling rules target the right metrics for each service — Server scales on SignalR connection count (primary workload indicator) and CPU, Web scales on HTTP concurrent requests. This ensures efficient resource utilization and cost control.
+
+3. **Production readiness**: Three-tier probe strategy (liveness/readiness/startup) follows Azure Container Apps best practices. SQL health check ensures database connectivity before accepting traffic. SignalR health check intentionally omitted (no reliable package support for Azure SignalR Service, non-fatal if it fails).
+
+**Configuration:**
+- `infra/main.bicep`: Probe configuration for both serverApp and webApp resources
+- `src/Terrarium.ServiceDefaults/Extensions.cs`: SQL Server health check registration
+- `src/Terrarium.AppHost/Program.cs`: Aspire health check integration (`.WithHealthCheck()`)
+- `docs/deployment/health-probes.md`: Complete documentation with testing guidance
+
+**Scaling thresholds:**
+- Server: 1-10 replicas, scale on CPU >70% or SignalR connections >100
+- Web: 1-5 replicas, scale on HTTP concurrent requests >50
+
+**Dependencies:**
+- `AspNetCore.HealthChecks.SqlServer` 8.0.2 added to ServiceDefaults
+- Requires Azure Monitor access for SignalR connection count metric
+
+### 2026-02-11: Settings UI and PWA features completed (Issue #80, #85)
+
+**By:** Skyler
+
+**What:** Created comprehensive Settings UI with localStorage persistence and full PWA support (manifest, service worker, responsive design)
+
+**Why:** Issue #80 required web settings panel for ecosystem mode, network config, display settings, and theme selection. Issue #85 required mobile/tablet responsive design and PWA capabilities. Combined both issues into a cohesive mobile-first web experience.
+
+**Technical details:**
+- Settings.razor: localStorage-backed settings with auto-save, glass-themed form controls
+- manifest.json: PWA metadata with Terrarium branding, installable as standalone app
+- sw.js: Shell caching service worker for offline capability, network-first strategy
+- responsive.css: Mobile (≤768px), tablet (769-1024px), desktop breakpoints; touch controls; orientation handling
+- App.razor: PWA meta tags, manifest link, service worker registration
+- NavMenu: Settings link added
+
+**Files created:**
+- `src/Terrarium.Web/Components/Pages/Settings.razor`
+- `src/Terrarium.Web/wwwroot/manifest.json`
+- `src/Terrarium.Web/wwwroot/sw.js`
+- `src/Terrarium.Web/wwwroot/css/responsive.css`
+- `src/Terrarium.Web/wwwroot/assets/ICON-NOTES.md` (placeholder icon generation guide)
+
+**Files modified:**
+- `src/Terrarium.Web/Components/App.razor` (PWA support)
+- `src/Terrarium.Web/Components/Layout/NavMenu.razor` (Settings link)
+

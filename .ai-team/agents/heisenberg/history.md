@@ -144,3 +144,36 @@
   - `src/Terrarium.Game/Networking/INetworkEngine.cs` — network engine abstraction
   - `src/Terrarium.Game/GameServiceExtensions.cs` — `AddTerrariumGameEngine()` + `AddTerrariumNetworking()`
   - `src/Terrarium.Web/RenderingServiceExtensions.cs` — `AddTerrariumRenderer()`
+
+
+### 2026-02-11 — Sprint 12: Error Handling Sweep
+
+**Files modified:**
+- Created `src/Terrarium.Web/Components/Shared/TerrariumErrorBoundary.razor` — Global ErrorBoundary component with user-friendly error UI
+- Created `src/Terrarium.Web/Components/Shared/TerrariumErrorBoundary.razor.css` — Styling for error boundary
+- Updated `src/Terrarium.Web/Components/Layout/MainLayout.razor` — Wrapped @Body with TerrariumErrorBoundary
+- Updated `src/Terrarium.Web/Components/Routes.razor` — Added NotFound template with error boundary styling
+- Updated `src/Terrarium.Web/Components/Pages/Home.razor` — Added graceful degradation to local-only mode when server unreachable
+- Updated `src/Terrarium.Web/Components/Pages/Upload.razor` — Enhanced error handling with specific exception types
+- Updated `src/Terrarium.Web/Components/Pages/Gallery.razor` — Enhanced error handling for network/timeout errors
+- Updated `src/Terrarium.Services/ServiceCollectionExtensions.cs` — Added .AddStandardResilienceHandler() to all HttpClient registrations
+- Created `docs/error-handling-architecture.md` — Comprehensive documentation
+
+**Architecture decisions:**
+- **Global exception handler:** TerrariumErrorBoundary wraps all page content in MainLayout, catches rendering exceptions
+- **Graceful degradation:** Home page monitors SignalR lifecycle, switches to local-only mode after 3 failed connection attempts
+- **SignalR reconnection:** Exponential backoff already implemented in TerrariumHubClient (confirmed matches spec: immediate, 2s, 10s, 30s, 60s)
+- **HTTP retry logic:** StandardResilienceHandler on all service clients provides 3 retries with exponential backoff, circuit breaker, and timeout
+- **Error categorization:** Distinguish HttpRequestException (network), TaskCanceledException (timeout), InvalidOperationException (validation)
+
+**Key patterns:**
+- ErrorBoundary.ShowDetails controlled by IWebHostEnvironment.IsDevelopment() — stack traces hidden in production
+- Local-only mode disables network features (peer list, teleportation) but keeps game running
+- SignalR OnReconnected exits local-only mode and resets connection attempt counter
+- All service calls in GameServiceBridge already catch exceptions and log warnings (no changes needed)
+
+**Testing notes:**
+- Build blocked by pre-existing package vulnerabilities (Microsoft.Identity.Client 4.56.0), not from Sprint 12 changes
+- All created files have valid Razor syntax
+- Error handling flows documented in docs/error-handling-architecture.md with diagrams
+
