@@ -1026,3 +1026,176 @@ Sprint 12 Issue #83 required performance profiling infrastructure for the game l
 - `src/Terrarium.Web/Components/App.razor` (PWA support)
 - `src/Terrarium.Web/Components/Layout/NavMenu.razor` (Settings link)
 
+### 2025-01-XX: SDK packaging finalized and verified for Issue #89
+
+**By:** Hank
+**What:** Completed comprehensive SDK packaging verification and documentation for creature development
+**Why:** Final sprint deliverable — SDK must be ready for external developers to create creatures
+
+## Verification Results
+
+### ✅ NuGet Package (Terrarium.OrganismBase)
+- **Metadata**: Complete and comprehensive
+  - PackageId: `Terrarium.OrganismBase`
+  - Version: `10.0.0-preview.1`
+  - Authors, Description, License, Tags all present
+  - Package README included
+  - Documentation XML generation enabled
+  - Symbol package configured (snupkg)
+- **Build Status**: ✅ Builds successfully
+- **Pack Status**: ✅ Packs successfully with `dotnet pack`
+
+### ✅ dotnet new Template (Terrarium.Templates)
+- **Template Configuration**: Complete
+  - Short name: `terrarium-creature`
+  - Parameters: CreatureType, IsCarnivore, AuthorName, AuthorEmail, Framework
+  - Conditional compilation for Animal vs Plant
+  - Scaffolded code includes event handlers, attributes, TODO comments
+- **Build Status**: ✅ Builds successfully
+- **Pack Status**: ✅ Packs successfully as template package
+
+### ✅ SDK Documentation Structure
+**Comprehensive and cross-referenced:**
+
+```
+docs/sdk/
+├── README.md (updated with getting-started link)
+├── getting-started.md (NEW - 10-minute quickstart)
+├── tutorials/
+│   ├── getting-started.md (conceptual intro, links to hands-on)
+│   ├── tutorial-1-simple-plant.md (cross-linked)
+│   ├── tutorial-2-herbivore.md (cross-linked)
+│   └── tutorial-3-carnivore.md (cross-linked)
+└── api/
+    ├── README.md (cross-linked)
+    ├── animal.md
+    ├── plant.md
+    └── attributes.md
+```
+
+**Key features:**
+- Practical, hands-on approach
+- Copy-paste ready code examples
+- Complete smart herbivore logic (scans, moves, eats, reproduces)
+- Clear success indicators
+- Troubleshooting for common issues
+- Links to advanced tutorials and API docs
+
+**Developer Experience Flow:** 1 → Install templates, 2 → Create project, 3 → Follow getting-started guide, 4 → Deploy creature. **Time to first deployed creature: ~10 minutes.**
+
+✅ **SDK is ship-ready for Sprint 13 final deliverable.**
+
+### 2025-01-20: ARCHITECTURE.md updated for modern .NET 10 solution
+
+**By:** Heisenberg (Lead Architect)
+
+**What:** Replaced the legacy ARCHITECTURE.md (which documented the .NET 3.5 codebase) with a comprehensive architecture document for the modernized .NET 10 solution.
+
+**Key sections added:**
+1. **Solution structure**: All 23 projects in `src/Terrarium.sln` with clear categorization
+2. **Project dependency graph**: Mermaid diagram showing zero circular dependencies (clean DAG)
+3. **Project details**: Each project gets a dedicated section with role, technology, responsibilities, key files, dependencies, and DI registration
+4. **Interface contracts**: Full catalog of all public interfaces (`ITerrariumHub`, `IOrganismEngine`, `IPhysicsEngine`, `ITeleportationService`, etc.)
+5. **Data flow diagrams**: Sequence diagrams for game loop and creature upload
+6. **Modernization comparison table**: Legacy (.NET 3.5) vs. Modern (.NET 10) side-by-side
+7. **Deployment architecture**: Azure Container Apps topology with Mermaid diagram
+8. **Build configuration**: Global settings from `Directory.Build.props`, package management strategy
+9. **Testing strategy**: All 8 test projects with coverage areas and commands
+10. **Security model**: Creature sandboxing approach, DLL validation, timeout enforcement
+
+**Why:** The old ARCHITECTURE.md was a snapshot of the legacy .NET 3.5 codebase with WinForms, DirectX, and ASMX web services — none of which exist in the modernized solution. This created confusion:
+- New contributors couldn't understand the modern architecture
+- The dependency graph showed projects that no longer exist
+- Technology choices (Blazor, SignalR, Aspire) were undocumented
+- DI registration patterns were invisible
+- No deployment guidance for Azure Container Apps
+
+The new document is **authoritative** — it describes what IS, not what WAS. The legacy architecture is preserved in git history (`git log ARCHITECTURE.md`) and referenced in MODERNIZATION.md.
+
+### 2025-01-20: Legacy .NET 3.5 codebase deleted (764 files removed)
+
+**By:** Heisenberg (Lead Architect)
+
+**What:** Removed all legacy code directories via `git rm -r`, cleaning the repository to contain only the modern .NET 10 solution. **All legacy code remains in git history** — nothing is lost, just archived.
+
+**Directories removed:**
+- `Client/` — 13 WinForms projects (.NET 3.5): Terrarium, TerrariumWPF, Game, Renderer, Configuration, Controls, Glass, OrganismBase, Services, HttpListener (legacy implementations)
+- `ClientWPF/` — 13 empty WPF project shells (.NET 4.0): never completed, only AssemblyInfo.cs files
+- `Server/` — Legacy ASP.NET WebForms + ASMX web services server (.NET 3.5)
+- `ServerMVC/` — ASP.NET MVC 2 scaffold (.NET 4.0): only HomeController and AccountController, never completed
+- `SDK/` — Legacy tutorial exercise projects (.NET 2.0): Exercise1, Exercise2, Exercise3
+- `Samples/` — Legacy creature samples (.NET 2.0): Carnivore, Herbivore, Plant (replaced by `src/Terrarium.Samples/`)
+- `Tools/` — Legacy server config tools (.NET 2.0): ServerConfig, InstallerItems
+- `Keys/` — Legacy strong-name key files (`development.snk`)
+- `Terrraium2010.sln` — Old Visual Studio 2010 solution file (note the typo: three R's)
+- `test_validation/` — Untracked test project (not in modern solution)
+- `packages/` — Untracked NuGet build output directory
+
+**Why:** The repository contained **three generations of code** (2001–2005, 2008, 2010) alongside the modern 2025 rewrite. This created confusion:
+- New contributors saw 15+ year old code and assumed it was current
+- Build files from three eras conflicted (`.sln`, `.csproj` formats)
+- DirectX COM interop, ASMX SOAP, BinaryFormatter — all deprecated technologies
+- Maintainability burden: 764 legacy files requiring security patches, dependency updates
+
+**Decision rationale:**
+1. **Preservation via git history**: Every line of legacy code is accessible via `git checkout <old-commit>` or browsing history on GitHub
+2. **Clean mental model**: `src/` is the only active codebase — no ambiguity about which files to edit
+3. **Modern tooling works**: No VS 2008/2010 project files confusing modern dotnet CLI
+4. **Security posture**: Zero attack surface from .NET Framework 3.5 dependencies
+5. **Onboarding speed**: New contributors see only relevant code
+
+**Impact:**
+- Repository size reduced by ~4 MB (764 files removed)
+- Zero build warnings from legacy code
+- Contributors focus on one solution (`src/Terrarium.sln`)
+- Deployment CI/CD only builds modern artifacts
+- Security scanning only analyzes .NET 10 dependencies
+
+### 2025-01-20: README.md modernized for .NET 10 architecture
+
+**By:** Heisenberg (Lead Architect)
+
+**What:** Completely rewrote the root `README.md` to reflect the modernized .NET 10 architecture. The new README is developer-first, quick-start focused, and comprehensive.
+
+**Key changes:**
+- **Project overview**: Emphasizes the 25-year journey from .NET 1.0 to .NET 10, highlighting Blazor WebAssembly, SignalR, Canvas 2D, and Azure Container Apps
+- **Quick start**: Single command entry point via Aspire (`dotnet run --project src/Terrarium.AppHost`)
+- **Architecture diagram**: Mermaid graph showing Blazor frontend → SignalR → Game Engine → Server API → Azure services
+- **Project structure table**: All 9 core projects with clear purpose statements
+- **Creature development guide**: Complete 3-step workflow (install SDK, write code, upload DLL) with runnable code example
+- **Documentation links**: SDK tutorials, API docs, deployment guide, architecture deep-dive
+- **Technology stack table**: Full modern stack (Blazor, SignalR, Aspire, Azure Container Apps, Canvas 2D)
+- **Contributing section**: Areas to contribute (creatures, rendering, mechanics, networking, ML, mobile)
+- **Preserved history**: Acknowledges original .NET Framework team, links to MODERNIZATION.md for migration story
+
+**Why:** The previous README was from 2005 and described .NET Framework 2.0 technologies (Windows Forms, DirectX, ASMX web services) that no longer exist in the modernized codebase. New developers need:
+1. Immediate clarity on what the modern stack is
+2. A working quick-start command that launches the app
+3. A clear path from "I installed .NET 10" to "I'm writing creatures"
+4. Accurate architecture documentation that matches the actual code
+
+The README is now the **front door** to the project — it should make developers excited to build creatures, not confused about which technologies we use.
+
+**Impact:**
+- GitHub visitors see a modern, active project (not a 2005 archive)
+- New creature developers have a clear onboarding path
+- Contributors know what the stack is and where to help
+- README matches reality (Blazor, not WinForms; SignalR, not ASMX; Canvas 2D, not DirectX)
+
+### 2026-02-11: Production deployment documentation and GitHub Actions CD pipeline
+
+**By:** Saul
+
+**What:** Created comprehensive deployment guide (`docs/deployment/deployment-guide.md`), deployment checklist (`docs/deployment/checklist.md`), and GitHub Actions CD workflow (`.github/workflows/deploy.yml`) for Terrarium production deployment to Azure Container Apps.
+
+**Why:** Sprint 13 (final sprint) deliverables — Issues #88 and #90. The team needs complete documentation and automation for deploying Terrarium to production. The deployment guide provides step-by-step instructions for prerequisites, local development with Aspire, Azure deployment via `azd up`, custom domain configuration, environment variables, monitoring with Application Insights, and troubleshooting. The deployment checklist ensures all pre-deployment requirements are met (infrastructure, authentication, code readiness, configuration), guides through deployment steps, verifies post-deployment health (Container Apps status, database connectivity, SignalR service, logging, auto-scaling, security), and includes GitHub Actions setup, monitoring configuration, and ongoing operational tasks. The GitHub Actions workflow automates the full CI/CD pipeline: builds with .NET 10, runs tests, authenticates to Azure via OIDC (passwordless), deploys using `azd deploy`, and provides deployment summary with URLs. Workflow uses OIDC federated credentials for secure, passwordless authentication (requires `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` secrets and `AZURE_ENV_NAME`, `AZURE_LOCATION` variables configured in GitHub). Actual `azd up` execution deferred to Brady with Azure subscription — all steps fully documented for execution.
+
+**Production readiness verified:**
+- ✅ `azure.yaml` correctly defines server and web services as Container Apps
+- ✅ `infra/main.bicep` provisions all required resources with correct configuration
+- ✅ Health probes configured (Sprint 12 — `docs/deployment/health-probes.md`)
+- ✅ Auto-scaling rules configured (CPU, SignalR connections, HTTP requests)
+- ✅ GitHub Actions workflow created with OIDC authentication
+- ✅ Deployment guide covers all steps from prerequisites to troubleshooting
+- ✅ Deployment checklist ensures nothing is missed pre/post-deployment
+

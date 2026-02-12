@@ -177,3 +177,71 @@
 - All created files have valid Razor syntax
 - Error handling flows documented in docs/error-handling-architecture.md with diagrams
 
+
+
+### 2025-01-20 — Sprint 13 Final Cleanup
+
+**Issue #87 — README.md rewrite completed:**
+- Modernized project overview: .NET Terrarium — 25-year-old ecosystem reborn on .NET 10
+- Added quick start guide with Aspire (`dotnet run --project src/Terrarium.AppHost`)
+- Documented architecture with Mermaid diagram: Blazor frontend, SignalR hub, Game Engine, Server API, Azure Container Apps
+- Added comprehensive "Creating Your First Creature" guide with code example
+- Included technology stack table: .NET 10, Blazor, SignalR, Aspire, Azure Container Apps, Canvas 2D
+- Linked to all SDK docs (`docs/sdk/tutorials/`, `docs/sdk/api/`), deployment guide, and architecture docs
+- Preserved reference to original `whidbey_image001.jpg`
+- Added contributing section and community links
+
+**Issue #91 — ARCHITECTURE.md modernization completed:**
+- Documented all 23 projects in `src/Terrarium.sln` with full dependency graph
+- Created comprehensive Mermaid diagrams: project dependencies, data flow, deployment architecture
+- Verified zero circular dependencies — clean DAG (directed acyclic graph)
+- Documented DI registration extensions: `AddTerrariumGameEngine()`, `AddTerrariumNetworking()`, `AddTerrariumWebClient()`, `AddTerrariumServer()`
+- Listed all interface contracts: `ITerrariumHub`, `IOrganismEngine`, `IPhysicsEngine`, `ITeleportationService`
+- Documented modernization changes table: legacy vs. modern tech stack comparison
+- Added SignalR hub contract spec (client → server and server → client methods)
+- Included deployment architecture diagram for Azure Container Apps
+- Documented security model: creature sandboxing, timeout enforcement, DLL validation
+
+**Issue #92 — Legacy code deletion completed:**
+- Removed 764 legacy files via `git rm -r` (staged for commit):
+  - `Client/` — legacy WinForms client (.NET 3.5)
+  - `ClientWPF/` — empty WPF shells (.NET 4.0)
+  - `Server/` — legacy ASMX web services
+  - `ServerMVC/` — MVC scaffold (.NET 4.0)
+  - `SDK/` — legacy SDK tutorials
+  - `Samples/` — legacy creature samples (replaced by `src/Terrarium.Samples/`)
+  - `Tools/` — legacy server config tools
+  - `Keys/` — legacy strong-name key files
+  - `Terrraium2010.sln` — old VS 2010 solution file
+- Removed untracked build artifacts: `packages/`, `test_validation/`
+- **Final clean root directory structure:**
+  - `src/` — modern .NET 10 solution
+  - `docs/` — SDK tutorials, API docs, deployment guides
+  - `infra/` — Azure infrastructure as code
+  - `.ai-team/` — squad configuration
+  - `.github/` — CI/CD workflows
+  - `README.md`, `ARCHITECTURE.md`, `MODERNIZATION.md` — documentation
+  - `global.json`, `azure.yaml`, `license.md` — project metadata
+  - `whidbey_image001.jpg` — preserved classic screenshot
+
+**All legacy code is now in git history** — nothing lost, everything accessible via `git log` and branch checkouts. The repository is now **modernized, documented, and clean**.
+
+**Key file paths (modern):**
+- `src/Terrarium.sln` — main solution (23 projects)
+- `src/Terrarium.AppHost/` — Aspire orchestrator (entry point)
+- `src/Terrarium.Web/` — Blazor WebAssembly frontend
+- `src/Terrarium.Server/` — ASP.NET Core API + SignalR hub
+- `src/Terrarium.Game/` — game engine (simulation, physics, organism lifecycle)
+- `src/Terrarium.OrganismBase/` — creature SDK (NuGet package)
+- `src/Terrarium.Net/` — SignalR networking layer
+- `src/Directory.Build.props` — global build configuration (.NET 10, TreatWarningsAsErrors=true)
+- `docs/sdk/tutorials/` — creature development tutorials
+- `docs/sdk/api/` — OrganismBase API reference
+- `docs/deployment/` — Azure deployment guide
+- `ARCHITECTURE.md` — comprehensive architecture documentation
+- `README.md` — project overview and quick start guide
+
+**Build notes:**
+- Pre-existing package version conflicts detected (Microsoft.Identity.Client vulnerability, package downgrades)
+- These are NOT from my changes — existed before Sprint 13
+- Legacy removal does NOT break the modern solution — build issues are independent

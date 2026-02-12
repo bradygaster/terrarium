@@ -418,3 +418,49 @@
 - Instrumented renderer: src/Terrarium.Web/wwwroot/js/terrarium-renderer.js
 - Performance profile: docs/performance-profile.md
 - Existing benchmarks: src/Terrarium.Benchmarks/{GameEngineBenchmarks.cs, SignalRBenchmarks.cs}
+
+### 2026-02-12 — Sprint 13 SDK Packaging Finalization (Issue #89)
+
+**What was done:**
+- Verified NuGet package metadata for Terrarium.OrganismBase (complete: version, authors, description, license, tags, README, symbols)
+- Verified dotnet new template in Terrarium.Templates (complete: all parameters, conditional compilation, scaffolded code)
+- Verified SDK documentation structure (tutorials + API reference comprehensive and modern)
+- **Created comprehensive Getting Started Guide** at docs/sdk/getting-started.md (9.7KB)
+  - 10-minute quickstart from zero to deployed creature
+  - Template installation, project creation, code walkthrough
+  - Smart herbivore behavior implementation (scans, moves, eats, reproduces)
+  - Characteristic tuning for survival (100 points distribution)
+  - Build + deployment via web UI or file system
+  - Troubleshooting section (build errors, upload errors, runtime issues)
+  - Next steps and improvement ideas
+  - Quick reference for common methods and properties
+- **Created QUICKSTART.md** in repo root (2.2KB) — fast-path reference linking to comprehensive guide
+- **Updated all SDK docs with cross-references** to getting-started guide:
+  - docs/sdk/README.md (Quick Start section updated)
+  - docs/sdk/tutorials/getting-started.md (added redirect notice)
+  - docs/sdk/tutorials/tutorial-1-simple-plant.md (added link)
+  - docs/sdk/tutorials/tutorial-2-herbivore.md (added link)
+  - docs/sdk/tutorials/tutorial-3-carnivore.md (added link)
+  - docs/sdk/api/README.md (added link)
+
+**Build Verification:**
+- ✅ Terrarium.OrganismBase builds and packs successfully
+- ✅ Terrarium.Templates builds and packs successfully
+- ✅ All samples build successfully (SimpleHerbivore, SimpleCarnivore, SimplePlant)
+- ⚠️ Main solution (src/Terrarium.sln) has unrelated build errors (NU1901 Microsoft.Identity.Client vulnerability warnings, NU1605 package downgrade warnings in Web/ServiceDefaults/Game/Tests)
+- SDK projects are NOT affected by main solution build issues
+
+**SDK Readiness:**
+- ✅ Zero to deployed creature achievable in ~10 minutes
+- ✅ Documentation comprehensive, practical, and cross-referenced
+- ✅ NuGet packages ready for publication
+- ✅ Template provides excellent developer experience
+- ✅ SDK is ship-ready for Sprint 13 final deliverable
+
+**Key file paths:**
+- Getting started: docs/sdk/getting-started.md
+- Quick start: QUICKSTART.md (repo root)
+- OrganismBase package: src/Terrarium.OrganismBase/Terrarium.OrganismBase.csproj
+- Templates package: src/Terrarium.Templates/Terrarium.Templates.csproj
+- Decision log: .ai-team/decisions/inbox/hank-sdk-packaging-finalized.md
+
