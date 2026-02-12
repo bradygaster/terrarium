@@ -87,6 +87,7 @@ const _performance = {
  * @returns {{ width: number, height: number }}
  */
 export async function initialize(canvasElement, dotNetRef, worldWidth, worldHeight) {
+    console.log('[Terrarium Renderer] initialize called', { worldWidth, worldHeight });
     _canvas = canvasElement;
     _ctx = _canvas.getContext('2d');
     _dotNetRef = dotNetRef;
@@ -111,6 +112,7 @@ export async function initialize(canvasElement, dotNetRef, worldWidth, worldHeig
     // Bind interaction events
     _bindEvents();
 
+    console.log('[Terrarium Renderer] initialized — canvas %dx%d, world %dx%d', _canvas.width, _canvas.height, _viewport.worldWidth, _viewport.worldHeight);
     return { width: _canvas.width, height: _canvas.height };
 }
 
@@ -145,11 +147,15 @@ export function resize(width, height) {
 // ---------------------------------------------------------------------------
 
 async function _loadTerrainTiles() {
+    console.log('[Terrarium Renderer] loading terrain tiles...');
     const loadImage = (src) => new Promise((resolve, reject) => {
         const img = new Image();
-        img.onload = () => resolve(img);
+        img.onload = () => {
+            console.log('[Terrarium Renderer] terrain tile loaded:', src, img.width + 'x' + img.height);
+            resolve(img);
+        };
         img.onerror = () => {
-            console.warn(`Terrain tile not found: ${src}, using fallback`);
+            console.warn(`[Terrarium Renderer] terrain tile not found: ${src}, using fallback`);
             resolve(null);
         };
         img.src = src;
@@ -215,7 +221,10 @@ const TILE_SIZE = 64;
  * @param {object} [terrainData] - Optional terrain data with tile type per cell.
  */
 export function drawTerrain(terrainData) {
-    if (!_ctx || !_canvas) return;
+    if (!_ctx || !_canvas) {
+        console.warn('[Terrarium Renderer] drawTerrain skipped — no canvas/context');
+        return;
+    }
 
     const vx = _viewport.x;
     const vy = _viewport.y;
@@ -687,10 +696,22 @@ function _drawTeleportNotifications() {
  * @param {object} [spriteSheets] - Map of family name → loaded Image/ImageBitmap
  */
 export function renderFrame(worldState, spriteSheets) {
-    if (!_ctx || !_canvas) return;
+    if (!_ctx || !_canvas) {
+        console.warn('[Terrarium Renderer] renderFrame skipped — no canvas/context');
+        return;
+    }
 
     // Start performance timing
     const frameStart = performance.now();
+
+    // Log first frame and periodic status
+    _performance.totalFrames++;
+    if (_performance.totalFrames === 1) {
+        console.log('[Terrarium Renderer] renderFrame — first frame, terrain tiles loaded:',
+            { background: !!_terrainTiles.background, dirt: !!_terrainTiles.dirt },
+            'canvas:', _canvas.width + 'x' + _canvas.height,
+            'creatures:', worldState?.creatures?.length ?? 0);
+    }
 
     _lastWorldState = worldState;
 

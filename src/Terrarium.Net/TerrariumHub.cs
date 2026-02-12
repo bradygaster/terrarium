@@ -32,6 +32,12 @@ public class TerrariumHub : Hub<ITerrariumClient>, ITerrariumHub
         _metrics = metrics;
     }
 
+    public override Task OnConnectedAsync()
+    {
+        _logger.LogInformation("Client connected: {ConnectionId}", Context.ConnectionId);
+        return base.OnConnectedAsync();
+    }
+
     /// <summary>
     /// Gets the current count of connected peers across all ecosystems.
     /// Used by metrics provider.

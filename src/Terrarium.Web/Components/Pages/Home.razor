@@ -96,6 +96,8 @@
 
     protected override void OnInitialized()
     {
+        Logger.LogInformation("Home page initializing — wiring SignalR callbacks");
+
         _creatures =
         [
             new CreatureInfo("Herbivore", "Leafy", 80, 100, 12, "120, 340"),
@@ -127,16 +129,17 @@
     {
         if (!firstRender) return;
 
-        // Render initial terrain so the canvas isn't blank before server data arrives
-        if (_gameView is not null)
-        {
-            await _gameView.RenderFrameAsync(new Terrarium.Web.Rendering.GameRenderState());
-        }
+        Logger.LogInformation("Home page first render complete, starting SignalR connection");
+
+        // NOTE: GameView renders its own initial terrain frame after its canvas initializes.
+        // We do NOT call RenderFrameAsync here because GameView.OnAfterRenderAsync
+        // may not have fired yet (parent fires before child in Blazor).
 
         // Start the SignalR connection
         try
         {
             await HubClient.StartAsync();
+            Logger.LogInformation("SignalR connected successfully");
             _messages.Add(new MessageLog.GameMessage(DateTime.Now, "✅ Connected to server"));
             await InvokeAsync(StateHasChanged);
         }

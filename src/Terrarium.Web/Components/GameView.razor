@@ -1,6 +1,7 @@
 @* GameView — Full game viewport with Canvas rendering, terrain, overlays, and interaction *@
 @using Terrarium.Web.Rendering
 @inject IJSRuntime JS
+@inject ILogger<GameView> Logger
 @implements IAsyncDisposable
 
 <div class="game-view glass-panel glass-panel--no-glass" tabindex="0">
@@ -43,12 +44,18 @@
     {
         if (firstRender)
         {
+            Logger.LogInformation("GameView initializing canvas renderer (world {W}x{H})", WorldWidth, WorldHeight);
             _renderer = new CanvasGameRenderer(JS);
             _renderer.SetCanvas(_canvasRef);
             _renderer.OnCreatureSelected += HandleCreatureSelected;
             _renderer.OnCreatureDeselected += HandleCreatureDeselected;
             await _renderer.InitializeAsync(WorldWidth, WorldHeight);
             _initialized = true;
+            Logger.LogInformation("GameView renderer initialized, drawing initial terrain frame");
+
+            // Draw initial terrain so the canvas shows green grass immediately
+            await _renderer.RenderFrameAsync(new GameRenderState());
+
             StateHasChanged();
         }
     }

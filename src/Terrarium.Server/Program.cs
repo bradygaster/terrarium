@@ -73,6 +73,8 @@ if (!string.IsNullOrEmpty(signalRConnectionString))
 
 var app = builder.Build();
 
+var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Terrarium.Server");
+
 app.MapDefaultEndpoints();
 app.MapOpenApi();
 app.UseMiddleware<ThrottleMiddleware>();
@@ -82,6 +84,8 @@ app.UseCors();
 app.MapGet("/", () => "Terrarium Server");
 
 app.MapHub<TerrariumHub>("/hubs/terrarium");
+
+startupLogger.LogInformation("Terrarium Server started — hub mapped at /hubs/terrarium");
 
 app.MapGroup("/api/messaging")
     .MapMessagingEndpoints();

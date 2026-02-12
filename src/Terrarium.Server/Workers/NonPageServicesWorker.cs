@@ -56,6 +56,8 @@ public sealed class NonPageServicesWorker : BackgroundService
                 var settings = _serviceProvider.GetRequiredService<IOptions<ServerSettings>>().Value;
                 var interval = TimeSpan.FromMilliseconds(settings.MillisecondsToRollupData);
 
+                _logger.LogDebug("NonPageServicesWorker heartbeat — next cycle in {Interval}", interval);
+
                 await Task.Delay(interval, stoppingToken);
 
                 if (!HasDatabaseConnection()) continue;
