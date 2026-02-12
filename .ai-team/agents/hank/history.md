@@ -159,9 +159,77 @@
 - **SimpleCarnivore** — Scorpion that hunts other animals, attacks, kills, eats dead prey. Demonstrates: `BeginAttacking()`, `WithinAttackingRange()`, `IsMySpecies()`, `Species.MaximumSpeed` pursuit. Point allocation: AttackDamage 52, MaximumSpeed 28, Eyesight 20.
 - **SimplePlant** — Simplest possible organism. Just attributes + serialization stubs. Plant base class handles reproduction automatically.
 
+### 2025-07-16 — SignalR Integration Tests (#53)
+
+**Test Project Created:** `src/Terrarium.SignalR.Tests/`
+- xUnit on net10.0, references `Terrarium.Net` project
+- Uses `Microsoft.AspNetCore.TestHost` with self-contained test server (no Terrarium.Server dependency)
+- **54 tests total: 48 passing, 6 skipped (rate limiting not yet implemented)**
+- Added to `src/Terrarium.sln`
+
+**What's Tested (9 test files):**
+- **ConnectionLifecycleTests** (8 tests) — connect, join ecosystem, heartbeat, leave, disconnect, join-leave-rejoin cycle, multiple heartbeats, join multiple ecosystems
+- **PeerDiscoveryTests** (7 tests) — peer join broadcasts PeerAnnounce, peer leave broadcasts, AnnouncePeer broadcast, RequestPeerList response, cross-ecosystem isolation, duplicate registration
+- **TeleportTests** (7 tests) — targeted teleport delivery, broadcast teleport, assembly payload delivery, idempotency key preservation, teleport to nonexistent peer, source doesn't receive own broadcast
+- **PopulationReportingTests** (4 tests) — report broadcasts to others, per-species data, reporter doesn't receive own report, cross-ecosystem isolation
+- **ErrorHandlingTests** (7 tests) — hub never throws on any method (JoinEcosystem, LeaveEcosystem, Heartbeat, TeleportCreature, ReportPopulation, RequestWorldState, RequestPeerList)
+- **RateLimitingTests** (6 tests, all SKIPPED) — teleport 10/60s, population 2/60s, world state 5/60s, peer list 2/60s, heartbeat 3/60s, RetryAfterMs in error. Waiting for hub rate limiting implementation.
+- **ReconnectionTests** (4 tests) — new connection ID on reconnect, must rejoin ecosystem, can request world state after reconnect, disconnect doesn't crash other peers
+- **EdgeCaseTests** (10 tests) — heartbeat before/after join/leave, leave without join, valid response structures, rapid join/leave cycles, empty state payload, zero species report, announce without version, concurrent operations no deadlock
+- **WorldStateTests** (3 tests) — matching ecosystem ID, timestamp validation, caller-only response (no cross-client leakage)
+
+**Architecture Coverage (per Heisenberg's docs/architecture/signalr-hub-spoke.md):**
+- Section 2 (Hub Contract): All 8 ITerrariumHub methods tested
+- Section 3 (Client Contract): ReceivePeerAnnounce, ReceiveCreatureTeleport, ReceivePopulationReport, ReceiveError callbacks verified
+- Section 5 (Teleportation): Targeted and broadcast teleport, idempotency key, assembly payload
+- Section 6 (Peer Discovery): Registration, broadcast, cross-ecosystem isolation
+- Section 7 (Connection Lifecycle): Full state machine coverage including reconnection
+- Section 8 (Population Reporting): Report broadcast, per-species data, isolation
+- Section 9 (Error Handling): Hub-never-throws principle verified for all methods; rate limit tests stubbed with Skip
+- Section 9 (Rate Limiting): All 5 method limits documented as skipped tests with exact thresholds from architecture doc
+
+**Key Decisions:**
+- Used `Microsoft.AspNetCore.TestHost` instead of `WebApplicationFactory<Program>` because `Terrarium.Server` has pre-existing build errors in `SpeciesEndpoints.cs` (missing `version`/`filter` parameters). This decouples SignalR tests from unrelated server compilation issues.
+- `TerrariumHub` lives in `Terrarium.Net` (not `Terrarium.Server`), so the test host can wire it up directly with `MapHub<TerrariumHub>("/hub/terrarium")`.
+- Rate limiting tests use `[Fact(Skip = "...")]` — they'll light up when Mike's hub implementation adds rate limiting.
+- Factory is `IAsyncLifetime` (xUnit) — server starts/stops per test class via `IClassFixture<TerrariumHubFactory>`.
+- Build command: `dotnet test src/Terrarium.SignalR.Tests/`
+
 **Key Porting Changes:**
 - Modern C# delegate syntax (`Load += LoadEvent` instead of `new LoadEventHandler(...)`)
 - Nullable annotations (`PlantState?`, `AnimalState?`)
 - Pattern matching (`organismState is PlantState plant`)
 - Updated namespaces to `Terrarium.Samples.*`
 - SDK-style `.csproj` with `ProjectReference` to OrganismBase
+
+### 2025-07-16 — Web Renderer Tests (#60)
+
+**Test Project Created:** `src/Terrarium.Web.Tests/`
+- xUnit on net10.0, references `Terrarium.Web` and `Terrarium.OrganismBase`
+- Compiles `SpriteMetadata.cs` and `TerrariumSprite.cs` from `Terrarium.Game` directly (Game has pre-existing build error in Hosting/CreatureValidator.cs — duplicate `ValidationResult`)
+- Copies `animations.json` from `Terrarium.Web/wwwroot/assets/sprites/` as test data
+- **142 tests, 0 failures** across 6 test files
+- Added to `src/Terrarium.sln`
+
+**What's Tested (6 test files):**
+- **SpriteMetadataTests** (24 tests) — Load/deserialize, invalid JSON, FrameSize, CreatureFamilies, GetCreature (case insensitive, unknown), SpriteSheetRef, SheetSize, GetAnimation (known/unknown/case insensitive), AnimationSequence properties, GetFrameRect pixel math (large/small, frame wrapping, single-frame, unknown, defaults)
+- **AnimationsJsonIntegrationTests** (18 tests) — Real animations.json validation: deserializes, frame sizes correct, animal sheet refs present, effect creatures may omit small sheet, all animal creatures have 8-direction animations for 5 actions, frame counts positive, frames fit within sheet width, rows within sheet height, frame durations positive, direction-to-row mapping theory tests, sheet dimension theory tests, GetFrameRect with real data
+- **TerrariumSpriteTests** (16 tests) — Default values, frame dimensions (48x48), AdvanceFrame from zero (no position move), AdvanceFrame from non-zero (moves position), frame wraps at 10, fractional delta, multi-frame accumulation, full 10-frame cycle, property setters, DisplayAction, selection toggle
+- **SpriteDataModelTests** (14 tests) — Record equality/inequality for FrameSizeInfo, SheetDimensions, SpriteSheetRef, SheetSizeInfo, AnimationSequence, CreatureAnimations, SpriteAnimationData; manual frame rect math verification theory tests
+- **DirectionMappingTests** (26 tests) — Action+direction→row formula (9 theory cases), 8 directions per action, total 40 rows, no row overlap, DisplayAction→animation key mapping (5 directional + 4 non-directional fallback to idle), frame index wrapping theory tests
+- **ViewportMathTests** (19 tests) — World↔screen coordinate transforms: origin, bottom-right, center, scroll offset, outside viewport, zoom; round-trip theory tests; terrain tile index ↔ world position; visible tile range calculation
+- **CreatureInfoConventionTests** (5 tests) — Positional record shape validation via reflection, energy percent calculation (normal/zero-max/full/over-max)
+
+**Architecture Coverage:**
+- Sprite sheet math: 10 frames/row, 40 rows for animals, 5 actions × 8 directions
+- Frame rect calculation: `(startFrame + frameIndex % frameCount) * frameSize` for X, `row * frameSize` for Y
+- Teleporter/effect sprites: different layout (16 frames/row, 1 row, no small variant)
+- DisplayAction enum ↔ animation action key mapping
+- Viewport coordinate transforms: world→screen, screen→world, round-trip invariants
+- Terrain grid: tile index calculations, visible tile range
+
+**Key Decisions:**
+- Used `Compile Include` for `SpriteMetadata.cs` and `TerrariumSprite.cs` from Terrarium.Game instead of project reference, because Game has pre-existing duplicate `ValidationResult` build error from parallel Heisenberg/Mike work
+- Referenced `Terrarium.Web` directly (Web SDK project) to test CreatureInfo record shape
+- animations.json copied as `Content` with `CopyToOutputDirectory` for integration tests
+- Build command: `dotnet test src/Terrarium.Web.Tests/`

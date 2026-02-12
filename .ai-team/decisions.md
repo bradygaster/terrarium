@@ -315,3 +315,149 @@ services.AddTerrariumServices(new Uri("https://api.terrarium.dev")); // explicit
 
 **Why:** Brady's directive is "blog everything." This is the "here's what's ahead" post, written before execution begins. It sets reader expectations (48 issues across 7 sprints), makes the parallelism tangible (8 agents, 89 minutes wall-clock), and establishes the emotional stakes: "an AI team is about to modernize a 25-year-old .NET app in under 2 hours of wall-clock time." It's the call-to-action post that invites the community to watch the migration unfold. Written for .NET veterans—people who remember Terrarium, remember PDC, remember when .NET was brand new.
 
+### 2026-02-11: Renderer architecture — JS ES module + C# interface + Blazor component
+**By:** Skyler (Frontend Web Dev)
+**Status:** Implemented
+**Sprint:** 8
+**Issues:** #55, #57, #58, #59
+
+**What:** Three-layer architecture for web game rendering:
+
+1. **`terrarium-renderer.js`** — All Canvas 2D operations: terrain, sprites, text, viewport, interaction
+2. **`IGameRenderer` / `CanvasGameRenderer`** — C# interface + JS interop implementation
+3. **`GameView.razor`** — Blazor component that owns the renderer lifecycle
+
+Architecture diagram:
+```mermaid
+graph TD
+    A[GameView.razor] -->|creates| B[CanvasGameRenderer]
+    B -->|JS interop| C[terrarium-renderer.js]
+    C -->|draws on| D[HTML5 Canvas 2D]
+    C -->|loads| E[terrain/*.bmp]
+    C -->|uses| F[SpriteLoader]
+    B -->|implements| G[IGameRenderer]
+    C -->|callbacks| B
+    B -->|events| A
+```
+
+**Key Decisions:**
+- Rendering logic in JS where Canvas APIs live natively (no marshaling per-pixel)
+- C# interface enables future swap to WebGL or off-screen rendering
+- Component-scoped renderer (not DI singleton) — each viewport independent
+- `IGameRenderer` lives in `Terrarium.Web.Rendering`, not `Terrarium.Game` (keeps Web layer separate)
+- `TerrariumViewport.razor` preserved for backward compatibility
+- Viewport interaction: Pan (mouse drag/WASD), Zoom (scroll/+- keys, 0.25x–4.0x), Select (click), Reset (0 key)
+
+**Why:** Keeps rendering logic in JavaScript where Canvas APIs live; C# interface enables future abstraction swaps; component-scoped design prevents coupling.
+
+### 2026-02-11: Web Sprite System Architecture (Issue #56)
+**By:** Jesse (Client Dev)
+**Status:** Implemented
+**Sprint:** 8
+
+**What:** Three-layer JavaScript sprite system for HTML5 Canvas rendering:
+
+1. **`terrarium-sprites.js`** — Core sprite primitives:
+   - `SpriteSheet` class: wraps `ImageBitmap` with frame geometry (size, columns, rows, type)
+   - `SpriteAnimation` class: time-based frame sequencing with update/draw
+   - Direction mapping: 8 directions (E,SE,S,SW,W,NW,N,NE) → row offsets 0-7
+   - Action mapping: 5 actions → base rows (attacked=0, defended=8, died=16, ate=24, moved=32)
+   - Factory helpers: `createAnimalAnimation()`, `createPlantAnimation()`, `createTeleporterAnimation()`
+
+2. **`sprite-manager.js`** — High-level manager (IIFE singleton):
+   - Loads/caches `SpriteSheet` instances from `animations.json` manifest
+   - `drawSprite(ctx, spriteId, action, direction, frameIndex, x, y, size)` — stateless draw
+   - `drawAnimated(ctx, spriteId, action, direction, deltaMs, x, y, size)` — time-based animated draw
+   - `preloadAll()` / `loadSpriteSheet(id)` — on-demand or batch loading
+
+3. **Blazor integration** — `terrarium-interop.js` (ES module):
+   - `loadSprites(ids?, useLarge?)` — preload from Blazor
+   - `drawSprite(spriteId, action, direction, frameIndex, x, y, size?)` — per-entity draw
+   - `drawFrame(worldState)` — batch render with entity array support
+   - `getSpriteStatus()` — query loaded state
+
+4. **Renderer integration** — `terrarium-renderer.js`:
+   - `loadSprites()` / `drawCreatureSprite()` exports for viewport-aware sprite drawing
+   - `renderFrame()` prefers `SpriteManager` when available
+
+5. **TerrariumViewport.razor** — Added `LoadSpritesAsync()` and `DrawSpriteAsync()` C# interop methods
+
+**Script loading order** in `App.razor`: `terrarium-sprites.js` → `sprite-loader.js` → `sprite-manager.js` → `blazor.web.js`
+
+**Why:** Preserves exact original sprite sheet layout (10×40 animal, single-frame plant, 16-frame teleporter); provides both stateless and stateful animation APIs; integrates with existing `SpriteLoader` without breaking; exposes clean Blazor interop for C# game loop control.
+
+### 2026-02-11: Web Renderer Test Strategy
+**By:** Hank (Tester/QA)
+**Status:** Implemented
+**Sprint:** 8
+**Issue:** #60
+
+**What:** 142 passing tests covering C#-side renderer contracts.
+
+**Test Strategy Decisions:**
+1. **Compile-include Game sources instead of project reference** — `Terrarium.Game` has pre-existing build error (duplicate `ValidationResult`). Test project compiles `SpriteMetadata.cs` and `TerrariumSprite.cs` directly via `<Compile Include>`. When Game build is fixed, switch back to `<ProjectReference>`.
+
+2. **Test the math, not the JS** — Renderer's JS layer can't be unit-tested in xUnit. Instead, test **C# contracts and math**:
+   - Frame rect pixel coordinates: `(startFrame + frameIndex % frameCount) * frameSize`
+   - Direction-to-row mapping: 5 actions × 8 directions = 40 rows
+   - Viewport world↔screen coordinate transforms
+   - Terrain grid tile index calculations
+
+3. **animations.json as integration test data** — Real `animations.json` copied to test output and validated: correct frame sizes, all directional animations present, frames fit within sheet, no row overlaps.
+
+4. **CreatureInfo tested via reflection** — `Terrarium.Web` is Web SDK project. Accept ASP.NET dependency and test CreatureInfo shape via reflection + energy-percent calculation logic.
+
+**Impact:** 142 tests, 0 failures; tests BUILD and PASS despite `Terrarium.Game` build errors; stable against parallel renderer work.
+
+**Open Items:**
+- TODO: When Skyler finalizes interop service, add tests for CreatureInfo ↔ TerrariumSprite mapping
+- TODO: When Jesse's sprite system lands, add tests for animation metadata loading
+- TODO: bUnit tests for TerrariumViewport.razor if component gets more complex C# logic
+
+**Why:** Achieves renderer verification without blocking on unrelated Game build issues.
+
+### 2026-02-11: Blog — Sprint 7–8 Journal Entries
+**By:** Beth (Technical Writer)
+**Status:** Complete
+**Sprint:** 7–8
+**Issues:** #97, #98
+
+**What:** Two journal entry blog posts:
+
+1. **Sprint 7: TCP Sockets to SignalR** (`docs/blog/journal/07-tcp-to-signalr.md`)
+   - 25-year-old custom TCP networking → hub-and-spoke SignalR + Orleans
+   - Coverage: Legacy architecture, modern architecture, why it matters, peer discovery flow, heartbeat/lease, assembly caching
+
+2. **Sprint 8: DirectDraw to Canvas** (`docs/blog/journal/08-directdraw-to-canvas.md`)
+   - DirectX 7 COM interop → HTML5 Canvas 2D
+   - Coverage: Legacy rendering, Canvas 2D pipeline, sprite sheet format, animation.json metadata, accessibility revolution
+
+**Key Narrative Decisions:**
+- Lead with human respect for legacy before pivoting to modern design
+- Side-by-side comparison tables (Legacy vs. Modern) for architectural clarity
+- All diagrams in Mermaid (graphs, sequence diagrams, state machines, flowcharts)
+- Explain design philosophy, not code snippets
+- Lead with visceral metrics ("four HTTP calls becomes one")
+- 25-year-old code as emotional anchor ("Rest easy, TCP socket. Your job is done.")
+- Accessibility as victory metric (Canvas as "accessible everywhere")
+- Roadmap honesty (particle effects, WebGL optional, multiplayer rendering)
+
+**Alignment with Brady's Vision:**
+- ✅ Hanselman-ready: developer-to-developer, credible, narrative-driven
+- ✅ Respectful to legacy systems while explaining modern choices
+- ✅ Technical depth paired with human emotion
+- ✅ No jargon without explanation
+- ✅ Mermaid diagrams throughout
+
+**Alignment with Beth's Voice:**
+- ✅ Developer-to-developer, not marketing
+- ✅ Community-first stewardship frame
+- ✅ Technically credible with emotional throughline
+- ✅ Compelling narratives ("It's 2001..." → closing payoff)
+
+**Files:**
+- `docs/blog/journal/07-tcp-to-signalr.md` (17.4 KB)
+- `docs/blog/journal/08-directdraw-to-canvas.md` (20.7 KB)
+
+**Why:** Brady's directive is "blog everything." These posts are the historical record of Sprint 7–8 work. They establish that modernization respects the past while embracing the future. They are Hanselman-ready and set the tone for future documentation.
+

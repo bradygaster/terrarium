@@ -126,3 +126,40 @@ Created `src/Terrarium.Net/` — the SignalR contract layer replacing the legacy
 - No dependency on other Terrarium projects — pure contract library
 
 PR #113, branch `squad/16-networking-layer`.
+
+### 2025-07-16 — Sprint 7 Networking Implementation (#50, #52, #54)
+
+**Issue #50 — TerrariumHub SignalR Hub (full implementation):**
+- Rewrote `TerrariumHub` in `src/Terrarium.Net/TerrariumHub.cs` with in-memory `ConcurrentDictionary<string, PeerState>` for peer tracking
+- Per-connection rate limiting with sliding window: TeleportCreature 10/60s, ReportPopulation 2/60s, RequestWorldState 5/60s, RequestPeerList 2/60s, Heartbeat 3/60s
+- Hub never throws — all errors go through `ReceiveError` callback per Heisenberg's design
+- `OnDisconnectedAsync` cleans up peer state and broadcasts `PeerAction.Leave`
+- Teleportation routes to specific peer or random peer in ecosystem (excludes sender)
+- SignalR groups use `ecosystem-{id}` naming convention
+- Wired into Server `Program.cs`: `AddSignalR()` with 512KB max message size, `MapHub<TerrariumHub>("/hubs/terrarium")`
+- Added `Terrarium.Net` project reference to `Terrarium.Server.csproj`
+- TODO comments mark Orleans grain integration points for Sprint 11
+
+**Issue #52 — NetworkEngine Port:**
+- Created `src/Terrarium.Game/Networking/NetworkEngine.cs` — client-side SignalR connection management
+- Replaces legacy `Client/Game/Classes/PeerToPeer/NetworkEngine.cs` (custom TCP, port 50000)
+- `Channel<T>` bounded work queue (capacity 256, drop-oldest) for outbound operations
+- 30-second throttle on teleport and population report enqueue (matches legacy `PeerManager`)
+- Bad-peer blacklist with configurable timeout (default 1 hour, matches legacy 1-hour bad-peer timeout)
+- Automatic reconnect with escalating delays (0s → 2s → 10s → 30s → 60s), auto-rejoin ecosystem on reconnect
+- 30-second heartbeat via `PeriodicTimer`, with blacklist cleanup on each tick
+- Event-based API: `OnCreatureTeleported`, `OnPeerAnnounced`, `OnPeerListReceived`, etc.
+- Added `Microsoft.AspNetCore.SignalR.Client` package and `Terrarium.Net` reference to `Terrarium.Game.csproj`
+
+**Issue #54 — Server-to-Server gRPC (future-proofing):**
+- Created `src/Terrarium.Grpc/` — code-first gRPC using `protobuf-net.Grpc` (no .proto files needed)
+- `IServerSyncService` contract: `TransferCreatureAsync`, `SyncPopulationAsync`, `HeartbeatAsync`, `ListEcosystemsAsync`
+- 8 DataContract message types with explicit `DataMember` ordering for wire stability
+- Added to `Terrarium.sln`
+- This is contract-only — implementation comes when multi-server scaling is needed
+
+**Key decisions:**
+- In-memory state via `ConcurrentDictionary` for Sprint 7 — Orleans grain calls replace this in Sprint 11
+- Code-first gRPC over .proto files — .NET-to-.NET communication doesn't need language-neutral schemas
+- `Channel<T>` over `BlockingCollection` — modern async, backpressure-aware, single-reader optimized
+- SignalR hub endpoint at `/hubs/terrarium` — follows ASP.NET Core convention

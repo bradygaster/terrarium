@@ -67,3 +67,20 @@ Searched entire legacy codebase and extracted ALL 76 original image assets to `s
 Created `manifest.json` cataloging every asset with path, original location, and purpose.
 
 **Key insight:** The `.svnbridge` subdirectories in `Client/ControlsWPF/Images/` contain duplicate copies of the button PNGs — excluded those to avoid redundancy. All unique assets are preserved.
+
+### 2025-07-17 — Sprint 8: Web Sprite System (Issue #56)
+
+**Created three-layer JavaScript sprite system** for HTML5 Canvas rendering:
+
+- **`terrarium-sprites.js`** — Core classes: `SpriteSheet` (frame extraction from loaded `ImageBitmap`), `SpriteAnimation` (time-based or frame-indexed sequencing), direction/action mappings matching the 10×40 animal sheet layout. Factory helpers for animal, plant, and teleporter animations.
+- **`sprite-manager.js`** — Singleton manager that loads sheets from `animations.json`, caches them, and provides `drawSprite()` (stateless) and `drawAnimated()` (time-based) entry points the renderer calls.
+- **Updated `terrarium-interop.js`** — Blazor JS interop now exposes `loadSprites()`, `drawSprite()`, `drawFrame(worldState)`, `getSpriteStatus()`. `drawFrame` handles entity arrays with per-entity action/direction/frame data.
+- **Updated `terrarium-renderer.js`** — Added `loadSprites()` and `drawCreatureSprite()` exports; `renderFrame()` now prefers `SpriteManager` over raw source coords.
+- **Updated `TerrariumViewport.razor`** — Added `LoadSpritesAsync()` and `DrawSpriteAsync()` C# methods.
+- **Updated `App.razor`** — Script loading order ensures globals are available before ES modules.
+
+**Key insights:**
+- The direction indices in `animations.json` are 1-based (E=1..NE=8), but row offsets within an action block are 0-based. Row = `actionBaseRow + (directionIndex - 1)`.
+- The teleporter sheet is 768×48 (16 frames × 48px in a single row), not 10 columns like animals.
+- `SpriteLoader` (existing) uses `createImageBitmap(blob)` from fetched BMPs — works well for the original `.bmp` format sprite sheets.
+- `sprite-manager.js` and `terrarium-sprites.js` are loaded as globals (IIFE/const) so the ES module `terrarium-interop.js` can reference them. This matches the existing `sprite-loader.js` pattern.
