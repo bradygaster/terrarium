@@ -1,5 +1,7 @@
 using Terrarium.Configuration;
 using Terrarium.Game;
+using Terrarium.Game.Rendering;
+using Terrarium.Services;
 using Terrarium.Web;
 using Terrarium.Web.Components;
 using Terrarium.Web.Services;
@@ -11,6 +13,11 @@ builder.Services.AddTerrariumConfiguration();
 builder.Services.AddTerrariumGameEngine();
 builder.Services.AddTerrariumNetworking();
 builder.Services.AddTerrariumRenderer();
+builder.Services.AddTerrariumServices("server");
+
+// Engine renderer stub — the Web app renders via IGameRenderer/Canvas,
+// but GameRenderBridge requires IEngineRenderer in DI.
+builder.Services.AddSingleton<IEngineRenderer, NoOpEngineRenderer>();
 
 builder.Services.AddHttpClient("terrarium-server", client =>
 {

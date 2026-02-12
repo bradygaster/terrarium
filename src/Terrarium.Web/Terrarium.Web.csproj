@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Terrarium.Game\Terrarium.Game.csproj" />
     <ProjectReference Include="..\Terrarium.Net\Terrarium.Net.csproj" />
     <ProjectReference Include="..\Terrarium.ServiceDefaults\Terrarium.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Terrarium.Services\Terrarium.Services.csproj" />
   </ItemGroup>
 
 </Project>
