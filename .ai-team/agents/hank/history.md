@@ -59,25 +59,14 @@
 📌 Team update (2026-02-11): Hub-and-spoke SignalR architecture finalized (rate limiting, heartbeat/lease, reconnect=rejoin, error struct) — decided by Heisenberg
 📌 Team update (2026-02-11): Road ahead blog post written (sprint-prep-the-road-ahead.md): 48 issues, 7 sprints, 89 minutes wall-clock — decided by Beth
 
-### 2025-07-15 — CI Pipeline Created (Issue #5)
+### 2025-07-15 — CI Pipeline & Testing Foundation (Sprint 1)
 
-**What was done:**
-- Created `.github/workflows/build.yml` — the first CI pipeline for the project
-- Triggers on push to `main` and `squadified` branches, and on all PRs
-- Ubuntu runner (cross-platform web app per Brady's decision)
-- .NET 10 SDK setup with global.json detection (falls back to 10.0.x + preview quality)
-- NuGet package caching keyed on csproj/Directory.Packages.props/Directory.Build.props
-- Restore → Build (Release) → Test pipeline targeting `src/Terrarium.sln`
-- Decided against a separate `pr-check.yml` — no label/title conventions exist yet to validate
+**CI Pipeline Created (Issue #5):** `.github/workflows/build.yml` — first CI. Triggers on push/PRs. .NET 10 preview quality. Restore → Build → Test. Solution path: src/Terrarium.sln.
 
-**Key decisions:**
-- Used `dotnet-quality: preview` since .NET 10 is in preview
-- Solution path is `src/Terrarium.sln` (Heisenberg's new structure, not the legacy `Terrraium2010.sln`)
-- Cache key includes Directory.Packages.props and Directory.Build.props for central package management support
-- Single workflow handles both push CI and PR checks — no unnecessary ceremony
-📌 Team update (2025-07-16): Solution uses classic .sln format (not .slnx); CS1591 suppressed during initial port — decided by Heisenberg
-📌 Team update (2025-07-15): CSS tokens use `--glass-{category}-{element}-{modifier}` naming; BEM classes; `glass-theme.css` is single source of truth — decided by Jesse
-📌 Team update (2026-02-10): Keep ArrayList on Scan() until Game project ported — decided by Mike
+**Key Technical Decisions:**
+- 📌 Solution uses classic .sln format (not .slnx); CS1591 suppressed during port
+- 📌 CSS tokens: --glass-{category}-{element}-{modifier}; BEM classes; glass-theme.css single source
+- 📌 Keep ArrayList on Scan() until Game project ported
 ### 2026-02-11 — OrganismBase Unit Tests (#7)
 
 **Test Project Created:** `src/Terrarium.OrganismBase.Tests/`
