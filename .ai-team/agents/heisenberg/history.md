@@ -265,3 +265,13 @@
 - Followed NuGet's own error messages: "Reference the package directly from the project to select a different version."
 - Suppressing NU1901 is appropriate for low-severity transitive vulnerabilities where we don't control the package graph (framework packages). The upstream framework will update Microsoft.Identity.Client in future releases.
 
+### 2026-02-12 — Full Project Retrospective (Sprints 7-13 + Post-Sprint)
+
+- **Primary defect pattern identified:** All post-sprint bugs were cross-agent wiring failures (URL paths, CORS, lifecycle calls, type duplication) — not logic errors within individual agents' code. Integration testing is the highest-leverage quality investment.
+- **Process changes adopted:** (1) Smoke test gate per sprint via Playwright, (2) explicit ownership of shared projects (Terrarium.Net → Mike), (3) configurable seeding via IConfiguration.
+- **Seeding reduction:** EcosystemSimulationWorker went from 2000-3000 plants / 200-300 herbivores / 30-50 carnivores → 12 plants / 3 herbivores / 1 carnivore. Conservative defaults with configuration knobs is the pattern going forward.
+- **Key file paths:**
+  - `.ai-team/log/2026-02-12-retrospective.md` — full retrospective with root cause analysis and action items
+  - `.ai-team/decisions/inbox/heisenberg-retro-2026-02-12.md` — retro decisions for team
+  - `src/Terrarium.Server/Workers/EcosystemSimulationWorker.cs` — game loop BackgroundService with seeding logic
+

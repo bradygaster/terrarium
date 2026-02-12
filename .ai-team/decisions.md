@@ -1032,9 +1032,7 @@ Sprint 12 Issue #83 required performance profiling infrastructure for the game l
 **What:** Completed comprehensive SDK packaging verification and documentation for creature development
 **Why:** Final sprint deliverable — SDK must be ready for external developers to create creatures
 
-## Verification Results
-
-### ✅ NuGet Package (Terrarium.OrganismBase)
+#### ✅ NuGet Package (Terrarium.OrganismBase)
 - **Metadata**: Complete and comprehensive
   - PackageId: `Terrarium.OrganismBase`
   - Version: `10.0.0-preview.1`
@@ -1045,7 +1043,7 @@ Sprint 12 Issue #83 required performance profiling infrastructure for the game l
 - **Build Status**: ✅ Builds successfully
 - **Pack Status**: ✅ Packs successfully with `dotnet pack`
 
-### ✅ dotnet new Template (Terrarium.Templates)
+#### ✅ dotnet new Template (Terrarium.Templates)
 - **Template Configuration**: Complete
   - Short name: `terrarium-creature`
   - Parameters: CreatureType, IsCarnivore, AuthorName, AuthorEmail, Framework
@@ -1054,7 +1052,7 @@ Sprint 12 Issue #83 required performance profiling infrastructure for the game l
 - **Build Status**: ✅ Builds successfully
 - **Pack Status**: ✅ Packs successfully as template package
 
-### ✅ SDK Documentation Structure
+#### ✅ SDK Documentation Structure
 **Comprehensive and cross-referenced:**
 
 ```
@@ -1672,4 +1670,17 @@ Blazor `OnAfterRenderAsync` fires **parent-first**: `Home.razor` executes before
 - **Sidebar synced from world state:** `_creatures` list (drives `CreaturePanel`) is now populated from `WorldStateUpdate.Creatures` with live positions, so the sidebar reflects real server data.
 - **Converged with Mike on `CreatureStateData`:** Mike added his creature DTO to `WorldStateUpdate` in parallel. I initially added a duplicate — caught it in build, removed mine, and mapped to his type. No conflict remains.
 - **48px default FrameSize:** Matches the sprite sheet frame size used by `terrarium-renderer.js`. Creatures without sprites render as colored circles (fallback in JS renderer).
+
+### 2026-02-12: User directive
+**By:** bradygaster (via Copilot)
+**What:** Telemetry/observability for the ecosystem simulation is a future need (to enable blogging about what's happening in the terrarium), but NOT for now. Do not implement telemetry yet.
+**Why:** User request — captured for team memory
+
+### 2026-02-12: Retrospective outcomes — integration testing gate, shared project ownership, configurable seeding
+**By:** Heisenberg
+**What:** Three process changes adopted from the full-project retrospective:
+1. **Smoke test gate:** Every sprint must pass a Playwright smoke test (AppHost starts, SignalR connects, canvas renders) before marking complete. Hank owns implementation.
+2. **Shared project ownership:** `Terrarium.Net` is owned by Mike. Any agent adding types must grep for existing definitions first to prevent duplicate type collisions.
+3. **Configurable seeding:** `EcosystemSimulationWorker` initial organism counts must be driven by `IConfiguration`, not hardcoded constants. Enables tuning without code changes.
+**Why:** All three post-sprint bugs (SignalR URL mismatch, missing CORS, StartAsync not called) were cross-agent wiring failures — not logic errors. Integration testing would have caught all three. The `CreatureStateData` type duplication and overloaded seeding (2300 → 16 organisms) were caused by implicit ownership and developer-centric defaults. These process changes target the actual defect injection patterns observed across Sprints 7-13.
 

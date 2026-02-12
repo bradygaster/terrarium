@@ -202,3 +202,20 @@
 - `src/Terrarium.Net/TerrariumHub.cs` — added `OnConnectedAsync`
 - `src/Terrarium.Server/Program.cs` — added startup banner log
 - `src/Terrarium.Server/Workers/NonPageServicesWorker.cs` — added heartbeat log
+
+### 2025-07-17 — JSON Casing Fix for Creature Rendering
+
+**Context:** Canvas showed terrain but no creatures/plants. Root cause: `System.Text.Json` default PascalCase serialization vs JavaScript expecting camelCase.
+
+**What was done:**
+- Added `[JsonPropertyName]` attributes to all properties on `GameRenderState` and `CreatureRenderData` in `src/Terrarium.Web/Rendering/IGameRenderer.cs`
+- Added `using System.Text.Json.Serialization;` import
+- Properties now serialize as camelCase (`creatures`, `statusText`, `skinFamily`, `srcX`, `srcY`, `frameSize`, etc.) matching what `terrarium-renderer.js` expects
+
+**Key decisions:**
+- Used explicit `[JsonPropertyName]` attributes per-property rather than global `JsonSerializerOptions` with `CamelCase` naming policy — keeps the fix surgical and doesn't affect other serialization in the app
+- No changes needed to JavaScript — the JS was already correct, C# serialization was the only problem
+
+**Key file paths:**
+- `src/Terrarium.Web/Rendering/IGameRenderer.cs` — `GameRenderState` and `CreatureRenderData` classes (lines 64-112)
+- `src/Terrarium.Web/wwwroot/js/terrarium-renderer.js` — `renderFrame()` function expects camelCase properties
