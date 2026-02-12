@@ -744,3 +744,72 @@ All subscriptions cleaned up via IDisposable.
 - EcosystemStatus.TickCount changed from int to long (matches EcosystemTick.TickNumber)
 - TerrariumViewport.razor preserved but unused (backward compatibility)
 
+### 2026-02-11: Multi-client testing infrastructure and performance benchmarks
+
+**By:** Hank
+
+**What:** Created two new test projects for Sprint 11:
+1. Terrarium.MultiClient.Tests — xUnit tests that simulate N browser clients via SignalR hub connections
+2. Terrarium.Benchmarks — BenchmarkDotNet performance tests for game engine and SignalR hub
+
+**Why:** Sprint 11 requires multi-client ecosystem testing and load/stress testing to validate the peer-to-peer architecture at scale. The multi-client tests verify that teleportation, peer discovery, and population reporting work correctly across multiple simultaneous browser connections. The benchmarks establish baseline performance metrics for game engine tick duration and SignalR message throughput to guide optimization work.
+
+**Testing patterns:**
+- Both projects use the TestHost pattern (no direct Terrarium.Server dependency) to avoid pre-existing build errors
+- Multi-client tests follow same patterns as existing SignalR.Tests (TaskCompletionSource, WaitWithTimeout helper)
+- Docker Compose file (docker-compose.test.yml) enables CI testing with postgres + server + test runner
+- Performance baselines documented in docs/performance-baselines.md with target metrics (60 FPS @ 50 organisms, 1000+ msgs/sec)
+
+### 2026-02-11: Sprint 11 Teleportation & Peer List UX
+
+**By:** Skyler
+**What:** Implemented teleportation visual effects on canvas (zones, portals, notifications) and peer list UI component showing network health and connected peers
+**Why:** Issues #74 and #76 required frontend UX for the networking layer. Teleportation effects provide visual feedback for cross-peer creature transfer (arrival/departure animations, toast notifications, activity log). Peer list gives users visibility into network status and connected peer count. Both integrate with existing SignalR events from TerrariumHubClient.
+
+**Technical decisions:**
+- Teleport zones are 100px-wide strips at world edges (left/right/top/bottom), rendered with pulsing cyan glow
+- Portal animations use the 16-frame teleporter sprite with particle effects (green for arrivals, blue for departures)
+- Toast notifications are canvas-rendered (not DOM) with glass theme styling, 4-second auto-dismiss
+- Activity log capped at 50 entries to prevent unbounded growth
+- PeerList component auto-refreshes on PeerJoined/PeerLeft events, shows truncated peer IDs (8 chars) with full ID in tooltip
+- Relative time formatting for connection timestamps ("just now", "Xm ago", "Xh ago", "Xd ago")
+
+**Files added:**
+- Components/PeerList.razor — peer list component with network health indicators
+- CSS additions to glass-components.css for .peer-list styling
+
+**Files modified:**
+- wwwroot/js/terrarium-renderer.js — added teleportation effects rendering and API
+- Components/Pages/Home.razor — integrated PeerList component, wired OnCreatureTeleport event
+
+### 2025-02-11: Azure SignalR Service integration for horizontal scaling
+
+**By:** Saul  
+**What:** Configured Azure SignalR Service as an Aspire resource with optional fallback to in-process SignalR for local development. Updated Bicep infrastructure to provision SignalR Standard S1 with sticky sessions enabled on Container Apps. Documented the scaling architecture with Mermaid diagrams showing local vs. production topology, cross-server message routing, and operational characteristics.
+
+**Why:** Terrarium.Server needs to scale horizontally across multiple Container App instances to support thousands of concurrent clients. Azure SignalR Service provides a managed backplane for SignalR hub-and-spoke architecture, eliminating the need for Redis infrastructure. Sticky sessions preserve per-connection rate limit state consistency across instances. The optional design allows local dev to run with in-process SignalR (no Azure dependency), while production automatically uses Azure SignalR when the connection string is present.
+
+**Technical Details:**
+- Aspire AppHost: Added AddAzureSignalR("signalr") with emulator support for local dev
+- Server: Conditional AddAzureSignalR() when ConnectionStrings__signalr is present, enforcing ServerStickyMode.Required
+- Bicep: Provisioned Microsoft.SignalRService/signalR with Standard_S1 SKU (1,000 connections), sticky sessions on Container Apps ingress
+- Documentation: Created docs/architecture/signalr-scaling.md with production topology diagrams, capacity planning, failure modes, and cost estimation
+
+**Scaling Characteristics:**
+- Current capacity: 1,000 concurrent connections (SignalR S1), 1-3 server instances
+- Auto-scaling: Container Apps scales based on HTTP concurrent requests
+- Message throughput: 1,000 msg/sec inbound, 2,000 msg/sec outbound (well within EcosystemTick broadcast requirements)
+- Sticky sessions: Required for per-connection rate limit state consistency
+
+**Related Files:**
+- src/Terrarium.AppHost/Program.cs — SignalR resource registration
+- src/Terrarium.Server/Program.cs — Conditional Azure SignalR configuration
+- src/Terrarium.Server/Workers/SignalRScalingService.cs — Startup logging service
+- infra/main.bicep — Azure SignalR provisioning + Container Apps sticky sessions
+- docs/architecture/signalr-scaling.md — Full scaling architecture documentation
+
+### 2026-02-11: Population Tracking Architecture
+**By:** Mike
+**What:** Hub-and-spoke population aggregation with in-memory server-side tracking
+**Why:** SignalR hub aggregates population data from all clients, maintains per-peer-per-species contributions, and broadcasts consolidated stats. Broadcast throttled to 10-tick intervals. In-memory for Sprint 11, Orleans grain replacement in Sprint 12. Client-side PopulationChart component displays top 10 species with bar chart visualization.
+

@@ -231,3 +231,46 @@ PR #113, branch `squad/16-networking-layer`.
 - Client service: `src/Terrarium.Services/Clients/SpeciesServiceClient.cs` (already had `GetSpeciesAssemblyAsync`)
 
 **Build verified:** Full solution compiles with zero errors.
+
+### 2026-02-11 — Sprint 11 Global Population Tracking (#75)
+
+**What was built:**
+- Created src/Terrarium.Server/Services/PopulationTrackingService.cs — in-memory aggregation service for population data across all connected clients
+- Added src/Terrarium.Net/IPopulationTrackingService.cs — interface for dependency injection
+- Updated TerrariumHub.ReportPopulation() to record individual client reports, aggregate them, and broadcast aggregated data back to all clients in the ecosystem
+- Updated TerrariumHub.OnDisconnectedAsync() to clean up peer contributions from population tracking
+- Created src/Terrarium.Web/Components/PopulationChart.razor — Blazor component displaying real-time population statistics with species breakdown and bar chart
+- Added population chart CSS to glass-components.css — bar charts, species rows, scrollable list styling
+- Updated Home.razor to wire PopulationChart component to SignalR population report events
+- Registered IPopulationTrackingService as singleton in Terrarium.Server/Program.cs
+
+**Key implementation details:**
+- **Server-side aggregation:** PopulationTrackingService uses ConcurrentDictionary<ecosystemId, ConcurrentDictionary<speciesName, SpeciesAggregate>> for thread-safe per-peer-per-species tracking
+- **Peer contribution model:** Each SpeciesAggregate tracks per-peer contributions (population, births, deaths) and aggregates totals across all peers
+- **Broadcast throttling:** Hub broadcasts aggregate reports at most once every 10 ticks to avoid spamming clients
+- **Cleanup:** CleanupStaleEcosystems() method (not yet wired to background worker) will remove old ecosystem data
+- **Blazor integration:** Home.razor already had OnPopulationReport callback wired; updated to capture full report in _populationReport field
+- **UI design:** Top 10 species by population with horizontal bar chart, total organism count, species count, and last update timestamp
+- **CSS styling:** Glass theme-compatible with scrollable species list, green gradient bars (matching button hover), and muted labels
+
+**Architecture flow:**
+1. GameServiceBridge reports population every 600 ticks → Server HTTP endpoint (existing legacy path)
+2. **NEW:** NetworkEngine enqueues PopulationReport → SignalR Hub
+3. **NEW:** Hub records report in PopulationTrackingService
+4. **NEW:** Hub aggregates data across all peers in ecosystem
+5. **NEW:** Hub broadcasts aggregate report to all clients via ReceivePopulationReport
+6. **NEW:** Blazor UI updates PopulationChart component with real-time data
+
+**File locations:**
+- Server service: src/Terrarium.Server/Services/PopulationTrackingService.cs
+- Interface: src/Terrarium.Net/IPopulationTrackingService.cs
+- Hub integration: src/Terrarium.Net/TerrariumHub.cs (constructor, ReportPopulation, OnDisconnectedAsync)
+- DI registration: src/Terrarium.Server/Program.cs
+- Blazor component: src/Terrarium.Web/Components/PopulationChart.razor
+- CSS styling: src/Terrarium.Web/wwwroot/css/glass-components.css
+- Page integration: src/Terrarium.Web/Components/Pages/Home.razor
+
+**Sprint 12 Orleans replacement:** The in-memory PopulationTrackingService will be replaced by PopulationGrain with write-behind persistence. The interface and Hub integration remain unchanged — only the implementation swaps out.
+
+**Build verified:** Terrarium.Server, Terrarium.Net, and Terrarium.Web all compile successfully.
+

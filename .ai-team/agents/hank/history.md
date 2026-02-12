@@ -315,3 +315,48 @@
 - `docs/sdk/api/animal.md` (17348 chars)
 - `docs/sdk/api/plant.md` (9269 chars)
 - `docs/sdk/api/attributes.md` (12441 chars)
+
+### 2026-02-11 — Sprint 11 Multi-Client Testing & Performance Benchmarks
+
+**Issue #73 — Multi-Client Testing Infrastructure:**
+- Created src/Terrarium.MultiClient.Tests/ project using xUnit and TestHost pattern
+- Created MultiClientFactory fixture that spins up N SignalR hub connections (simulates N browser clients)
+- Created EcosystemMultiClientTests with 7 test scenarios:
+  - 3 clients see PeerAnnounce when new client joins
+  - Creature teleported from client1 appears on client2 and client3
+  - Targeted teleport only delivered to target, not others
+  - 5 clients RequestPeerList returns consistent results
+  - Client leave broadcasts PeerAnnounce to all remaining clients
+  - Teleport with AssemblyPayload delivered to multiple clients
+  - 10 clients can connect and exchange creatures (load test)
+- All tests use same patterns as existing SignalR.Tests (TaskCompletionSource, WaitWithTimeout helper)
+- Docker Compose file docker-compose.test.yml for CI testing (postgres + server + test runner)
+- Dockerfile.test for running multi-client tests in CI
+
+**Issue #77 — Load and Stress Testing:**
+- Created src/Terrarium.Benchmarks/ project using BenchmarkDotNet
+- Created GameEngineBenchmarks for ProcessTurn duration and WorldState serialization (10/50/100/200 organisms)
+- Created SignalRBenchmarks for connection capacity and message throughput (10/50/100 clients)
+- Used [SimpleJob(RuntimeMoniker.Net90)] (Net100 not available in BenchmarkDotNet 0.14.x yet)
+- Created docs/performance-baselines.md to track baseline performance metrics
+- Document includes target benchmarks (60 FPS @ 50 organisms, 1000+ msgs/sec, <50ms fanout for 50 peers)
+- Benchmarks build successfully; runtime execution requires actual server or test data population
+
+**Build verification:**
+- Terrarium.MultiClient.Tests builds cleanly (zero errors, zero warnings)
+- Terrarium.Benchmarks builds cleanly (zero errors, zero warnings)
+- Both projects added to src/Terrarium.sln
+- Full solution builds cleanly with new test projects
+
+**Test execution notes:**
+- Multi-client tests could not be executed due to .NET 10 runtime issue on this machine (hostpolicy.dll not found)
+- Tests use same TestHost pattern as existing test suites — should work in CI environment
+- Benchmarks require either a running server (SignalR tests) or game engine population logic (game engine tests)
+- These are Sprint 11 deliverables ready for integration testing when runtime is available
+
+**Key file paths:**
+- Multi-client tests: src/Terrarium.MultiClient.Tests/EcosystemMultiClientTests.cs
+- Test factory: src/Terrarium.MultiClient.Tests/MultiClientFactory.cs
+- Benchmarks: src/Terrarium.Benchmarks/{GameEngineBenchmarks.cs, SignalRBenchmarks.cs}
+- Docker CI: docker-compose.test.yml, src/Terrarium.MultiClient.Tests/Dockerfile.test
+- Baselines doc: docs/performance-baselines.md

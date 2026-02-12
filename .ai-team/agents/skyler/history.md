@@ -191,3 +191,58 @@
 📌 `NavLink` component has `Match` parameter — use `NavLinkMatch.All` for exact home route matching, default prefix match for others
 📌 Gallery grid uses `repeat(auto-fill, minmax(280px, 1fr))` for responsive card layout without media queries
 📌 Type badges use LED gradient tokens for color coding: idle (green) for herbivores, failed (red) for carnivores, waiting (yellow) for plants
+
+### 2026-02-12: Sprint 11 — Teleportation UX and Peer List (#74, #76)
+- **What I built:**
+  - **Teleportation UX enhancements (#74):**
+    - Added teleportation visual effects to `terrarium-renderer.js`:
+      - Teleport zone rendering with glowing cyan borders at world edges (left, right, top, bottom)
+      - Portal animations using 16-frame teleporter sprite (`assets/sprites/teleporter.bmp`)
+      - Arrival animations (green particle glow) when creatures arrive from peers
+      - Departure animations (blue particle glow) when creatures leave
+      - Toast notifications sliding in from top-right corner with fade in/out animations
+      - Teleportation activity log tracking last 50 events
+    - API additions:
+      - `showTeleportArrival(worldX, worldY, creatureName, sourcePeerId)` — triggers arrival animation + notification
+      - `showTeleportDeparture(worldX, worldY, creatureName, targetPeerId)` — triggers departure animation + notification
+      - `getTeleportActivityLog()` — returns activity log entries
+      - `clearTeleportActivityLog()` — clears the log
+    - Teleporter sprite loading in `initialize()` with fallback on missing asset
+    - Pulse animation on teleport zone borders (0.4–1.0 alpha, 500ms cycle)
+    - Notifications: glass-themed toast with glass panel background, cyan border, 4-second auto-dismiss
+    - Particle effects scale with portal frame progression (16 frames, 60ms each)
+  - **Peer List UI component (#76):**
+    - Created `Components/PeerList.razor` — Displays connected peers with network health
+      - Network status header with LED indicator (active/waiting/failed states)
+      - Peer count display
+      - Peer list showing connection ID (truncated to 8 chars + ellipsis), version, and relative connection time
+      - Auto-refreshes on `PeerJoined`/`PeerLeft` events via `TerrariumHubClient`
+      - Subscribes to `OnPeerList`, `OnPeerAnnounce`, and `OnStateChanged` events
+      - Styled with glass theme: dark panel, scrollable list, hover states
+    - CSS additions in `glass-components.css`:
+      - `.peer-list` with all variants (header, items, empty state)
+      - Custom scrollbar theming matching glass aesthetic
+      - Peer item cards with hover transitions
+      - Monospace font for peer IDs, stat labels for version and connection time
+    - Integrated into `Home.razor` sidebar between Creatures and Event Log sections
+    - Wired `OnCreatureTeleport` event in Home.razor to log teleport events
+  - Updated `Home.razor` to pass `EcosystemId` to `PeerList` component for peer discovery
+- **Build:** `dotnet build src/Terrarium.Web/Terrarium.Web.csproj` — 0 errors, 0 warnings
+- **Design decisions:**
+  - Teleport zones are static world-edge rectangles (100px width/height) initialized at renderer startup
+  - Portal animations use the existing `drawSprite` API with frame-based indexing (no SpriteManager dependency)
+  - Notifications use screen-space coordinates (canvas pixels), not world coordinates
+  - Activity log is capped at 50 entries to prevent unbounded memory growth
+  - PeerList component requests peer list on first render and auto-refreshes on peer lifecycle events
+  - Peer IDs truncated to 8 characters for readability (full ID available in tooltip)
+  - Relative time formatting: "just now" < 60s, "Xm ago" < 60m, "Xh ago" < 24h, "Xd ago" beyond
+
+## Learnings
+
+📌 Teleporter sprite is 16 frames × 1 row at 48×48px per frame (total sheet: 768×48px)
+📌 Teleport zones should be static, not dynamic — initialized once at world edges and rendered every frame
+📌 Toast notifications in canvas require manual positioning and fade animations — no DOM available
+📌 `PeerListResponse.Peers` is `IReadOnlyList<PeerInfo>` — convert to mutable list for UI binding
+📌 `PeerAnnounce.Action` enum has `Join`, `Leave`, `Heartbeat` — only `Join` and `Leave` trigger peer list refresh
+📌 Relative time formatting improves UX for connection timestamps — "just now" feels more natural than "0s ago"
+📌 Canvas notifications need careful layer ordering: terrain → creatures → zones → portals → status → tooltip → notifications
