@@ -16,6 +16,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ThrottleService>();
 builder.Services.AddSingleton<IPopulationTrackingService, PopulationTrackingService>();
 builder.Services.AddHostedService<NonPageServicesWorker>();
+builder.Services.AddHostedService<EcosystemSimulationWorker>();
 builder.Services.AddOpenApi();
 
 // CORS policy for SignalR — allows local dev and Aspire service discovery origins

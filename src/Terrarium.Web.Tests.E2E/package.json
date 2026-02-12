@@ -1,7 +1,7 @@
 {
   "name": "terrarium.web.tests.e2e",
   "version": "1.0.0",
-  "description": "Playwright diagnostic tests for Terrarium web app",
+  "description": "Playwright integration tests for Terrarium web app",
   "scripts": {
     "test": "npx playwright test --reporter=list",
     "test:headed": "npx playwright test --reporter=list --headed",

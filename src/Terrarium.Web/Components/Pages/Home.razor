@@ -98,11 +98,7 @@
     {
         Logger.LogInformation("Home page initializing — wiring SignalR callbacks");
 
-        _creatures =
-        [
-            new CreatureInfo("Herbivore", "Leafy", 80, 100, 12, "120, 340"),
-            new CreatureInfo("Carnivore", "Fang", 45, 100, 7, "300, 150"),
-        ];
+        _creatures = [];
 
         _messages =
         [
@@ -175,8 +171,34 @@
 
     private async Task HandleWorldStateUpdate(Terrarium.Net.WorldStateUpdate update)
     {
-        _messages.Add(new MessageLog.GameMessage(DateTime.Now,
-            $"World update tick {update.TickNumber}: {update.OrganismCount} organisms"));
+        _tickCount = update.TickNumber;
+        _isRunning = true;
+
+        // Map server creature data to render state
+        var renderState = new GameRenderState
+        {
+            Creatures = update.Creatures?.Select(c => new CreatureRenderData
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Species = c.Species,
+                SkinFamily = c.SkinFamily,
+                X = c.X,
+                Y = c.Y,
+                Energy = c.Energy,
+                FrameSize = 48
+            }).ToList() ?? [],
+            StatusText = $"Tick {update.TickNumber} — {update.OrganismCount} organisms"
+        };
+
+        // Update sidebar creature list from world state
+        _creatures = update.Creatures?.Select(c =>
+            new CreatureInfo(c.Species, c.Name, c.Energy, 100, 0, $"{c.X:F0}, {c.Y:F0}"))
+            .ToList() ?? [];
+
+        if (_gameView is not null)
+            await _gameView.RenderFrameAsync(renderState);
+
         await InvokeAsync(StateHasChanged);
     }
 
