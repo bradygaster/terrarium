@@ -122,3 +122,25 @@ Created `manifest.json` cataloging every asset with path, original location, and
 - `src/Terrarium.Web/Services/TerrariumHubClient.cs` (line 52: URL fix)
 - `src/Terrarium.Game/GameServiceExtensions.cs` (line 53: URL fix)
 - `src/Terrarium.Web/Components/Pages/Home.razor` (added `OnAfterRenderAsync`)
+
+### 2025-07-17 — Render Pipeline Fix + Observability Logging
+
+**Root cause of blank blue canvas:** Blazor `OnAfterRenderAsync` fires parent-first. `Home.razor`'s handler called `_gameView.RenderFrameAsync()` before `GameView.razor`'s handler had initialized the `CanvasGameRenderer`. The guard `_renderer is { IsInitialized: true }` silently returned, so `renderFrame()` in JS was never called. After `GameView` finished its own init, no one re-triggered a render — canvas stayed transparent (showing blue CSS gradient).
+
+**Fix:**
+1. **Moved initial `renderFrame` into `GameView.OnAfterRenderAsync`** — immediately after `InitializeAsync()` completes, the component calls `_renderer.RenderFrameAsync(new GameRenderState())`. This guarantees terrain draws the moment the renderer is ready, regardless of parent timing.
+2. **Removed premature render call from `Home.razor`** — the old `RenderFrameAsync()` call in Home's `OnAfterRenderAsync` was a no-op due to the race condition. Removed it with a comment explaining why.
+
+**Observability logging added (Brady directive: "any entity that is alive should log"):**
+- `GameView.razor` — `ILogger<GameView>` injection, logs at init start, init complete, and first terrain frame.
+- `Home.razor` — Added log at `OnInitialized` and `OnAfterRenderAsync` startup (already had `ILogger<Home>`).
+- `terrarium-renderer.js` — `console.log` at: `initialize()` entry/exit with canvas/world dimensions, terrain tile load success/failure with image dimensions, `renderFrame()` first frame with tile status and creature count, `drawTerrain()` skip warnings.
+- `TerrariumHubClient.cs` — Already had comprehensive ILogger usage (connection lifecycle, all callbacks, reconnect events). No changes needed.
+- `GameRenderBridge.cs`, `GameServiceBridge.cs` — Already had ILogger with proper logging. No changes needed.
+
+**Key insight:** In Blazor Interactive Server, `OnAfterRenderAsync` fires top-down (parent before child). Any parent that needs to interact with a child component's JS interop must either: (a) let the child self-initialize and self-render, or (b) await a signal from the child that init is complete. Option (a) is simpler and what we chose.
+
+**Key files modified:**
+- `src/Terrarium.Web/Components/GameView.razor` (ILogger, initial render after init)
+- `src/Terrarium.Web/Components/Pages/Home.razor` (removed premature render, added init logging)
+- `src/Terrarium.Web/wwwroot/js/terrarium-renderer.js` (console.log at init, terrain load, renderFrame, drawTerrain)

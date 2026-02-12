@@ -175,3 +175,30 @@
 - Default policy (no named policy) keeps it simple — one CORS config for the whole server
 - `AllowCredentials()` required for SignalR's negotiate handshake
 - Placed `UseCors()` after `UseMiddleware<ThrottleMiddleware>()` and before `MapHub`/`MapGet` — correct middleware ordering
+
+### 2025-07-17 — Server Logging Audit & Missing Game Loop Diagnosis
+
+**Context:** Frontend shows "Connected" to SignalR hub but canvas is blank, zero logs from any component.
+
+**What was done:**
+- Added `OnConnectedAsync` to `TerrariumHub` — logs every client connection with `ConnectionId`
+- Added startup banner log in `Program.cs`: "Terrarium Server started — hub mapped at /hubs/terrarium"
+- Added heartbeat log to `NonPageServicesWorker` maintenance loop cycle
+- Build verified: 0 warnings, 0 errors
+
+**Root cause of blank canvas — NO GAME LOOP EXISTS:**
+- `ITerrariumClient` defines `ReceiveEcosystemTick` and `ReceiveWorldStateUpdate` callbacks
+- `IEcosystemNotifier` defines `NotifyTickAsync` and `NotifyWorldStateAsync` methods
+- **Nothing on the server implements or calls these.** No `BackgroundService` runs a simulation tick or broadcasts world state.
+- `RequestWorldState` returns `WorldWidth: 0, WorldHeight: 0, TickNumber: 0` — the TODO says "Sprint 11 — fetch from EcosystemGrain" but nothing fills this gap in the meantime.
+- The server is a **passive relay** — it only sends data when clients push first. No client pushes because there's no game simulation.
+
+**Key finding:** The server needs a game loop `BackgroundService` that:
+1. Maintains world state (terrain, dimensions, organisms)
+2. Runs periodic ticks
+3. Broadcasts `EcosystemTick` + `WorldStateUpdate` via `IHubContext<TerrariumHub, ITerrariumClient>`
+
+**Files modified:**
+- `src/Terrarium.Net/TerrariumHub.cs` — added `OnConnectedAsync`
+- `src/Terrarium.Server/Program.cs` — added startup banner log
+- `src/Terrarium.Server/Workers/NonPageServicesWorker.cs` — added heartbeat log
