@@ -39,8 +39,15 @@ public sealed class NonPageServicesWorker : BackgroundService
     {
         _logger.LogInformation("NonPageServicesWorker starting");
 
-        // Initial blacklist load
-        await RefreshBlacklistAsync(stoppingToken);
+        // Initial blacklist load (skip if no DB configured)
+        if (HasDatabaseConnection())
+        {
+            await RefreshBlacklistAsync(stoppingToken);
+        }
+        else
+        {
+            _logger.LogInformation("NonPageServicesWorker: no database connection configured, running in local-only mode");
+        }
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -50,6 +57,8 @@ public sealed class NonPageServicesWorker : BackgroundService
                 var interval = TimeSpan.FromMilliseconds(settings.MillisecondsToRollupData);
 
                 await Task.Delay(interval, stoppingToken);
+
+                if (!HasDatabaseConnection()) continue;
 
                 await CleanupStalePeersAsync(stoppingToken);
                 await RunPopulationSnapshotAsync(stoppingToken);
@@ -77,6 +86,22 @@ public sealed class NonPageServicesWorker : BackgroundService
         }
 
         _logger.LogInformation("NonPageServicesWorker stopped");
+    }
+
+    /// <summary>
+    /// Returns true if a database connection string is configured.
+    /// </summary>
+    private bool HasDatabaseConnection()
+    {
+        try
+        {
+            var settings = _serviceProvider.GetRequiredService<IOptions<ServerSettings>>().Value;
+            return !string.IsNullOrEmpty(settings.SpeciesDsn);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
