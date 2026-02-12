@@ -233,3 +233,29 @@
 - Referenced `Terrarium.Web` directly (Web SDK project) to test CreatureInfo record shape
 - animations.json copied as `Content` with `CopyToOutputDirectory` for integration tests
 - Build command: `dotnet test src/Terrarium.Web.Tests/`
+
+### 2025-07-16 — Smoke Tests (#66)
+
+**Test Project Created:** `src/Terrarium.Smoke.Tests/`
+- xUnit on net10.0, references Terrarium.Net, Terrarium.Game, Terrarium.Configuration, Terrarium.ServiceDefaults
+- Uses `Microsoft.AspNetCore.TestHost` with self-contained test server (no Terrarium.Server dependency)
+- **20 tests total, 20 passing, 0 failures**
+- Added to `src/Terrarium.sln`
+
+**What's Tested (4 test files):**
+- **ServerStartupSmokeTests** (4 tests) — server starts without throwing, root endpoint returns "Terrarium Server", health endpoint responds 200, alive endpoint responds 200
+- **SignalRHubSmokeTests** (6 tests) — hub accepts connection, JoinEcosystem completes, Heartbeat completes, RequestWorldState returns valid response, RequestPeerList returns valid response, clean disconnect
+- **GameEngineSmokeTests** (6 tests) — engine initializes without throwing, has valid WorldVector after init, runs one full tick (10 phases), runs 5 ticks without crashing, WorldVectorChanged event fires, StopGame does not throw
+- **DiContainerSmokeTests** (4 tests) — resolves IMemoryCache, resolves HealthCheckService, resolves TerrariumTelemetry, health checks report healthy
+
+**Architecture:**
+- `TerrariumServerFactory` — shared IAsyncLifetime fixture that spins up a TestServer with SignalR hub, health checks, memory cache, and telemetry. Mirrors Terrarium.Server's Program.cs setup.
+- Decoupled from `Terrarium.Server` project reference due to pre-existing CS0103 build errors in `SpeciesEndpoints.cs` (missing `version`/`filter` parameters in `/extinct` endpoint lambda).
+- Same decoupling pattern used by `Terrarium.SignalR.Tests`.
+
+**Key Decisions:**
+- Used `Microsoft.AspNetCore.TestHost` instead of `WebApplicationFactory<Program>` because `Terrarium.Server` has pre-existing build errors in `SpeciesEndpoints.cs`. This decouples smoke tests from unrelated server compilation issues.
+- Shared `TerrariumServerFactory` fixture across ServerStartup, SignalR, and DI tests to avoid spinning up multiple test servers.
+- GameEngine tests are standalone (no test server needed) — they use `NullLogger` and `PopulationData` directly.
+- Tests are intentionally shallow — they verify the app boots and nothing is broken at startup, not comprehensive behavior.
+- Build command: `dotnet test src/Terrarium.Smoke.Tests/`

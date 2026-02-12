@@ -512,3 +512,111 @@ graph TD
 
 **Why:** Brady's "blog everything" directive. Sprint 9 is the integration moment—the emotional peak of the modernization story. This post proves that pieces work together and sets up the final three sprints (10-12 feature work, 13 announcement).
 
+### 2025-07-16: DI + Service Registration (Sprint 9) — Issue #62
+**By:** Heisenberg (Lead / Architect)
+**Status:** Implemented
+
+The Terrarium stack had no dependency injection wiring. GameEngine, NetworkEngine, and the renderer were either constructed manually or registered ad-hoc. This blocked testability and Aspire integration.
+
+**Resolution:**
+1. Created interface abstractions: `IGameEngine`, `INetworkEngine` (IGameRenderer already existed)
+2. Three registration methods following the established pattern:
+   - `AddTerrariumGameEngine()` in Terrarium.Game: registers `IGameEngine`→`GameEngine` (singleton), `PopulationData`, `AssemblyValidator`, `CreatureValidator`
+   - `AddTerrariumNetworking()` in Terrarium.Game: registers `INetworkEngine`→`NetworkEngine` (singleton), `NetworkEngineOptions`
+   - `AddTerrariumRenderer()` in Terrarium.Web: registers `IGameRenderer`→`CanvasGameRenderer` (scoped — per Blazor circuit)
+3. Service lifetimes: singleton for game engine and networking (long-lived, stateful), scoped for renderer (JS interop per circuit)
+4. Program.cs now calls all four registration methods in sequence
+
+**Alternatives Considered:**
+- Single `AddTerrarium()` method rejected (couples all subsystems)
+- Transient game engine rejected (holds mutable world state)
+- Singleton renderer rejected (holds JS interop refs tied to Blazor circuit)
+
+**Impact:** All key services injectable and mockable for unit testing. Terrarium.Web now references Terrarium.Game. Future sprints can inject services directly.
+
+---
+
+### 2025-07-16: Engine Wiring (Sprint 9) — Issues #63, #64, #65
+**By:** Mike (Networking / Engine Dev)
+**Status:** Implemented
+
+**Decisions:**
+
+1. **IEngineRenderer abstraction:** Created in Terrarium.Game.Rendering, separate from IGameRenderer. Engine produces WorldRenderData (pure data), consumers implement IEngineRenderer. Keeps dependency clean: Game → IEngineRenderer ← Web.Rendering.
+
+2. **Fire-and-forget for render and service dispatches:** Both _renderBridge.RenderTickAsync() and _serviceBridge.ReportPopulationAsync() are fire-and-forget from game loop. Renders and reports are best-effort; game continues on failure.
+
+3. **TeleportStatePayload as serialization boundary:** Created dedicated record instead of serializing OrganismState directly. Carries only: organism ID, species name, position, radius, generation, energy. Avoids leaking internal state over wire.
+
+4. **Bridge pattern over direct coupling:** GameRenderBridge, GameNetworkBridge, GameServiceBridge mediate between GameEngine and external systems. Keeps engine focused on simulation (700+ lines, 10-phase loop). Bridges independently testable and swappable via DI.
+
+5. **IGameEngine interface extended with bridge properties:** RenderBridge, NetworkBridge, ServiceBridge properties allow wiring after DI construction. ServiceBridge setter propagates to PopulationData for automatic reporting.
+
+**Impact:** All external integration goes through bridges. New integrations follow same pattern. UI may skip render frames under heavy load (acceptable, legacy behavior). Population reports may be lost if server unreachable (acceptable).
+
+---
+
+### 2025-07-16: Smoke Test Architecture (Sprint 9) — Issue #66
+**By:** Hank (Tester/QA)
+**Status:** Implemented
+
+**Test Coverage:** 20 tests across 4 test classes, all passing.
+
+| Test Class | Tests | Status |
+|---|---|---|
+| ServerStartupSmokeTests | 4 | ✅ All passing |
+| SignalRHubSmokeTests | 6 | ✅ All passing |
+| GameEngineSmokeTests | 6 | ✅ All passing |
+| DiContainerSmokeTests | 4 | ✅ All passing |
+
+**Decisions:**
+
+1. **Self-contained TestServer:** Used Microsoft.AspNetCore.TestHost with TerrariumServerFactory fixture instead of WebApplicationFactory<Program>. Reason: Terrarium.Server has pre-existing CS0103 errors in SpeciesEndpoints.cs. Same decoupling pattern used by Terrarium.SignalR.Tests.
+
+2. **Shared test fixture:** TerrariumServerFactory shared via IClassFixture across ServerStartupSmokeTests, SignalRHubSmokeTests, DiContainerSmokeTests. Avoids spinning up multiple servers.
+
+3. **GameEngine tests standalone:** Tested without server — only needs logger and PopulationData. Uses NullLogger<GameEngine>.
+
+4. **Project references:** References Terrarium.Net, Terrarium.Game, Terrarium.Configuration, Terrarium.ServiceDefaults directly. Does NOT reference Terrarium.Server (build errors) or Terrarium.Web (Blazor components not needed).
+
+**Not Tested (deferred):**
+- Renderer initialization (coupled to Blazor, sprite assets — deferred until testable interface)
+- Server endpoint responses (requires Terrarium.Server reference, blocked by build errors)
+- Terrarium.Web startup (requires Aspire TestHost integration)
+
+**Consequences:** Smoke tests run in CI without database or external dependencies. When SpeciesEndpoints.cs fixed, tests can expand to full-fidelity server testing.
+
+---
+
+### 2025-07-17: GameView Wired into Main Layout (Sprint 9) — Issue #61
+**By:** Skyler (Frontend Web Dev)
+**Status:** Implemented
+
+**What:** GameView component (Sprint 8 canvas renderer) is now primary game viewport in main application layout, replacing legacy TerrariumViewport placeholder.
+
+**Layout Structure:**
+- **Main area (left):** GameView canvas — full interactive game viewport with pan/zoom/creature selection
+- **Right sidebar (260px):** Three collapsible glass-theme sections:
+  1. Ecosystem metrics (running state, creature/peer counts, tick number)
+  2. Creature panel (species list with selection and stats)
+  3. Event log (timestamped game messages)
+- **Bottom status bar:** Connection LED, population count, tick counter, peer count
+
+**SignalR Integration:** Home.razor subscribes to 5 TerrariumHubClient events:
+- OnEcosystemTick — tick count, peer count, running state
+- OnPopulationReport — creature list from per-species data
+- OnPeerAnnounce — peer join/leave log entries
+- OnWorldStateUpdate — world state log entries
+- OnError — hub error log entries
+
+All subscriptions cleaned up via IDisposable.
+
+**Responsive Design:** Sidebar stacks below viewport at ≤768px, further compresses at ≤480px. All styles use Glass theme CSS tokens.
+
+**Impact:**
+- Home.razor now owns game state and SignalR event wiring
+- MainLayout.razor simplified to just chrome frame
+- Status bar moved from layout to Home
+- EcosystemStatus.TickCount changed from int to long (matches EcosystemTick.TickNumber)
+- TerrariumViewport.razor preserved but unused (backward compatibility)
+

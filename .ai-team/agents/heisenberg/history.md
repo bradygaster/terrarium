@@ -125,3 +125,22 @@
   - `src/Terrarium.Net/Messages/HubError.cs` — structured error type
   - `src/Terrarium.Net/Messages/PopulationReport.cs` — population stats message
   - `src/Terrarium.Net/Messages/PeerListResponse.cs` — peer list response message
+
+### 2025-07-17 — DI + Service Registration (Sprint 9)
+
+- **IGameEngine interface created** in `Terrarium.Game` — abstracts `GameEngine` for testability and DI.
+- **INetworkEngine interface created** in `Terrarium.Game.Networking` — abstracts `NetworkEngine` for testability and DI.
+- **GameServiceExtensions created** with two extension methods:
+  - `AddTerrariumGameEngine()` — registers `IGameEngine`→`GameEngine`, `PopulationData`, `AssemblyValidator`, `CreatureValidator` as singletons.
+  - `AddTerrariumNetworking()` — registers `INetworkEngine`→`NetworkEngine` and `NetworkEngineOptions` as singletons.
+- **RenderingServiceExtensions created** in `Terrarium.Web`:
+  - `AddTerrariumRenderer()` — registers `IGameRenderer`→`CanvasGameRenderer` as scoped (one per Blazor circuit).
+- **Program.cs updated** to wire all services: `AddTerrariumGameEngine()`, `AddTerrariumNetworking()`, `AddTerrariumRenderer()`.
+- **Terrarium.Web.csproj** now references `Terrarium.Game` (was missing).
+- **DI pattern:** follows same `IServiceCollection` extension method pattern as `AddTerrariumConfiguration()` and `AddTerrariumServices()`.
+- **Build-blocking duplicate `ValidationResult` fixed** in `CreatureValidator.cs` (removed duplicate class definition that already exists in `AssemblyValidator.cs` in the same namespace).
+- **Key file paths:**
+  - `src/Terrarium.Game/IGameEngine.cs` — game engine abstraction
+  - `src/Terrarium.Game/Networking/INetworkEngine.cs` — network engine abstraction
+  - `src/Terrarium.Game/GameServiceExtensions.cs` — `AddTerrariumGameEngine()` + `AddTerrariumNetworking()`
+  - `src/Terrarium.Web/RenderingServiceExtensions.cs` — `AddTerrariumRenderer()`

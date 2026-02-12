@@ -108,3 +108,35 @@
 📌 `IGameRenderer` interface in `Terrarium.Web.Rendering` is the C# contract for rendering — implementations must be `IAsyncDisposable`
 📌 JS↔Blazor callbacks use `DotNetObjectReference` + `[JSInvokable]` pattern — method names must match exactly between JS `invokeMethodAsync('MethodName')` and C# `[JSInvokable] public Task MethodName()`
 📌 Terrain assets are BMP files in `wwwroot/assets/terrain/` — `background.bmp` (default ground) and `dirt.bmp` (variant tile)
+
+### 2026-02-11: Sprint 9 — Wire GameView into Main Layout (#61)
+- **What I built:**
+  - Rewired `Home.razor` to use `GameView` (Sprint 8 canvas renderer) instead of legacy `TerrariumViewport`
+  - Wired `TerrariumHubClient` SignalR events into the Home page:
+    - `OnEcosystemTick` → updates tick count, peer count, running state
+    - `OnPopulationReport` → updates creature list from species data
+    - `OnPeerAnnounce` → logs peer join/leave events
+    - `OnWorldStateUpdate` → logs world state updates
+    - `OnError` → logs hub errors to message log
+  - Classic Terrarium-style layout with three zones:
+    - **Main area:** `GameView` canvas (full game viewport with pan/zoom/selection)
+    - **Right sidebar:** `glass-sidebar` with three sections (Ecosystem metrics, Creature panel, Event log)
+    - **Bottom status bar:** Connection LED, population count, tick number, peer count
+  - Moved status bar from `MainLayout.razor` into `Home.razor` for data-driven content
+  - Responsive CSS: sidebar collapses below viewport on narrow screens (≤768px)
+  - All styles use Glass theme CSS tokens (`--glass-*`, `.glass-*` BEM classes)
+  - Proper `IDisposable` cleanup — unsubscribes all hub events on dispose
+  - Updated `EcosystemStatus.TickCount` parameter from `int` to `long` to match `EcosystemTick.TickNumber`
+- **Build:** `dotnet build src/Terrarium.Web/Terrarium.Web.csproj` — 0 errors, 0 warnings
+- **Files changed:**
+  - `Components/Pages/Home.razor` — full rewrite with GameView + SignalR wiring
+  - `Components/Layout/MainLayout.razor` — simplified (status bar moved to Home)
+  - `Components/EcosystemStatus.razor` — TickCount type fix (int→long)
+  - `wwwroot/css/app.css` — new layout styles, responsive breakpoints, creature panel items
+
+## Learnings
+
+📌 `Home.razor` is the main game page — owns GameView, sidebar, status bar, and all SignalR event subscriptions
+📌 Status bar lives in `Home.razor` (not `MainLayout.razor`) so it can show data-driven content (population, ticks, peers)
+📌 `EcosystemTick.TickNumber` is `long`, not `int` — all tick counters must use `long`
+📌 `WorldStateUpdate` is a lightweight snapshot (no creature array) — creature data comes via `PopulationReport.Species`

@@ -163,3 +163,42 @@ PR #113, branch `squad/16-networking-layer`.
 - Code-first gRPC over .proto files — .NET-to-.NET communication doesn't need language-neutral schemas
 - `Channel<T>` over `BlockingCollection` — modern async, backpressure-aware, single-reader optimized
 - SignalR hub endpoint at `/hubs/terrarium` — follows ASP.NET Core convention
+
+### 2025-07-16 — Sprint 9 Engine Wiring (#63, #64, #65)
+
+**Issue #63 — Wire Game Engine to Renderer:**
+- Created `src/Terrarium.Game/Rendering/IEngineRenderer.cs` — engine-side renderer abstraction (no dependency on Terrarium.Web)
+- `IEngineRenderer.RenderWorldAsync(WorldRenderData)` — single method, called once per completed tick
+- `WorldRenderData` — complete render payload: organisms (position, skin family, energy, action), teleport zones, world dimensions
+- `OrganismRenderData` — per-creature: ID, species name, skin family, position, radius, energy, alive state, DisplayAction
+- `TeleportZoneRenderData` — teleporter position/size for visual rendering
+- Created `src/Terrarium.Game/Rendering/GameRenderBridge.cs` — converts WorldState → WorldRenderData, dispatches to IEngineRenderer
+- Uses `ZOrderedOrganisms` for proper draw ordering, extracts skin family from AnimalSpecies/PlantSpecies enums
+- Wired into `GameEngine.ProcessTurn()` — fire-and-forget render dispatch after each completed tick (phase 9 → phase 0 reset)
+
+**Issue #64 — Wire Game Engine to SignalR Networking:**
+- Created `src/Terrarium.Game/Networking/GameNetworkBridge.cs` — bridges GameEngine ↔ NetworkEngine (INetworkEngine)
+- Outbound: `SendTeleport()` serializes OrganismState as JSON `TeleportStatePayload`, enqueues via NetworkEngine
+- Inbound: `HandleInboundTeleportAsync` receives CreatureTeleport, queues into GameEngine's `_newOrganismQueue` via `OnTeleportReceived()`
+- Peer tracking: `HandlePeerAnnouncedAsync` fires EngineStateChanged events on join/leave
+- Wired teleportation in `GameEngine.TeleportOrganisms()` — organisms in teleport zones now call `_networkBridge.SendTeleport()`
+- Added `InsertOrganismsFromQueue` handling for `CreatureTeleport` objects (dequeue and log — full materialization pending scheduler/assembly loading)
+- Made `OnEngineStateChanged` internal so bridge can notify UI of peer events
+
+**Issue #65 — Wire Game Engine to Server Services:**
+- Created `src/Terrarium.Game/Services/GameServiceBridge.cs` — bridges GameEngine to Terrarium.Services HTTP layer
+- `ReportPopulationAsync()` — converts species populations dict → `PopulationHistoryRow` list, calls IPopulationService
+- `RegisterSpeciesAsync()` — registers new species via ISpeciesService with assembly metadata
+- `ReportErrorAsync()` — Watson-style crash data via IWatsonService (RuntimeInformation for OS/CLR/version)
+- `ReportBugAsync()` — bug reporting via IReportingService
+- Wired `PopulationData.EndTick()` to fire-and-forget `ServiceBridge.ReportPopulationAsync()` every 600 ticks
+- Added `Terrarium.Services` project reference to `Terrarium.Game.csproj`
+- Added bridge properties to `IGameEngine` interface and `GameEngine` class
+- Registered `GameRenderBridge` and `GameServiceBridge` in `GameServiceExtensions.AddTerrariumGameEngine()`
+
+**Key decisions:**
+- Engine-side `IEngineRenderer` abstraction (not `IGameRenderer` from Terrarium.Web) — keeps Game project free of ASP.NET/Blazor/JS dependencies
+- Fire-and-forget for render and population report dispatches — game loop must never block on I/O
+- `GameNetworkBridge` takes `INetworkEngine` (interface), not `NetworkEngine` (class) — DI/testability
+- `TeleportStatePayload` custom JSON type (not raw OrganismState) — clean serialization boundary, no internal state leakage
+- `GameServiceBridge` wraps all server calls in try/catch — server failures never crash the game loop
