@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Terrarium.Web.Rendering;
 
 /// <summary>
@@ -63,8 +65,13 @@ public sealed record ViewportState(
 /// </summary>
 public sealed class GameRenderState
 {
+    [JsonPropertyName("creatures")]
     public List<CreatureRenderData> Creatures { get; set; } = [];
+
+    [JsonPropertyName("terrain")]
     public Dictionary<string, string>? Terrain { get; set; }
+
+    [JsonPropertyName("statusText")]
     public string? StatusText { get; set; }
 }
 
@@ -73,14 +80,33 @@ public sealed class GameRenderState
 /// </summary>
 public sealed class CreatureRenderData
 {
+    [JsonPropertyName("id")]
     public string Id { get; set; } = "";
+
+    [JsonPropertyName("name")]
     public string Name { get; set; } = "";
+
+    [JsonPropertyName("species")]
     public string Species { get; set; } = "";
+
+    [JsonPropertyName("skinFamily")]
     public string SkinFamily { get; set; } = "";
+
+    [JsonPropertyName("x")]
     public float X { get; set; }
+
+    [JsonPropertyName("y")]
     public float Y { get; set; }
+
+    [JsonPropertyName("srcX")]
     public int SrcX { get; set; }
+
+    [JsonPropertyName("srcY")]
     public int SrcY { get; set; }
+
+    [JsonPropertyName("frameSize")]
     public int FrameSize { get; set; } = 48;
+
+    [JsonPropertyName("energy")]
     public int Energy { get; set; }
 }

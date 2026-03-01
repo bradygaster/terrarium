@@ -26,7 +26,11 @@
     <script src="js/terrarium-sprites.js"></script>
     <script src="js/sprite-loader.js"></script>
     <script src="js/sprite-manager.js"></script>
-    <script src="_framework/blazor.web.js"></script>
+    <script src="_framework/blazor.web.js" autostart="false"></script>
+    <script>
+        // Start Blazor with enhanced navigation disabled to prevent page transition animations
+        Blazor.start({ ssr: { disableDomPreservation: true } });
+    </script>
     <script>
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

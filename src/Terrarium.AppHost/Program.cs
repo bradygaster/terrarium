@@ -1,5 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+// Azure Container Apps environment for deployment
+builder.AddAzureContainerAppEnvironment("terrarium-env");
+
 // SQL Server — the Terrarium game database (Docker for dev, Azure SQL for prod)
 var sql = builder.AddSqlServer("sql")
     .WithLifetime(ContainerLifetime.Persistent);

@@ -7,9 +7,10 @@ const SpriteLoader = (() => {
     const _cache = new Map();
 
     /**
-     * Loads a BMP sprite sheet and caches it as an ImageBitmap.
+     * Loads a BMP sprite sheet, replaces the magenta (#FF00FF) transparency
+     * key with actual alpha transparency, and caches the result.
      * @param {string} url - URL of the BMP sprite sheet.
-     * @returns {Promise<ImageBitmap>} The loaded image bitmap.
+     * @returns {Promise<ImageBitmap>} The loaded image bitmap with transparency applied.
      */
     async function loadSheet(url) {
         if (_cache.has(url)) {
@@ -22,7 +23,27 @@ const SpriteLoader = (() => {
         }
 
         const blob = await response.blob();
-        const bitmap = await createImageBitmap(blob);
+        const rawBitmap = await createImageBitmap(blob);
+
+        // Draw onto an offscreen canvas to access pixel data
+        const offscreen = document.createElement('canvas');
+        offscreen.width = rawBitmap.width;
+        offscreen.height = rawBitmap.height;
+        const ctx = offscreen.getContext('2d');
+        ctx.drawImage(rawBitmap, 0, 0);
+        rawBitmap.close();
+
+        // Replace magenta (255, 0, 255) pixels with fully transparent
+        const imageData = ctx.getImageData(0, 0, offscreen.width, offscreen.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i] === 255 && data[i + 1] === 0 && data[i + 2] === 255) {
+                data[i + 3] = 0; // set alpha to transparent
+            }
+        }
+        ctx.putImageData(imageData, 0, 0);
+
+        const bitmap = await createImageBitmap(offscreen);
         _cache.set(url, bitmap);
         return bitmap;
     }

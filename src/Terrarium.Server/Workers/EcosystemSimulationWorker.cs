@@ -15,8 +15,8 @@ public sealed class EcosystemSimulationWorker : BackgroundService
     private readonly ILogger<EcosystemSimulationWorker> _logger;
 
     private const string EcosystemId = "default";
-    private const int WorldWidth = 5000;
-    private const int WorldHeight = 5000;
+    private const int WorldWidth = 1000;
+    private const int WorldHeight = 1000;
     private const int TickIntervalMs = 500;
 
     // Simulation tuning
@@ -37,6 +37,8 @@ public sealed class EcosystemSimulationWorker : BackgroundService
         ["Grass", "Shrub", "Flower", "Reed", "Kelp", "Bloom", "Petal", "Thorn", "Root", "Seed"];
     private static readonly string[] SkinFamilies =
         ["ant", "beetle", "inchworm", "spider", "scorpion"];
+    private static readonly string[] PlantSkinFamilies =
+        ["plant", "plantone", "planttwo", "plantthree"];
 
     public EcosystemSimulationWorker(
         IHubContext<TerrariumHub, ITerrariumClient> hubContext,
@@ -86,8 +88,11 @@ public sealed class EcosystemSimulationWorker : BackgroundService
     {
         var rng = Random.Shared;
 
-        // Plants: 2000-3000
-        var plantCount = rng.Next(2000, 3001);
+        // Spread across the full world
+        // ~1000 total: 600 plants, 250 herbivores, 150 carnivores
+
+        // Plants: 600 with varied skins
+        var plantCount = 600;
         for (var i = 0; i < plantCount; i++)
         {
             _organisms.Add(new Organism
@@ -99,12 +104,12 @@ public sealed class EcosystemSimulationWorker : BackgroundService
                 X = rng.Next(WorldWidth),
                 Y = rng.Next(WorldHeight),
                 Energy = rng.Next(40, 100),
-                SkinFamily = "plant"
+                SkinFamily = PlantSkinFamilies[rng.Next(PlantSkinFamilies.Length)]
             });
         }
 
-        // Herbivores: 200-300
-        var herbCount = rng.Next(200, 301);
+        // Herbivores: 250 with varied skins
+        var herbCount = 250;
         for (var i = 0; i < herbCount; i++)
         {
             _organisms.Add(new Organism
@@ -122,8 +127,8 @@ public sealed class EcosystemSimulationWorker : BackgroundService
             });
         }
 
-        // Carnivores: 30-50
-        var carnCount = rng.Next(30, 51);
+        // Carnivores: 150 with varied skins
+        var carnCount = 150;
         for (var i = 0; i < carnCount; i++)
         {
             _organisms.Add(new Organism
@@ -229,8 +234,37 @@ public sealed class EcosystemSimulationWorker : BackgroundService
 
     private void SimulateHerbivore(Organism herb, Random rng)
     {
-        // Random direction change
-        if (rng.NextDouble() < 0.1)
+        // Try to find nearest plant and move toward it
+        Organism? nearestFood = null;
+        var nearestDistSq = float.MaxValue;
+        for (var i = 0; i < _organisms.Count; i++)
+        {
+            var target = _organisms[i];
+            if (target.Type != OrganismType.Plant || target.Energy <= 0) continue;
+            var dx = herb.X - target.X;
+            var dy = herb.Y - target.Y;
+            var distSq = dx * dx + dy * dy;
+            if (distSq < nearestDistSq)
+            {
+                nearestDistSq = distSq;
+                nearestFood = target;
+            }
+        }
+
+        // Seek food if hungry and food is within detection range, otherwise wander
+        const float detectionRange = 500f;
+        if (nearestFood != null && nearestDistSq < detectionRange * detectionRange && herb.Energy < 80)
+        {
+            var dx = nearestFood.X - herb.X;
+            var dy = nearestFood.Y - herb.Y;
+            var dist = MathF.Sqrt(dx * dx + dy * dy);
+            if (dist > 0)
+            {
+                herb.DirectionX = dx / dist;
+                herb.DirectionY = dy / dist;
+            }
+        }
+        else if (rng.NextDouble() < 0.1)
         {
             herb.DirectionX = (float)(rng.NextDouble() * 2 - 1);
             herb.DirectionY = (float)(rng.NextDouble() * 2 - 1);
@@ -244,31 +278,52 @@ public sealed class EcosystemSimulationWorker : BackgroundService
         if (herb.X <= 0 || herb.X >= WorldWidth - 1) herb.DirectionX = -herb.DirectionX;
         if (herb.Y <= 0 || herb.Y >= WorldHeight - 1) herb.DirectionY = -herb.DirectionY;
 
-        // Lose energy
-        herb.Energy -= 1;
+        // Lose energy (slow drain — animals are hardy)
+        if (_tickNumber % 3 == 0)
+            herb.Energy -= 1;
 
         // Try to eat a nearby plant
-        for (var i = 0; i < _organisms.Count; i++)
+        if (nearestFood != null && nearestDistSq < EatRange * EatRange)
         {
-            var target = _organisms[i];
-            if (target.Type != OrganismType.Plant || target.Energy <= 0) continue;
-
-            var dx = herb.X - target.X;
-            var dy = herb.Y - target.Y;
-            if (dx * dx + dy * dy < EatRange * EatRange)
-            {
-                var gained = Math.Min(target.Energy, 20);
-                herb.Energy = Math.Min(100, herb.Energy + gained);
-                target.Energy -= gained;
-                break;
-            }
+            var gained = Math.Min(nearestFood.Energy, 20);
+            herb.Energy = Math.Min(100, herb.Energy + gained);
+            nearestFood.Energy -= gained;
         }
     }
 
     private void SimulateCarnivore(Organism carn, Random rng)
     {
-        // Random direction change
-        if (rng.NextDouble() < 0.08)
+        // Try to find nearest herbivore and move toward it
+        Organism? nearestPrey = null;
+        var nearestDistSq = float.MaxValue;
+        for (var i = 0; i < _organisms.Count; i++)
+        {
+            var target = _organisms[i];
+            if (target.Type != OrganismType.Herbivore || target.Energy <= 0) continue;
+            var dx = carn.X - target.X;
+            var dy = carn.Y - target.Y;
+            var distSq = dx * dx + dy * dy;
+            if (distSq < nearestDistSq)
+            {
+                nearestDistSq = distSq;
+                nearestPrey = target;
+            }
+        }
+
+        // Hunt prey if within detection range, otherwise wander
+        const float detectionRange = 600f;
+        if (nearestPrey != null && nearestDistSq < detectionRange * detectionRange)
+        {
+            var dx = nearestPrey.X - carn.X;
+            var dy = nearestPrey.Y - carn.Y;
+            var dist = MathF.Sqrt(dx * dx + dy * dy);
+            if (dist > 0)
+            {
+                carn.DirectionX = dx / dist;
+                carn.DirectionY = dy / dist;
+            }
+        }
+        else if (rng.NextDouble() < 0.08)
         {
             carn.DirectionX = (float)(rng.NextDouble() * 2 - 1);
             carn.DirectionY = (float)(rng.NextDouble() * 2 - 1);
@@ -282,24 +337,16 @@ public sealed class EcosystemSimulationWorker : BackgroundService
         if (carn.X <= 0 || carn.X >= WorldWidth - 1) carn.DirectionX = -carn.DirectionX;
         if (carn.Y <= 0 || carn.Y >= WorldHeight - 1) carn.DirectionY = -carn.DirectionY;
 
-        // Lose energy (slightly faster than herbivores)
-        carn.Energy -= 1;
+        // Lose energy (slow drain — predators are efficient)
+        if (_tickNumber % 3 == 0)
+            carn.Energy -= 1;
 
         // Try to eat a nearby herbivore
-        for (var i = 0; i < _organisms.Count; i++)
+        if (nearestPrey != null && nearestDistSq < EatRange * EatRange)
         {
-            var target = _organisms[i];
-            if (target.Type != OrganismType.Herbivore || target.Energy <= 0) continue;
-
-            var dx = carn.X - target.X;
-            var dy = carn.Y - target.Y;
-            if (dx * dx + dy * dy < EatRange * EatRange)
-            {
-                var gained = Math.Min(target.Energy, 30);
-                carn.Energy = Math.Min(100, carn.Energy + gained);
-                target.Energy = 0; // Kill herbivore
-                break;
-            }
+            var gained = Math.Min(nearestPrey.Energy, 30);
+            carn.Energy = Math.Min(100, carn.Energy + gained);
+            nearestPrey.Energy = 0; // Kill herbivore
         }
     }
 

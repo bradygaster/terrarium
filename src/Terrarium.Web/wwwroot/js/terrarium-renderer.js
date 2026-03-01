@@ -106,6 +106,17 @@ export async function initialize(canvasElement, dotNetRef, worldWidth, worldHeig
     // Load teleporter sprite
     await _loadTeleporterSprite();
 
+    // Preload all sprite sheets so creatures render on first frame
+    if (typeof SpriteManager !== 'undefined') {
+        try {
+            await SpriteManager.loadManifest();
+            await SpriteManager.preloadAll(true);
+            console.log('[Terrarium Renderer] SpriteManager preloaded:', SpriteManager.getSpriteIds());
+        } catch (e) {
+            console.warn('[Terrarium Renderer] SpriteManager preload failed:', e);
+        }
+    }
+
     // Initialize teleport zones at world edges
     _initializeTeleportZones();
 
@@ -171,17 +182,12 @@ async function _loadTerrainTiles() {
 }
 
 async function _loadTeleporterSprite() {
-    const loadImage = (src) => new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => {
-            console.warn(`Teleporter sprite not found: ${src}`);
-            resolve(null);
-        };
-        img.src = src;
-    });
-
-    _teleporterSheet = await loadImage('/assets/sprites/teleporter.bmp');
+    try {
+        _teleporterSheet = await SpriteLoader.loadSheet('/assets/sprites/teleporter.bmp');
+    } catch (e) {
+        console.warn('[Terrarium Renderer] Teleporter sprite not found:', e);
+        _teleporterSheet = null;
+    }
 }
 
 function _initializeTeleportZones() {
@@ -752,7 +758,21 @@ export function renderFrame(worldState, spriteSheets) {
                 }
             }
 
-            if (drawn) {
+            // Final fallback: colored rectangle so creatures are always visible
+            if (!drawn) {
+                const zoom = _viewport.zoom;
+                const size = (creature.frameSize || 48) * zoom;
+                const sx = (creature.x - _viewport.x) * zoom;
+                const sy = (creature.y - _viewport.y) * zoom;
+                const species = (creature.species || '').toLowerCase();
+                _ctx.fillStyle = species === 'plant' ? '#22aa22'
+                    : species === 'carnivore' ? '#cc3333' : '#3388cc';
+                _ctx.fillRect(sx, sy, size, size);
+                drawn = true;
+            }
+
+            // Labels and selection (always drawn now)
+            {
                 const frameSize = creature.frameSize || 48;
 
                 // Selection highlight
@@ -921,6 +941,11 @@ function _bindEvents() {
     _canvas.addEventListener('wheel', _onWheel, { passive: false });
     _canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
+    // Touch events for mobile pan/zoom
+    _canvas.addEventListener('touchstart', _onTouchStart, { passive: false });
+    _canvas.addEventListener('touchmove', _onTouchMove, { passive: false });
+    _canvas.addEventListener('touchend', _onTouchEnd, { passive: false });
+
     // Keyboard events on the canvas's parent (needs focus)
     _canvas.tabIndex = 0;
     _canvas.addEventListener('keydown', _onKeyDown);
@@ -933,6 +958,9 @@ function _unbindEvents() {
     _canvas.removeEventListener('mouseup', _onMouseUp);
     _canvas.removeEventListener('mouseleave', _onMouseLeave);
     _canvas.removeEventListener('wheel', _onWheel);
+    _canvas.removeEventListener('touchstart', _onTouchStart);
+    _canvas.removeEventListener('touchmove', _onTouchMove);
+    _canvas.removeEventListener('touchend', _onTouchEnd);
     _canvas.removeEventListener('keydown', _onKeyDown);
 }
 
@@ -1003,6 +1031,109 @@ function _onMouseLeave() {
     _interaction.isDragging = false;
     _tooltip.visible = false;
     _canvas.style.cursor = 'default';
+}
+
+// Touch state for pinch-to-zoom
+let _touchState = {
+    lastTouchX: 0,
+    lastTouchY: 0,
+    lastPinchDist: 0,
+    isTouching: false,
+    touchStartX: 0,
+    touchStartY: 0,
+    viewportStartX: 0,
+    viewportStartY: 0,
+};
+
+function _getTouchDistance(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function _onTouchStart(e) {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+        const t = e.touches[0];
+        _touchState.isTouching = true;
+        _touchState.lastTouchX = t.clientX;
+        _touchState.lastTouchY = t.clientY;
+        _touchState.touchStartX = t.clientX;
+        _touchState.touchStartY = t.clientY;
+        _touchState.viewportStartX = _viewport.x;
+        _touchState.viewportStartY = _viewport.y;
+    } else if (e.touches.length === 2) {
+        _touchState.lastPinchDist = _getTouchDistance(e.touches[0], e.touches[1]);
+    }
+}
+
+function _onTouchMove(e) {
+    e.preventDefault();
+    if (e.touches.length === 1 && _touchState.isTouching) {
+        // Single finger pan
+        const t = e.touches[0];
+        const dx = _touchState.lastTouchX - t.clientX;
+        const dy = _touchState.lastTouchY - t.clientY;
+        _touchState.lastTouchX = t.clientX;
+        _touchState.lastTouchY = t.clientY;
+        _viewport.x = _clampX(_viewport.x + dx / _viewport.zoom);
+        _viewport.y = _clampY(_viewport.y + dy / _viewport.zoom);
+    } else if (e.touches.length === 2) {
+        // Pinch to zoom
+        const newDist = _getTouchDistance(e.touches[0], e.touches[1]);
+        if (_touchState.lastPinchDist > 0) {
+            const scale = newDist / _touchState.lastPinchDist;
+            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            const rect = _canvas.getBoundingClientRect();
+            const mx = midX - rect.left;
+            const my = midY - rect.top;
+
+            const oldZoom = _viewport.zoom;
+            const newZoom = Math.max(0.25, Math.min(4.0, oldZoom * scale));
+            const worldX = mx / oldZoom + _viewport.x;
+            const worldY = my / oldZoom + _viewport.y;
+
+            _viewport.zoom = newZoom;
+            _viewport.x = _clampX(worldX - mx / newZoom);
+            _viewport.y = _clampY(worldY - my / newZoom);
+        }
+        _touchState.lastPinchDist = newDist;
+    }
+}
+
+function _onTouchEnd(e) {
+    e.preventDefault();
+    if (e.touches.length === 0 && _touchState.isTouching) {
+        // Check if it was a tap (not a drag)
+        const dx = Math.abs(e.changedTouches[0].clientX - _touchState.touchStartX);
+        const dy = Math.abs(e.changedTouches[0].clientY - _touchState.touchStartY);
+        if (dx < 10 && dy < 10) {
+            // Simulate a click for creature selection
+            const t = e.changedTouches[0];
+            const rect = _canvas.getBoundingClientRect();
+            const mx = t.clientX - rect.left;
+            const my = t.clientY - rect.top;
+            const worldX = mx / _viewport.zoom + _viewport.x;
+            const worldY = my / _viewport.zoom + _viewport.y;
+            const hit = _hitTestCreature(worldX, worldY);
+            if (hit) {
+                _interaction.selectedCreatureId = hit.id;
+                if (_dotNetRef) {
+                    _dotNetRef.invokeMethodAsync('OnCreatureSelected_JS', hit.id, hit.name || '', hit.species || '');
+                }
+            } else {
+                _interaction.selectedCreatureId = null;
+                if (_dotNetRef) {
+                    _dotNetRef.invokeMethodAsync('OnCreatureDeselected_JS');
+                }
+            }
+        }
+        _touchState.isTouching = false;
+    }
+    if (e.touches.length < 2) {
+        _touchState.lastPinchDist = 0;
+    }
 }
 
 function _onWheel(e) {

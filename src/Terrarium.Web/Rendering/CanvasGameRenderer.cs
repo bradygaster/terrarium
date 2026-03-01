@@ -144,7 +144,14 @@ public sealed class CanvasGameRenderer : IGameRenderer
     {
         if (_module is not null)
         {
-            await _module.InvokeVoidAsync("dispose");
+            try
+            {
+                await _module.InvokeVoidAsync("dispose");
+            }
+            catch (JSDisconnectedException)
+            {
+                // Circuit already disconnected — JS cleanup is unnecessary
+            }
             await _module.DisposeAsync();
         }
         _dotNetRef?.Dispose();

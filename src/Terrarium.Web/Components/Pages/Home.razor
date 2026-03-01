@@ -13,8 +13,8 @@
     <div class="terrarium-home__content">
         <div class="terrarium-home__viewport">
             <GameView @ref="_gameView"
-                      WorldWidth="5000"
-                      WorldHeight="5000"
+                      WorldWidth="1000"
+                      WorldHeight="1000"
                       OnCreatureClicked="@OnGameCreatureClicked"
                       OnSelectionCleared="@OnGameSelectionCleared" />
         </div>
@@ -90,6 +90,7 @@
     private bool _localOnlyMode = false;
     private int _connectionAttempts = 0;
     private const int MaxConnectionAttempts = 3;
+    private bool _viewportCentered = false;
 
     [Inject]
     private ILogger<Home> Logger { get; set; } = default!;
@@ -171,35 +172,47 @@
 
     private async Task HandleWorldStateUpdate(Terrarium.Net.WorldStateUpdate update)
     {
-        _tickCount = update.TickNumber;
-        _isRunning = true;
-
-        // Map server creature data to render state
-        var renderState = new GameRenderState
+        await InvokeAsync(async () =>
         {
-            Creatures = update.Creatures?.Select(c => new CreatureRenderData
+            _tickCount = update.TickNumber;
+            _isRunning = true;
+
+            // Map server creature data to render state
+            var renderState = new GameRenderState
             {
-                Id = c.Id,
-                Name = c.Name,
-                Species = c.Species,
-                SkinFamily = c.SkinFamily,
-                X = c.X,
-                Y = c.Y,
-                Energy = c.Energy,
-                FrameSize = 48
-            }).ToList() ?? [],
-            StatusText = $"Tick {update.TickNumber} — {update.OrganismCount} organisms"
-        };
+                Creatures = update.Creatures?.Select(c => new CreatureRenderData
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Species = c.Species,
+                    SkinFamily = c.SkinFamily,
+                    X = c.X,
+                    Y = c.Y,
+                    Energy = c.Energy,
+                    FrameSize = 48
+                }).ToList() ?? [],
+                StatusText = $"Tick {update.TickNumber} — {update.OrganismCount} organisms"
+            };
 
-        // Update sidebar creature list from world state
-        _creatures = update.Creatures?.Select(c =>
-            new CreatureInfo(c.Species, c.Name, c.Energy, 100, 0, $"{c.X:F0}, {c.Y:F0}"))
-            .ToList() ?? [];
+            // Update sidebar creature list from world state
+            _creatures = update.Creatures?.Select(c =>
+                new CreatureInfo(c.Species, c.Name, c.Energy, 100, 0, $"{c.X:F0}, {c.Y:F0}"))
+                .ToList() ?? [];
 
-        if (_gameView is not null)
-            await _gameView.RenderFrameAsync(renderState);
+            // Center viewport on creatures on the first update so they're visible
+            if (!_viewportCentered && _gameView?.Renderer is not null && update.Creatures?.Count > 0)
+            {
+                var avgX = update.Creatures.Average(c => c.X);
+                var avgY = update.Creatures.Average(c => c.Y);
+                await _gameView.Renderer.SetViewportAsync((float)avgX - 400, (float)avgY - 300);
+                _viewportCentered = true;
+            }
 
-        await InvokeAsync(StateHasChanged);
+            if (_gameView is not null)
+                await _gameView.RenderFrameAsync(renderState);
+
+            StateHasChanged();
+        });
     }
 
     private async Task HandleHubError(Terrarium.Net.HubError error)
